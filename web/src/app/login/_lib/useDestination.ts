@@ -5,8 +5,9 @@
  * e-mail, and which of them work right now for the chosen country
  * (GET /v1/auth/login-options; a failed check offers everything). The
  * method starts as the one of the page's first HTML (openingMethod.ts) and
- * changes only when the visitor changes it: the answers that come later
- * explain and offer, they never swap the form.
+ * changes only when the visitor changes it. An answer that arrives later
+ * and says that the method shown cannot deliver leaves its form in place:
+ * the form explains, offers the other method and cannot send.
  */
 
 import { useState } from "react";
@@ -21,8 +22,8 @@ import { guessCountryCode, isCountryAvailable, type LoginMethod } from "@/lib/co
 import { splitInternationalNumber } from "@/lib/internationalNumber";
 
 import {
+  canSendLoginCode,
   chooseDeliveryChannel,
-  effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
   phoneLoginBlock,
@@ -30,7 +31,7 @@ import {
 
 export function useDestination(openingMethod: LoginMethod) {
   const countries = useCountries();
-  const [chosenMethod, setChosenMethod] = useState<LoginMethod>(openingMethod);
+  const [method, setChosenMethod] = useState<LoginMethod>(openingMethod);
   const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(null);
   const [chosenCountry, setChosenCountry] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -52,7 +53,6 @@ export function useDestination(openingMethod: LoginMethod) {
     api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   const options = loginOptions.data;
-  const method = effectiveLoginMethod(chosenMethod, options);
   const phoneBlock = phoneLoginBlock(options);
   const phoneChannels = options?.phone_channels ?? [];
   const isUnavailable = isSignInUnavailable(options);
@@ -71,7 +71,7 @@ export function useDestination(openingMethod: LoginMethod) {
     /** The terms and privacy policy the code step's acceptance line names. */
     termsVersion: options?.terms_version ?? null,
     privacyVersion: options?.privacy_version ?? null,
-    canSend: !isUnavailable && (method === "email" || phoneBlock === null),
+    canSend: canSendLoginCode(method, options),
     phoneNumber,
     email,
     error,

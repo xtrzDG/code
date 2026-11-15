@@ -1973,14 +1973,20 @@ Its motion and 3D hero: see [Motion](#motion).
   payer that way, without the SameSite=Lax session cookie) with a 303 to the same
   address, so the browser repeats it as a GET that carries the session.
 - `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
-  switch hides e-mail when it cannot deliver codes, the phone form offers a
-  channel choice when several work, and explains when none does. The form
+  switch goes when e-mail cannot deliver codes (never from under a visitor on
+  the e-mail form), the phone form offers a channel choice when several work,
+  and explains when none does. The form
   in the page's first HTML is the server's choice (`_lib/openingMethod.ts`
   reads the options once while the page renders): phone, or e-mail where no
   phone channel has a provider in any country (codes go by e-mail only);
   when that read fails or takes more than two seconds, phone. After that
-  only the visitor changes the method: what the browser's own check answers
-  explains and offers, it never swaps the form under someone typing. The code
+  only the visitor changes the method: when the browser's own check answers
+  that the method shown cannot deliver, its form stays (the field, its focus
+  and what was typed), explains, offers the other method and cannot send.
+  `/login` is also the health-check path of the image (`Dockerfile`, five
+  seconds a check) and of Render (`render.yaml`), so every probe makes that
+  read: an API that hangs holds each probe for two seconds, and the page
+  still answers 200. The code
   screen offers the country's other channels ("No code? Send by SMS instead":
   a number without WhatsApp is reported only later), which the API allows at
   once. Phone numbers and codes typed in any script (Arabic-Indic, Persian,

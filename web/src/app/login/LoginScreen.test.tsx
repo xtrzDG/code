@@ -8,10 +8,16 @@ import type * as AuthModule from "@/api/auth";
 import { ApiError } from "@/api/errors";
 import { queryCache } from "@/api/queryCache";
 import type { OtpChallengeView } from "@/api/types";
-import { answerGet, ok, pending } from "@/test/fakeApi";
 import { renderInLocale, textsIn } from "@/test/render";
 
-import type { LoginOptions } from "./_lib/loginOptions";
+import {
+  emailOnly,
+  everyMethod,
+  nothingDelivers,
+  phoneOnly,
+  signInOptions,
+  signInOptionsLater,
+} from "./_lib/loginFixtures";
 import { LoginScreen } from "./LoginScreen";
 
 vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn(), DELETE: vi.fn() } }));
@@ -38,34 +44,6 @@ const challenge: OtpChallengeView = {
   login_method: "email",
   masked_destination: "o***@example.com",
 };
-
-const loginOptions: LoginOptions = {
-  configured_channels: ["email", "sms"],
-  is_email_login_available: true,
-  is_phone_login_available: true,
-  is_sign_up_restricted: false,
-  phone_channels: ["sms"],
-  terms_version: "2026-09-01",
-  privacy_version: "2026-09-01",
-};
-
-/** Codes go by e-mail only: no phone channel has a provider, in any country. */
-const emailOnly: LoginOptions = {
-  ...loginOptions,
-  configured_channels: ["email"],
-  is_phone_login_available: false,
-  phone_channels: [],
-};
-
-
-function signInOptions(options: LoginOptions = loginOptions) {
-  answerGet((path) => {
-    if (path === "/v1/auth/login-options") {
-      return ok(options);
-    }
-    return path === "/v1/catalog/countries" ? ok({ countries: [] }) : pending();
-  });
-}
 
 async function chooseEmail(user: ReturnType<typeof userEvent.setup>) {
   renderInLocale(<LoginScreen next="/businesses" sessionExpired={false} openingMethod="phone" />);
@@ -145,23 +123,9 @@ describe("LoginScreen: the method it opens on", () => {
   });
 
   const phoneField = () => screen.queryByRole<HTMLInputElement>("textbox", { name: t("auth.phone") });
-  const emailField = () => screen.queryByRole("textbox", { name: t("auth.email") });
+  const emailField = () => screen.queryByRole<HTMLInputElement>("textbox", { name: t("auth.email") });
   const isChecked = (name: string) => screen.getByRole<HTMLInputElement>("radio", { name }).checked;
-
-  /** The options answer when the test says so: until then the page knows only its opening method. */
-  function signInOptionsLater(options: LoginOptions): () => void {
-    let answer: () => void = () => undefined;
-    const answered = new Promise<void>((resolve) => {
-      answer = resolve;
-    });
-    answerGet((path) => {
-      if (path === "/v1/auth/login-options") {
-        return answered.then(() => ok(options));
-      }
-      return path === "/v1/catalog/countries" ? ok({ countries: [] }) : pending();
-    });
-    return answer;
-  }
+  const sendButton = () => screen.getByRole<HTMLButtonElement>("button", { name: t("auth.sendCode") });
 
   it("opens on e-mail when the server says so, before the browser has asked anything", () => {
     signInOptionsLater(emailOnly);
@@ -173,7 +137,7 @@ describe("LoginScreen: the method it opens on", () => {
   });
 
   it("opens on phone when the server says so", () => {
-    signInOptionsLater(loginOptions);
+    signInOptionsLater(everyMethod);
     renderInLocale(<LoginScreen next="/businesses" sessionExpired={false} openingMethod="phone" />);
 
     expect(phoneField()).toBeTruthy();
@@ -215,18 +179,90 @@ describe("LoginScreen: the method it opens on", () => {
 
     expect(phoneField()).toBeTruthy();
     expect(await screen.findByText(t("loginOptions.noPhoneChannels"))).toBeTruthy();
+    // The switch keeps the focus it was given.
+    expect(document.activeElement).toBe(screen.getByRole("radio", { name: t("auth.methodPhone") }));
 
     await user.click(screen.getByRole("button", { name: t("loginOptions.useEmail") }));
 
     expect(emailField()).toBeTruthy();
     expect(phoneField()).toBeNull();
+    // The button left with the phone form: focus is in the field that took its place.
+    expect(document.activeElement).toBe(emailField());
   });
 
-  it("shows phone when the page opened on e-mail and e-mail cannot deliver", async () => {
-    signInOptions({ ...loginOptions, is_email_login_available: false, configured_channels: ["sms"] });
+  it("never takes the e-mail form from a visitor who is using it", async () => {
+    const user = userEvent.setup();
+    const answerOptions = signInOptionsLater(phoneOnly);
+    renderInLocale(<LoginScreen next="/businesses" sessionExpired={false} openingMethod="phone" />);
+    // Nothing has answered yet, so the switch still offers e-mail.
+    await user.click(screen.getByRole("radio", { name: t("auth.methodEmail") }));
+    const email = emailField();
+    if (!email) {
+      throw new Error("The e-mail field is missing.");
+    }
+    await user.type(email, "owner");
+    await user.click(sendButton());
+    expect(email.getAttribute("aria-invalid")).toBe("true");
+    await user.click(email);
+
+    // The answer says that e-mail cannot deliver: the page explains and offers, the form stays.
+    answerOptions();
+
+    expect(await screen.findByText(t("loginOptions.noEmail"))).toBeTruthy();
+    expect(emailField()).toBe(email);
+    expect(email.value).toBe("owner");
+    expect(document.activeElement).toBe(email);
+    expect(email.getAttribute("aria-invalid")).toBe("true");
+    expect(screen.getByText(t("auth.errors.emailInvalid"))).toBeTruthy();
+    expect(phoneField()).toBeNull();
+    // The switch stays under the visitor, and no code can be asked for.
+    expect(isChecked(t("auth.methodEmail"))).toBe(true);
+    expect(sendButton().disabled).toBe(true);
+    await user.type(email, "@example.com{Enter}");
+    expect(email.value).toBe("owner@example.com");
+    expect(startLogin).not.toHaveBeenCalled();
+  });
+
+  it("leads from an e-mail form that cannot deliver to the phone form", async () => {
+    const user = userEvent.setup();
+    signInOptions(phoneOnly);
     renderInLocale(<LoginScreen next="/businesses" sessionExpired={false} openingMethod="email" />);
 
-    await waitFor(() => expect(phoneField()).toBeTruthy());
+    await user.click(await screen.findByRole("button", { name: t("loginOptions.usePhone") }));
+
+    expect(phoneField()).toBeTruthy();
+    expect(document.activeElement).toBe(phoneField());
     expect(emailField()).toBeNull();
+    expect(screen.queryByText(t("loginOptions.noEmail"))).toBeNull();
+    // E-mail cannot deliver: the switch went with its form.
+    expect(screen.queryByRole("radio", { name: t("auth.methodEmail") })).toBeNull();
+    expect(sendButton().disabled).toBe(false);
+  });
+
+  it("says once that sign-in is down when nothing delivers a code", async () => {
+    signInOptions(nothingDelivers);
+    renderInLocale(<LoginScreen next="/businesses" sessionExpired={false} openingMethod="email" />);
+
+    expect(await screen.findByText(t("loginOptions.nothingAvailable"))).toBeTruthy();
+    expect(screen.queryByText(t("loginOptions.noEmail"))).toBeNull();
+    expect(emailField()).toBeTruthy();
+    expect(sendButton().disabled).toBe(true);
+  });
+
+  it("names the method of its form in the HTML, for the smoke test of a deployment", async () => {
+    const user = userEvent.setup();
+    signInOptions();
+    const { container } = renderInLocale(
+      <LoginScreen next="/businesses" sessionExpired={false} openingMethod="email" />,
+    );
+    const methods = () =>
+      Array.from(container.querySelectorAll("[data-login-method]"), (form) => form.getAttribute("data-login-method"));
+
+    // scripts/smoke.sh looks for exactly one `data-login-method="..."`.
+    expect(methods()).toEqual(["email"]);
+
+    await user.click(screen.getByRole("radio", { name: t("auth.methodPhone") }));
+
+    expect(methods()).toEqual(["phone"]);
   });
 });

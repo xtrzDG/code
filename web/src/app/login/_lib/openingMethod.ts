@@ -13,9 +13,10 @@ const OPTIONS_TIMEOUT_MS = 2_000;
  * The form in the sign-in page's first HTML, read from the API while the
  * page renders. Choosing it in the browser instead, once its own check of
  * the options has answered, replaced the phone form under a visitor who
- * was already typing: the field, its focus and its error went away. An
- * API that does not answer in time, or at all, opens the page on phone,
- * where the browser's check explains what works.
+ * was already typing: the field and its focus went away, and its error
+ * moved under the e-mail field. An API that does not answer in time, or at
+ * all, opens the page on phone, where the browser's check explains what
+ * works.
  */
 export async function loadOpeningLoginMethod(): Promise<LoginMethod> {
   try {

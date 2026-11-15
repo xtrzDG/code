@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  canSendLoginCode,
   chooseDeliveryChannel,
-  effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
   openingLoginMethod,
@@ -26,8 +26,9 @@ describe("login options", () => {
   it("offers everything until the options arrive", () => {
     expect(phoneLoginBlock(undefined)).toBeNull();
     expect(isEmailLoginOffered(undefined)).toBe(true);
-    expect(effectiveLoginMethod("email", undefined)).toBe("email");
     expect(isSignInUnavailable(undefined)).toBe(false);
+    expect(canSendLoginCode("phone", undefined)).toBe(true);
+    expect(canSendLoginCode("email", undefined)).toBe(true);
   });
 
   it("explains why phone sign-in cannot start", () => {
@@ -38,12 +39,37 @@ describe("login options", () => {
     expect(phoneLoginBlock(options({ phone_channels: [], is_phone_login_available: false }))).toBe("noChannels");
   });
 
-  it("hides e-mail when it cannot deliver codes", () => {
-    const noEmail = options({ is_email_login_available: false });
+  it("does not offer e-mail when it cannot deliver codes", () => {
+    const noEmail = options({ is_email_login_available: false, configured_channels: ["sms", "telegram"] });
 
     expect(isEmailLoginOffered(noEmail)).toBe(false);
-    expect(effectiveLoginMethod("email", noEmail)).toBe("phone");
-    expect(effectiveLoginMethod("phone", noEmail)).toBe("phone");
+    expect(isEmailLoginOffered(options())).toBe(true);
+  });
+
+  it("sends a code only by a method that delivers", () => {
+    const noEmail = options({ is_email_login_available: false, configured_channels: ["sms", "telegram"] });
+    const noChannelHere = options({ phone_channels: [], is_phone_login_available: false });
+    const restricted = options({ phone_channels: [], is_phone_login_available: false, is_sign_up_restricted: true });
+    const nothing = options({
+      phone_channels: [],
+      configured_channels: [],
+      is_phone_login_available: false,
+      is_email_login_available: false,
+    });
+
+    expect(canSendLoginCode("phone", options())).toBe(true);
+    expect(canSendLoginCode("email", options())).toBe(true);
+    // The method shown does not deliver: its form stays and cannot send.
+    expect(canSendLoginCode("email", noEmail)).toBe(false);
+    expect(canSendLoginCode("phone", noEmail)).toBe(true);
+    expect(canSendLoginCode("phone", noChannelHere)).toBe(false);
+    expect(canSendLoginCode("email", noChannelHere)).toBe(true);
+    expect(canSendLoginCode("phone", restricted)).toBe(false);
+    // Sign-in is down: neither method sends.
+    expect(canSendLoginCode("phone", nothing)).toBe(false);
+    expect(canSendLoginCode("email", nothing)).toBe(false);
+    // An answer that offers e-mail although no channel is set up is still "down".
+    expect(canSendLoginCode("email", { ...nothing, is_email_login_available: true })).toBe(false);
   });
 
   it("opens on e-mail only where no phone channel is set up for any country", () => {

@@ -45,8 +45,9 @@ describe("the form of the sign-in page's first HTML", () => {
 
     expect(await loadOpeningLoginMethod()).toBe("email");
     // No country: the configured channels are the same for all of them.
+    expect(get).toHaveBeenCalledTimes(1);
     expect(get.mock.calls[0]?.[0]).toBe("/v1/auth/login-options");
-    expect(get.mock.calls[0]?.[1]).toMatchObject({ params: { query: {} } });
+    expect(get.mock.calls[0]?.[1]?.params).toEqual({ query: {} });
   });
 
   it("is phone where a phone channel delivers codes", async () => {

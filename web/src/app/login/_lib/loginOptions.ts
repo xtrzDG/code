@@ -39,14 +39,21 @@ export function openingLoginMethod(options: LoginOptions): LoginMethod {
   return isEmailLoginOffered(options) && !hasPhoneChannel ? "email" : "phone";
 }
 
-/** The method actually shown: e-mail falls back to phone when it is not offered. */
-export function effectiveLoginMethod(method: LoginMethod, options: LoginOptions | undefined): LoginMethod {
-  return method === "email" && !isEmailLoginOffered(options) ? "phone" : method;
-}
-
 /** No channel can deliver a code for any country: sign-in is down. */
 export function isSignInUnavailable(options: LoginOptions | undefined): boolean {
   return options !== undefined && options.configured_channels.length === 0;
+}
+
+/**
+ * A code can be asked for by the method shown: sign-in is up and the method
+ * delivers. The form of a method that does not deliver stays where it is
+ * (it explains and offers the other one), it only cannot send.
+ */
+export function canSendLoginCode(method: LoginMethod, options: LoginOptions | undefined): boolean {
+  if (isSignInUnavailable(options)) {
+    return false;
+  }
+  return method === "email" ? isEmailLoginOffered(options) : phoneLoginBlock(options) === null;
 }
 
 /** The phone channel to ask for: the chosen one if it still works, else the country's first. */
