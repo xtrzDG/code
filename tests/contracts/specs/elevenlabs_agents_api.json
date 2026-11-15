@@ -6608,6 +6608,17 @@
       }
      ],
      "default": null
+    },
+    "voice_surcharge_charge": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     }
    },
    "type": "object"
@@ -7615,6 +7626,7 @@
         "ui",
         "api",
         "template",
+        "architect",
         "unknown"
        ],
        "type": "string"
@@ -7634,6 +7646,7 @@
         "ui",
         "api",
         "template",
+        "architect",
         "unknown"
        ],
        "type": "string"
@@ -12988,6 +13001,20 @@
      ],
      "default": null
     },
+    "start_procedure_ids": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "starting_workflow_node_id": {
      "anyOf": [
       {
@@ -13153,6 +13180,20 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationInitiationSourceInfo"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "start_procedure_ids": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
       },
       {
        "type": "null"
@@ -16143,6 +16184,22 @@
      ],
      "default": null
     },
+    "service_tier": {
+     "anyOf": [
+      {
+       "enum": [
+        "standard",
+        "fast"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "temperature": {
      "anyOf": [
       {
@@ -17946,6 +18003,22 @@
         "high",
         "xhigh",
         "max"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "service_tier": {
+     "anyOf": [
+      {
+       "enum": [
+        "standard",
+        "fast"
        ],
        "type": "string"
       },
@@ -21457,6 +21530,17 @@
     },
     "id": {
      "type": "string"
+    },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "ran_against_draft": {
      "anyOf": [
@@ -26863,6 +26947,17 @@
      ],
      "default": null
     },
+    "mobile_fullscreen": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "override_link": {
      "anyOf": [
       {
@@ -29432,6 +29527,16 @@
       }
      ]
     },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "repeat_count": {
      "anyOf": [
       {
@@ -29677,6 +29782,6 @@
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only elevenlabs",
   "source": "https://github.com/elevenlabs/elevenlabs-python",
   "title": "ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
-  "version": "elevenlabs 2.74.1"
+  "version": "elevenlabs 2.75.0"
  }
 }
