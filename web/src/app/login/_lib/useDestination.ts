@@ -22,12 +22,16 @@ import {
   effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
+  openingLoginMethod,
   phoneLoginBlock,
 } from "./loginOptions";
 
 export function useDestination() {
   const countries = useCountries();
-  const [chosenMethod, setChosenMethod] = useState<LoginMethod>("phone");
+  /** The visitor's own choice of method; null until there is one. */
+  const [chosenMethod, setChosenMethod] = useState<LoginMethod | null>(null);
+  /** The method shown before that choice: kept while another country's options load. */
+  const [openingMethod, setOpeningMethod] = useState<LoginMethod>("phone");
   const [chosenChannel, setChosenChannel] = useState<OtpDeliveryChannel | null>(null);
   const [chosenCountry, setChosenCountry] = useState<string | null>(null);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -49,7 +53,11 @@ export function useDestination() {
     api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   const options = loginOptions.data;
-  const method = effectiveLoginMethod(chosenMethod, options);
+  const suggestedMethod = options ? openingLoginMethod(options) : openingMethod;
+  if (suggestedMethod !== openingMethod) {
+    setOpeningMethod(suggestedMethod);
+  }
+  const method = effectiveLoginMethod(chosenMethod ?? suggestedMethod, options);
   const phoneBlock = phoneLoginBlock(options);
   const phoneChannels = options?.phone_channels ?? [];
   const isUnavailable = isSignInUnavailable(options);

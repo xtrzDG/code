@@ -5,6 +5,7 @@ import {
   effectiveLoginMethod,
   isEmailLoginOffered,
   isSignInUnavailable,
+  openingLoginMethod,
   otherDeliveryChannels,
   phoneLoginBlock,
   withDeliveryChannel,
@@ -43,6 +44,19 @@ describe("login options", () => {
     expect(isEmailLoginOffered(noEmail)).toBe(false);
     expect(effectiveLoginMethod("email", noEmail)).toBe("phone");
     expect(effectiveLoginMethod("phone", noEmail)).toBe("phone");
+  });
+
+  it("opens on e-mail only where no phone channel is set up for any country", () => {
+    const noChannelHere = options({ phone_channels: [], is_phone_login_available: false });
+
+    expect(openingLoginMethod(options())).toBe("phone");
+    // Another country has a channel: the phone form says so and offers e-mail.
+    expect(openingLoginMethod(noChannelHere)).toBe("phone");
+    expect(openingLoginMethod({ ...noChannelHere, configured_channels: ["email"] })).toBe("email");
+    // Nothing delivers a code: the page says that sign-in is down.
+    expect(
+      openingLoginMethod({ ...noChannelHere, configured_channels: [], is_email_login_available: false }),
+    ).toBe("phone");
   });
 
   it("reports sign-in as down only when nothing works anywhere", () => {

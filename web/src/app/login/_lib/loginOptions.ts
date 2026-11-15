@@ -26,6 +26,17 @@ export function isEmailLoginOffered(options: LoginOptions | undefined): boolean 
   return options?.is_email_login_available ?? true;
 }
 
+/**
+ * The method the page opens on, until the visitor chooses one: phone, or
+ * e-mail when codes go by e-mail only (no phone channel is set up for any
+ * country). Opening on phone there would greet every visitor with "codes
+ * cannot be sent to phone numbers" and a button to the form that works.
+ */
+export function openingLoginMethod(options: LoginOptions): LoginMethod {
+  const hasPhoneChannel = options.configured_channels.some((channel) => channel !== "email");
+  return isEmailLoginOffered(options) && !hasPhoneChannel ? "email" : "phone";
+}
+
 /** The method actually shown: e-mail falls back to phone when it is not offered. */
 export function effectiveLoginMethod(method: LoginMethod, options: LoginOptions | undefined): LoginMethod {
   return method === "email" && !isEmailLoginOffered(options) ? "phone" : method;
