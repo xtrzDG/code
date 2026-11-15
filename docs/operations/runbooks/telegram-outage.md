@@ -30,8 +30,11 @@ themselves may not arrive in the Telegram ops chat: keep
 - **A business's bot token revoked:** the owner pastes the new token
   (Channels → Telegram); the webhook is registered again.
 - **The platform bot's token leaked or revoked:** create a new token in
-  @BotFather, set `TELEGRAM_PLATFORM_BOT_TOKEN` on `workshop-api`,
-  redeploy API and worker. Staff linked by "/start <code>" stay linked.
+  @BotFather and set `TELEGRAM_PLATFORM_BOT_TOKEN` on `workshop-api`. In
+  the Blueprint the workers copy it; workers created through Render's
+  API hold their own copy (`../go-live.md`, step 4, item 5), so set it
+  on both of them as well. Redeploy the API and both workers. Staff
+  linked by "/start <code>" stay linked.
 
 ## Fix and recover
 

@@ -2074,8 +2074,10 @@ Its motion and 3D hero: see [Motion](#motion).
   `SameSite=Lax`, a write needs `Sec-Fetch-Site: same-origin` or the site's `Origin` (else 403
   `forbidden_origin`); audited exports refuse other sites (`src/server/sameOrigin.ts`).
 - Two-factor sign-in: after the login code, people with an authenticator app
-  (and every platform admin, who sets one up at the first sign-in) enter its
-  code or a recovery code (`app/login/_components/SecondStepForm.tsx`); the
+  enter its code or a recovery code
+  (`app/login/_components/SecondStepForm.tsx`); a platform admin without a
+  second factor sets one up there first: a passkey, or the app where the API
+  still offers it (never with `ADMIN_PASSKEY_REQUIRED`, on in production). The
   admin pages want a two-factor session. A sensitive action (exporting or
   erasing a contact's data, team changes, connecting a channel, the admin's
   actions) answered with 401 and `WWW-Authenticate: Bearer

@@ -61,7 +61,10 @@ The alert's detail line names both figures:
 - Missed calls are texted back by WhatsApp or SMS when the business has it
   enabled (Settings → Calls): check those jobs run and are not dead.
 - **Key revoked:** new key in ElevenLabs (EU residency workspace), set
-  `ELEVENLABS_API_KEY` on `workshop-api` (the worker copies it), redeploy.
+  `ELEVENLABS_API_KEY` on `workshop-api`. In the Blueprint the workers
+  copy it; workers created through Render's API hold their own copy
+  (`../go-live.md`, step 4, item 5), so set it on both of them as well.
+  Redeploy.
 
 ## Fix and recover
 

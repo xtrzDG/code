@@ -119,10 +119,17 @@ repo-settings.yml has no successful run in 8 days" with the green run.
    `BACKEND_URL` (the API's internal address with `http://` and port 8000),
    `SITE_URL` (its own https address), `SECURITY_CONTACT_EMAIL` and
    `SENTRY_DSN`. Never production's keys.
-3. The first deploy of the API and the worker stops with "Production
-   connects with two roles": create the roles (step 3), set
-   `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on
-   `workshop-staging-api` (the worker copies them) and deploy again.
+3. The first deploy of the API stops with "Production connects with two
+   roles": create the roles (step 3) and set `DATABASE_URL_TENANT` and
+   `DATABASE_URL_PLATFORM` on `workshop-staging-api` (the worker copies
+   them). Before you deploy again, add whatever item 2 names and the
+   service does not have: a value left blank when the Blueprint was
+   created (an address you did not know yet) does not exist on the
+   service, and the API does not start on the two role addresses alone
+   ("Production refuses to start" below). In the first production launch
+   Render cancelled the creation of the services that copy variables from
+   the API once its first deploy had stopped: see whether
+   `workshop-staging-worker` exists (step 4, item 5).
 4. In staging's cabinet create the smoke business: the website chat turned
    on and a live assistant (`docs/operations/deploys.md`, "One-time setup",
    step 3). Note its id.
@@ -144,10 +151,33 @@ API and the workers log in with two roles of their own: `workshop_tenant_app`
 (`workshop` in both Blueprints) stays the migration role and joins
 `workshop_platform`. Run the SQL of `docs/operations/deploys.md`, "Setting
 the roles up (once per database server)", on staging's and on production's
-server (Render → the database → Connect → External), each with its own
-passwords. Then set `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on the
+server, each with its own passwords.
+
+The database takes no connection from outside Render: both Blueprints set
+`ipAllowList: []`, so `psql` with the external connection string (Render →
+the database → Connect → External) does not connect as it stands. Two ways
+reach it:
+
+- From your own machine: add your IP address to the database's access
+  list in the dashboard, connect with the external connection string, and
+  remove the address again afterwards.
+- From inside Render, as the first production launch did (2026-11-15): a
+  temporary cron job service in the database's region, built from the
+  public image `postgres:16-alpine`, that runs the SQL with `psql` against
+  the internal connection string (Connect → Internal). Run it once by
+  hand and delete it afterwards: it holds the connection string and the
+  passwords. Nobody answers `\password` in a job, so each password goes
+  into its statement (`create role ... login ... password '<password>'`).
+
+A one-off job on the API is not a third way: Render refuses it before the
+service has a successful deploy ("service has no successful deploy"), and
+the API cannot deploy before the roles exist.
+
+Then set `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on the
 environment's API: the internal address of the database with the login
-role and its password.
+role and its password. Give each role a long random password of letters
+and digits only (40 characters, for example): without symbols nothing in
+the two addresses needs URL-encoding.
 
 The knowledge embeddings (migration `migrations/1211_knowledge_embeddings.sql`)
 need pgvector. As the migration role run
@@ -156,7 +186,9 @@ administrator runs `create extension vector;` first, then the function again
 (docs/LAUNCH.md, section 4.2). From then on every backup holds the
 extension, and the restore drill restores into Postgres with pgvector.
 
-Check, with `psql "<external-connection-string>"`:
+Check, with `psql` connected in one of the two ways above (the first
+production launch ran the role query from such a temporary job; the two
+pgvector lines come later, once a deploy has applied migration 1211):
 
 ```sql
 select r.rolname, r.rolcanlogin, r.rolsuper, r.rolbypassrls,
@@ -183,9 +215,16 @@ With `APP_ENV=production` (both Blueprints set it in the env group of every
 backend service) the API and every worker check their settings before they
 serve and stop with one error that lists each problem by its variable
 (`app/gateways/startup_checks.py`, `run_startup_checks`). Render then keeps
-the previous deploy serving; the deploy log names what to set. An unknown
-`APP_ENV` (`prod`) never starts, and on Render (Render sets `RENDER` itself)
-neither does a missing one.
+the previous deploy serving; the deploy log names what to set. Some
+refusals do not wait for that list: they are raised while the settings
+are read (`app/utilities/config_helpers/app_settings/`), each as an error
+of its own. The first production launch met two of them: a database
+without its two role addresses ("Production connects with two roles") and
+`RECORDINGS_STORAGE=s3` without one of its five variables or
+`ENCRYPTION_KEY` ("RECORDINGS_STORAGE=s3 needs ..."). Such a log says
+nothing about the rest: set everything in the table before the next
+deploy. An unknown `APP_ENV` (`prod`) never starts, and on Render (Render
+sets `RENDER` itself) neither does a missing one.
 
 | Area | Refused in production |
 | --- | --- |
@@ -201,25 +240,93 @@ The cabinet (`workshop-cabinet`) never takes its canonical address from a
 request: without `SITE_URL` a production build names only a localhost
 address it was reached on, else `http://localhost:3000`. Set `SITE_URL`.
 
-Check: the first deploy of a new service lists what is missing in its log;
-after you set it, `curl -fsS <production-api-url>/readyz` answers `ready`.
+Check: a deploy that stops names what is missing in its log, the first
+deploy of a new environment only the two role addresses; once everything
+is set, `curl -fsS <production-api-url>/readyz` answers `ready`.
 
 ## 4. Production on Render (`render.yaml`)
 
 1. With `release` in place (step 1) and the accounts of docs/LAUNCH.md,
-   section 4: Render → New → Blueprint → `render.yaml`. It creates
+   section 4: Render → New → Blueprint → `render.yaml`. It describes
    `workshop-db` (`basic-1gb`, 15 GB disk), `workshop-api` (1 × `starter`),
    `workshop-worker` (1 × `starter`), `workshop-batch-worker` (`standard`),
    the cron `workshop-backup` (01:17 UTC) and `workshop-cabinet`
-   (`starter`), all in Frankfurt, all following `release`.
-2. Roles and pgvector on `workshop-db` (step 3), then
-   `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on `workshop-api`.
-3. The addresses and the rest of the first setup: docs/LAUNCH.md,
-   section 3, step 5 (`APP_BASE_URL`, `CABINET_BASE_URL`,
-   `CORS_ALLOWED_ORIGINS` on the API; `BACKEND_URL`, `SITE_URL`,
-   `SECURITY_CONTACT_EMAIL` and `SENTRY_DSN` on the cabinet).
-4. Wave 21's variables, on `workshop-api` (both workers copy each one by
-   name); leave empty what you do not use yet:
+   (`starter`), all in Frankfurt, all following `release`. In the first
+   launch (2026-11-15) the first sync created only `workshop-db`, the env
+   group `workshop-backend`, `workshop-api` and `workshop-cabinet`. The
+   API's first deploy stops by design ("Production connects with two
+   roles"), and Render then cancelled the creation of the services that
+   copy variables from the API: `workshop-worker`,
+   `workshop-batch-worker` and `workshop-backup` (item 5). The cabinet
+   came up: its `/login` answers without the API.
+2. Roles on `workshop-db` (step 3), then `DATABASE_URL_TENANT` and
+   `DATABASE_URL_PLATFORM` on `workshop-api`. pgvector (step 3) comes
+   once a deploy has applied migration 1211, which brings its function.
+3. Before the API deploys again, everything else production requires
+   ("Production refuses to start" above), not the role addresses alone:
+   in the first launch the deploy with only those two stopped again.
+   Still missing were the public addresses (`APP_BASE_URL`,
+   `CABINET_BASE_URL`, `CORS_ALLOWED_ORIGINS`), the recordings bucket
+   (`RECORDINGS_S3_ENDPOINT_URL`, `RECORDINGS_S3_REGION`,
+   `RECORDINGS_S3_BUCKET`, `RECORDINGS_S3_ACCESS_KEY_ID`,
+   `RECORDINGS_S3_SECRET_ACCESS_KEY`), the live Turnstile keys
+   (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`), a provider of login
+   codes (there the e-mail sign-in; step 2 lists its variables,
+   `SMTP_HOST` to `SMTP_FROM`), `OPENAI_API_KEY` and the seller
+   (`SELLER_LEGAL_NAME`, `SELLER_ADDRESS`, `SELLER_COUNTRY_CODE`,
+   `SELLER_TIME_ZONE`). The API started on the first deploy after all of
+   them were set. The addresses and the rest of the first setup:
+   docs/LAUNCH.md, section 3, step 5 (`APP_BASE_URL`, `CABINET_BASE_URL`,
+   `CORS_ALLOWED_ORIGINS` on the API; `BACKEND_URL` on the cabinet); the
+   cabinet's `SITE_URL` and `SECURITY_CONTACT_EMAIL` are in section 5 of
+   that guide, its `SENTRY_DSN` in 4.9.
+4. Custom domains. The first launch put the apex `<domain>` on
+   `workshop-cabinet` (Render added `www.<domain>` itself, as a redirect
+   to the apex) and `api.<domain>` on `workshop-api`. Its DNS is at
+   Cloudflare: three CNAME records (Cloudflare flattens the apex one),
+   each with the proxy off ("DNS only"), because `TRUSTED_PROXY_HOPS` (1
+   on the cabinet) and the proxy addresses the API trusts (`10.0.0.0/8`,
+   in `workshop-backend`) assume that Render's edge is the only proxy in
+   front of the services. Render verified the names within a minute, and
+   the certificates were in place about five minutes later. The
+   hostnames are part of `APP_BASE_URL`, `CABINET_BASE_URL`,
+   `CORS_ALLOWED_ORIGINS` and, when it is set, `WEBAUTHN_RP_ID` on
+   `workshop-api` and of `SITE_URL` on `workshop-cabinet`; the Turnstile
+   widget must list the cabinet's hostname.
+5. The services the first sync left out (item 1). A later Blueprint sync
+   should create them. In the first launch it failed at once, for a
+   reason that Render's API does not return and that is not known yet.
+   The two workers were then created through Render's API with exactly
+   the Blueprint's settings: the same names, the branch `release`, the
+   same Docker command, the plans (`starter` and `standard`), the region,
+   the instance count, the build filter, the env group `workshop-backend`
+   linked, the Blueprint's literal values and the values it copies from
+   `workshop-api` (only the keys that exist there). Render's Blueprint
+   validation then planned only `workshop-backup` as a new service: it
+   matched the two workers by name. A service created this way gets its
+   first deploy before the env group is linked: that deploy stopped on
+   "RECORDINGS_STORAGE=s3 needs ENCRYPTION_KEY", and the next one, after
+   the group was linked, started cleanly; `/readyz` then reported the
+   worker's heartbeat (`worker` with the status `ok`). Such a worker
+   holds plain values, with no link to `workshop-api`: a change there
+   does not reach it. When you later add or change on `workshop-api` a
+   variable that the Blueprint has the workers copy (item 6,
+   `SENTRY_DSN` in step 7, the alert settings in step 9), set it on both
+   workers as well; `DB_POOL_SIZE`, `DB_PLATFORM_POOL_SIZE`,
+   `THREADPOOL_SIZE` and `LLM_MAX_CONCURRENCY` are each service's own
+   and are not copied. `workshop-backup` was created the same way later
+   that day and suspended at once: the rollback command looks every
+   service up by name (`docs/operations/deploys.md`, "Rollback"), and no
+   backup may run before its variables are set. It holds plain values
+   too (`DATABASE_URL` and the two role addresses), so a role address
+   changed on `workshop-api`, and the `SENTRY_DSN` of step 7 that the
+   Blueprint has it copy from the API, are set on it by hand as well.
+   None of its `BACKUP_*` values is set yet: set them in step 6, item 4,
+   then resume the service. Render's Blueprint validation now plans no
+   new service.
+6. Wave 21's variables, on `workshop-api` (in the Blueprint both workers
+   copy each one by name; item 5 for workers created through Render's
+   API); leave empty what you do not use yet:
 
 | Feature | Variables | Before you set them |
 | --- | --- | --- |
@@ -238,10 +345,14 @@ scripts/smoke.sh <production-api-url> <production-cabinet-url>       # every che
 curl -fsS "<production-api-url>/v1/auth/login-options?country_code=<your-country-code>"
 ```
 
-Then the walk-through of docs/LAUNCH.md, section 7. In Render the
-Environment tab of `workshop-worker` and `workshop-batch-worker` shows each
-wave 21 variable linked to `workshop-api`, and Meta's webhook form accepts
-the address with `META_VERIFY_TOKEN` ("Verify and save").
+`/readyz` answers `ready` without any worker; its `worker` check has the
+status `ok` only while a worker pulsed within the last five minutes. Then
+the walk-through of docs/LAUNCH.md, section 7. In Render the Environment
+tab of `workshop-worker` and `workshop-batch-worker` shows each wave 21
+variable you set, linked to `workshop-api` or, on a worker created through
+Render's API (item 5), with the value `workshop-api` has, and Meta's
+webhook form accepts the address with `META_VERIFY_TOKEN` ("Verify and
+save").
 
 ## 5. GitHub environments, variables and secrets
 
@@ -299,9 +410,11 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    Lock** and a default retention in compliance mode of 31 days, a
    lifecycle rule that expires noncurrent versions after 400 days and one
    that aborts incomplete multipart uploads after 2 days. The recordings
-   bucket (`RECORDINGS_S3_BUCKET`) gets versioning and a rule that expires
-   noncurrent versions after 30 days; recordings are not in the backups
-   (`docs/operations/backup-restore.md`, "Objectives").
+   bucket (`RECORDINGS_S3_BUCKET`) gets no versioning (docs/LAUNCH.md,
+   section 4.6): what the platform deletes there (a recording, a
+   customer's file, an export) must be gone at once, and a versioned
+   bucket would keep it as a noncurrent version; recordings are not in
+   the backups (`docs/operations/backup-restore.md`, "Objectives").
 2. Three access keys: the backup cron's (put, list and delete under
    `workshop/`), the drill's (get and list only) and the deletion ledger's
    (put, get and list under `workshop/deletion-ledger/` only, no delete).
@@ -323,7 +436,9 @@ and custody"); docs/LAUNCH.md 4.11 says the same in Russian.
    `BACKUP_AGE_PUBLIC_KEY` = `<drill-public-key>,<escrow-public-key>`.
    `workshop-batch-worker`: the same bucket and public keys with the
    ledger's key. Retention (`BACKUP_KEEP_DAILY`, `BACKUP_KEEP_MONTHLY`)
-   and the overdue mark (`BACKUP_MAX_AGE_HOURS`) have defaults.
+   and the overdue mark (`BACKUP_MAX_AGE_HOURS`) have defaults. Then
+   resume `workshop-backup` where it is suspended: the first production
+   launch left it so until these values exist (step 4, item 5).
 5. GitHub: the repository variables of step 5 (`backup-drill` stays
    empty while `RESTORE_DRILL_ON_GITHUB` is unset).
 6. The drill machine of the production drill: a small VM in Germany at a
@@ -377,10 +492,12 @@ Check:
    so its events would look like production's.
 2. `SENTRY_DSN` of the backend project on `workshop-api`;
    `workshop-worker`, `workshop-batch-worker` and `workshop-backup` copy
-   it. `SENTRY_DSN` of the cabinet project on `workshop-cabinet`. The same
-   on `workshop-staging-api` and `workshop-staging-cabinet` with staging's
-   projects, and the backend DSN on the drill machine (and as the
-   `backup-drill` secret only while `RESTORE_DRILL_ON_GITHUB` is on).
+   it in the Blueprint (services created through Render's API,
+   `workshop-backup` among them: step 4, item 5). `SENTRY_DSN` of the
+   cabinet project on `workshop-cabinet`.
+   The same on `workshop-staging-api` and `workshop-staging-cabinet` with
+   staging's projects, and the backend DSN on the drill machine (and as
+   the `backup-drill` secret only while `RESTORE_DRILL_ON_GITHUB` is on).
 3. Readable cabinet stack traces: the repository secret
    `SENTRY_AUTH_TOKEN` (an organization token that may upload releases)
    and the repository variables `SENTRY_ORG` and `SENTRY_PROJECT` (the
@@ -454,8 +571,9 @@ Europe/Rome, every day (`docs/operations/on-call.md`).
      `PLATFORM_ALERT_TELEGRAM_CHAT_IDS` (sent by the bot of
      `TELEGRAM_PLATFORM_BOT_TOKEN`) and the addresses in
      `PLATFORM_ALERT_EMAILS` (sent through the SMTP settings), on
-     `workshop-api`: the workers copy them, and the API's pipeline
-     watchdog sends `worker_down` with them when no worker runs
+     `workshop-api`: in the Blueprint the workers copy them (workers
+     created through Render's API: step 4, item 5), and the API's
+     pipeline watchdog sends `worker_down` with them when no worker runs
      (docs/LAUNCH.md 4.9);
    - GitHub: the rota watches the repository's issues, where
      `schedule-watch.yml` and `contracts-live.yml` report.
