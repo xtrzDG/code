@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 import { Alert, Button } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
@@ -10,6 +10,11 @@ import type { LoginMethod } from "@/lib/countries";
 import type { LoginFlow } from "../_lib/useLoginFlow";
 import { EmailFields } from "./EmailFields";
 import { PhoneFields } from "./PhoneFields";
+
+/** Focus on the form's phone or e-mail field. */
+function focusFieldOf(form: HTMLFormElement | null): void {
+  form?.querySelector<HTMLInputElement>('input[type="tel"], input[type="email"]')?.focus();
+}
 
 /**
  * Step one: phone or e-mail, then "Get a code". The form names the method
@@ -21,29 +26,33 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
   const { destination } = flow;
   const { method, isUnavailable } = destination;
   const formRef = useRef<HTMLFormElement>(null);
-  const focusField = useRef(false);
+  const switchRef = useRef<HTMLFieldSetElement>(null);
+  const focusAfterSwitch = useRef(false);
+  // The switch goes when e-mail cannot deliver codes, but never from under a visitor who is on the e-mail form.
+  const isSwitchHidden = !destination.isEmailOffered && method !== "email";
 
-  // A notice's button leaves the page with its form, and so does the
-  // method switch when it goes with the e-mail form: focus goes on to the
-  // field of the form that took their place (a switch that stays keeps it).
+  // A notice's button leaves the page with its form: focus goes on to the
+  // field of the form that took its place.
   useEffect(() => {
-    if (focusField.current) {
-      focusField.current = false;
-      formRef.current?.querySelector<HTMLInputElement>('input[type="tel"], input[type="email"]')?.focus();
+    if (focusAfterSwitch.current) {
+      focusAfterSwitch.current = false;
+      focusFieldOf(formRef.current);
     }
   }, [method]);
 
-  function switchToField(other: LoginMethod) {
-    focusField.current = other !== method;
-    destination.setMethod(other);
-  }
-
-  function chooseMethod(option: LoginMethod) {
-    if (option === "phone" && !destination.isEmailOffered) {
-      switchToField(option);
-    } else {
-      destination.setMethod(option);
+  // When the switch goes (the visitor chose phone, or an answer said that
+  // e-mail cannot deliver), focus inside it goes on to the field. A layout
+  // effect runs before the browser's next style update, which would drop
+  // that focus to the page. A switch that stays keeps its focus.
+  useLayoutEffect(() => {
+    if (isSwitchHidden && switchRef.current?.contains(document.activeElement)) {
+      focusFieldOf(formRef.current);
     }
+  }, [isSwitchHidden]);
+
+  function switchToField(other: LoginMethod) {
+    focusAfterSwitch.current = other !== method;
+    destination.setMethod(other);
   }
 
   return (
@@ -72,8 +81,7 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
         data-login-method={method}
         onSubmit={flow.submitDestination}
       >
-        {/* The switch goes when e-mail cannot deliver codes, but never from under a visitor who is on the e-mail form. */}
-        <fieldset hidden={!destination.isEmailOffered && method !== "email"}>
+        <fieldset ref={switchRef} hidden={isSwitchHidden}>
           <legend className="sr-only">{t("auth.methodLabel")}</legend>
           <div className="grid grid-cols-2 gap-1 rounded-lg border border-line bg-surface-muted p-1">
             {(["phone", "email"] as const).map((option) => (
@@ -90,7 +98,7 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
                   name="method"
                   value={option}
                   checked={method === option}
-                  onChange={() => chooseMethod(option)}
+                  onChange={() => destination.setMethod(option)}
                   className="sr-only"
                 />
                 {option === "phone" ? t("auth.methodPhone") : t("auth.methodEmail")}

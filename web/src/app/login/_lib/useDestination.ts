@@ -3,14 +3,17 @@
 /**
  * Where the sign-in code goes: phone (country, number, delivery channel) or
  * e-mail, and which of them work right now for the chosen country
- * (GET /v1/auth/login-options; a failed check offers everything). The
+ * (GET /v1/auth/login-options; a failed first check offers everything). The
  * method starts as the one of the page's first HTML (openingMethod.ts) and
  * changes only when the visitor changes it. An answer that arrives later
  * and says that the method shown cannot deliver leaves its form in place:
  * the form explains, offers the other method and cannot send. The answer
- * for no country comes first, the chosen country's next: what is the same
- * for every country (e-mail, sign-in being down, the documents) keeps the
- * last answer meanwhile, so a notice never goes and comes back.
+ * for no country comes first, the chosen country's next. What is the same
+ * for every country (whether e-mail delivers, whether any phone channel is
+ * set up, sign-in being down, the documents) keeps the last answer while
+ * the next one loads or after it failed, so those notices stay put. What
+ * depends on the country (its phone channels, a country where sign-up is
+ * restricted) waits for the country's own answer.
  */
 
 import { useState } from "react";
@@ -29,6 +32,7 @@ import {
   chooseDeliveryChannel,
   isEmailLoginOffered,
   isSignInUnavailable,
+  type LoginOptions,
   phoneLoginBlock,
 } from "./loginOptions";
 
@@ -52,16 +56,14 @@ export function useDestination(openingMethod: LoginMethod) {
   const countryCode = chosenCountry ?? guessedCountry;
   const country = countryList.find((item) => item.country_code === countryCode);
 
-  const loginOptions = useQuery(
-    queryKeys.auth.loginOptions(countryCode ?? null),
-    () => api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
-    { keepPreviousData: true },
+  const loginOptions = useQuery(queryKeys.auth.loginOptions(countryCode ?? null), () =>
+    api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
   );
   /** The chosen country's own answer: its phone channels. */
-  const options = loginOptions.isPlaceholder ? undefined : loginOptions.data;
+  const options = loginOptions.data;
   /** The last answer of any country, for what is the same in all of them. */
-  const lastOptions = loginOptions.data;
-  const phoneBlock = phoneLoginBlock(options);
+  const lastOptions = useLastAnswer(options);
+  const phoneBlock = phoneLoginBlock(options, lastOptions);
   const phoneChannels = options?.phone_channels ?? [];
   const isUnavailable = isSignInUnavailable(lastOptions);
 
@@ -108,6 +110,15 @@ export function useDestination(openingMethod: LoginMethod) {
       setError(null);
     },
   };
+}
+
+/** The last answer that came, of any country: it stays while the next one loads and when that one fails. */
+function useLastAnswer(answer: LoginOptions | undefined): LoginOptions | undefined {
+  const [last, setLast] = useState(answer);
+  if (answer !== undefined && answer !== last) {
+    setLast(answer);
+  }
+  return answer ?? last;
 }
 
 export type Destination = ReturnType<typeof useDestination>;

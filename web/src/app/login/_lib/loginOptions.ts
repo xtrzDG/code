@@ -11,9 +11,24 @@ export type LoginOptions = Schema<"LoginOptionsView">;
 /** Why phone sign-in cannot start for the chosen country (null: it can). */
 export type PhoneLoginBlock = "restricted" | "noChannels" | null;
 
-export function phoneLoginBlock(options: LoginOptions | undefined): PhoneLoginBlock {
+/** Some phone channel (SMS, WhatsApp, Telegram) has a provider, for some country. */
+function hasPhoneChannel(options: LoginOptions): boolean {
+  return options.configured_channels.some((channel) => channel !== "email");
+}
+
+/**
+ * Why phone sign-in cannot start: the chosen country's own answer
+ * (`options`) decides. While it loads, or after it failed, the last answer
+ * of any country (`lastOptions`) still blocks phone when no phone channel
+ * is set up at all (then no country has one), so the notice does not go
+ * and come back between two answers.
+ */
+export function phoneLoginBlock(
+  options: LoginOptions | undefined,
+  lastOptions: LoginOptions | undefined = options,
+): PhoneLoginBlock {
   if (!options) {
-    return null;
+    return lastOptions !== undefined && !hasPhoneChannel(lastOptions) ? "noChannels" : null;
   }
   if (options.is_sign_up_restricted) {
     return "restricted";
@@ -35,8 +50,7 @@ export function isEmailLoginOffered(options: LoginOptions | undefined): boolean 
  * since `configured_channels` are the same for all of them.
  */
 export function openingLoginMethod(options: LoginOptions): LoginMethod {
-  const hasPhoneChannel = options.configured_channels.some((channel) => channel !== "email");
-  return isEmailLoginOffered(options) && !hasPhoneChannel ? "email" : "phone";
+  return isEmailLoginOffered(options) && !hasPhoneChannel(options) ? "email" : "phone";
 }
 
 /** No channel can deliver a code for any country: sign-in is down. */
@@ -48,9 +62,10 @@ export function isSignInUnavailable(options: LoginOptions | undefined): boolean 
  * A code can be asked for by the method shown: sign-in is up and the method
  * delivers. The form of a method that does not deliver stays where it is
  * (it explains and offers the other one), it only cannot send.
- * `lastOptions` is the last answer of any country: whether e-mail delivers
- * and whether sign-in is down are the same for every country, so they hold
- * while the chosen country's own answer (`options`) loads.
+ * `lastOptions` is the last answer of any country: whether e-mail delivers,
+ * whether any phone channel is set up and whether sign-in is down are the
+ * same for every country, so they hold while the chosen country's own
+ * answer (`options`) loads or after it failed.
  */
 export function canSendLoginCode(
   method: LoginMethod,
@@ -60,7 +75,7 @@ export function canSendLoginCode(
   if (isSignInUnavailable(lastOptions)) {
     return false;
   }
-  return method === "email" ? isEmailLoginOffered(lastOptions) : phoneLoginBlock(options) === null;
+  return method === "email" ? isEmailLoginOffered(lastOptions) : phoneLoginBlock(options, lastOptions) === null;
 }
 
 /** The phone channel to ask for: the chosen one if it still works, else the country's first. */

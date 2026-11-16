@@ -1983,6 +1983,10 @@ Its motion and 3D hero: see [Motion](#motion).
   only the visitor changes the method: when the browser's own check answers
   that the method shown cannot deliver, its form stays (the field, its focus
   and what was typed), explains, offers the other method and cannot send.
+  What holds for every country (whether e-mail delivers, whether any phone
+  channel is set up, sign-in being down) keeps the last answer while the
+  chosen country's own answer loads or after it failed, so such a notice
+  does not go and come back (`_lib/useDestination.ts`).
   The form names its method (`data-login-method`), which the smoke test of
   a deployment compares with the API's options (`scripts/smoke.sh`).
   `/login` is also the health-check path of the image (`Dockerfile`, five

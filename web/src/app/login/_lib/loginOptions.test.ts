@@ -85,10 +85,23 @@ describe("login options", () => {
     expect(canSendLoginCode("email", undefined, noEmail)).toBe(false);
     expect(canSendLoginCode("phone", undefined, nothing)).toBe(false);
     // The phone form waits for its own country: until then it may send.
+    expect(phoneLoginBlock(undefined, noEmail)).toBeNull();
     expect(canSendLoginCode("phone", undefined, noEmail)).toBe(true);
     expect(canSendLoginCode("phone", options({ phone_channels: [], is_phone_login_available: false }), noEmail)).toBe(
       false,
     );
+  });
+
+  it("keeps phone blocked meanwhile where no country has a phone channel", () => {
+    const emailOnly = options({ phone_channels: [], configured_channels: ["email"], is_phone_login_available: false });
+    const restricted = { ...emailOnly, is_sign_up_restricted: true };
+
+    expect(phoneLoginBlock(undefined, emailOnly)).toBe("noChannels");
+    expect(canSendLoginCode("phone", undefined, emailOnly)).toBe(false);
+    expect(canSendLoginCode("email", undefined, emailOnly)).toBe(true);
+    // The country's own answer decides once it comes.
+    expect(phoneLoginBlock(restricted, emailOnly)).toBe("restricted");
+    expect(phoneLoginBlock(emailOnly, emailOnly)).toBe("noChannels");
   });
 
   it("opens on e-mail only where no phone channel is set up for any country", () => {
