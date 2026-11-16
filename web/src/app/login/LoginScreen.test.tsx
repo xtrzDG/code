@@ -258,7 +258,7 @@ describe("LoginScreen: the method it opens on", () => {
     const methods = () =>
       Array.from(container.querySelectorAll("[data-login-method]"), (form) => form.getAttribute("data-login-method"));
 
-    // scripts/smoke.sh looks for exactly one `data-login-method="..."`.
+    // One form names the method: scripts/smoke.sh reads the first form element that names one.
     expect(methods()).toEqual(["email"]);
 
     await user.click(screen.getByRole("radio", { name: t("auth.methodPhone") }));

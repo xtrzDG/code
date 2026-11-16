@@ -20,9 +20,11 @@
 #                                       sign-in options call for: e-mail where
 #                                       login codes go by e-mail only (a page
 #                                       on phone is read three times,
-#                                       SMOKE_LOGIN_READ_PAUSE_SECONDS apart;
-#                                       a page that names no form, a release
-#                                       older than this check, is a skip)
+#                                       SMOKE_LOGIN_READ_PAUSE_SECONDS apart,
+#                                       and fails if a read names no form; a
+#                                       first page that names no form, a
+#                                       release older than this check, is a
+#                                       skip)
 #      GET  <cabinet>/.well-known/security.txt  names the security mailbox
 #                                       and its https Canonical address
 #   6. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
@@ -53,11 +55,15 @@ login_read_pause="${SMOKE_LOGIN_READ_PAUSE_SECONDS:-2}"
 business_id="${SMOKE_WIDGET_BUSINESS_ID:-}"
 expected_reply="${SMOKE_EXPECT_REPLY:-}"
 body_file="$(mktemp)"
-trap 'rm -f "$body_file"' EXIT
+error_file="$(mktemp)"
+trap 'rm -f "$body_file" "$error_file"' EXIT
 
 pass() { printf 'ok    %s\n' "$1"; }
 fail() {
   printf 'FAIL  %s\n' "$1" >&2
+  if [ -s "$error_file" ]; then
+    printf '      %s\n' "$(head -c 300 "$error_file")" >&2
+  fi
   if [ -s "$body_file" ]; then
     printf '      response: %s\n' "$(head -c 500 "$body_file")" >&2
   fi
@@ -65,13 +71,18 @@ fail() {
 }
 
 # refuse_published BASE PATH: fail when BASE PATH answers 2xx, which it
-# must not (the body is not printed: it may hold what must stay hidden).
+# must not. The status line decides, whatever becomes of the body after it
+# (cut off, slower than SMOKE_REQUEST_SECONDS); the body is not kept, it
+# may hold what must stay hidden.
 refuse_published() {
   local status
-  status="$(request GET "$1$2")"
+  status="$(curl --silent --max-time "$request_seconds" --output /dev/null \
+    --write-out '%{http_code}' --header 'X-Smoke-Test: 1' \
+    --header "X-Request-Id: smoke-$$" "$1$2" 2>/dev/null || true)"
   case "$status" in
     2??)
       : >"$body_file"
+      : >"$error_file"
       fail "GET $1$2 answered $status: a release must not publish it"
       ;;
   esac
@@ -79,7 +90,8 @@ refuse_published() {
 
 # request METHOD URL [JSON_BODY] [HEADER]: the status code; the body goes to
 # $body_file. A connection failure, a timeout or a body cut off is status
-# 000 (with an empty body: an earlier answer is never read twice).
+# 000, with an empty body (an earlier answer is never read twice) and
+# curl's cause in $error_file, which `fail` prints.
 request() {
   local method="$1" url="$2" data="${3:-}" header="${4:-X-Smoke-Test: 1}"
   local arguments=(--silent --show-error --max-time "$request_seconds"
@@ -89,9 +101,17 @@ request() {
     arguments+=(--header 'Content-Type: application/json' --data "$data")
   fi
   : >"$body_file"
-  local status
-  if ! status="$(curl "${arguments[@]}" "$url" 2>/dev/null)"; then
+  : >"$error_file"
+  local status cause code=0
+  status="$(curl "${arguments[@]}" "$url" 2>"$error_file")" || code=$?
+  if [ "$code" -ne 0 ]; then
     : >"$body_file"
+    cause="$(head -n 1 "$error_file")"
+    [ -n "$cause" ] || cause="curl: ($code)"
+    if [ "${status:-000}" != "000" ]; then
+      cause="$cause (after status $status)"
+    fi
+    printf '%s\n' "$cause" >"$error_file"
     status="000"
   fi
   printf '%s' "$status"
@@ -123,13 +143,18 @@ if name == "assistant_reply":
         None,
     )
 elif name == "login_form":
-    # As the cabinet: a missing or null flag offers e-mail, else its truth.
+    # As the cabinet: a missing or null flag offers e-mail, else its truth
+    # in JavaScript (a list or an object is true, NaN is false).
     channels = body.get("configured_channels")
     by_email_only = isinstance(channels, list) and all(
         channel == "email" for channel in channels
     )
     flag = body.get("is_email_login_available")
-    is_email_offered = flag is None or bool(flag)
+    is_email_offered = (
+        flag is None
+        or isinstance(flag, (list, dict))
+        or (bool(flag) and flag == flag)
+    )
     value = "email" if is_email_offered and by_email_only else "phone"
 else:
     value = body.get(name)
@@ -140,11 +165,41 @@ PYTHON
 
 # page_login_form: the method the sign-in form in $body_file names
 # (<form … data-login-method="email" or "phone">), or nothing when the page
-# names none (the attribute of the form element itself, not of a script or
-# a comment that quotes it).
+# names none. Only the page's own form elements count, the first that
+# names one: not a form quoted in a script, a comment or a template.
 page_login_form() {
-  grep -Eo '<form[^>]* data-login-method="[a-z]+"' "$body_file" | head -n 1 \
-    | sed -E 's/.*data-login-method="([a-z]+)"$/\1/' || true
+  python3 - "$body_file" <<'PYTHON' 2>/dev/null || true
+import re
+import sys
+from html.parser import HTMLParser
+
+
+class FormMethod(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.templates = 0
+        self.method = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "template":
+            self.templates += 1
+        elif tag == "form" and self.templates == 0 and self.method is None:
+            value = dict(attrs).get("data-login-method") or ""
+            if re.fullmatch("[a-z]+", value):
+                self.method = value
+
+    def handle_endtag(self, tag):
+        if tag == "template" and self.templates > 0:
+            self.templates -= 1
+
+
+parser = FormMethod()
+with open(sys.argv[1], encoding="utf-8", errors="replace") as page:
+    parser.feed(page.read())
+parser.close()
+if parser.method:
+    print(parser.method)
+PYTHON
 }
 
 # form_name METHOD: the form as a message names it.
@@ -168,8 +223,11 @@ done
 pass "GET /healthz"
 
 status="$(request GET "$api_url/readyz")"
-[ "$status" = "200" ] && [ "$(json_field status)" = "ready" ] \
-  || fail "GET /readyz answered $status (database, migrations or pool)"
+if [ "$status" != "200" ] || [ "$(json_field status)" != "ready" ]; then
+  # 000 is no whole answer: the line under it names curl's cause.
+  [ "$status" != "000" ] || fail "GET /readyz answered $status"
+  fail "GET /readyz answered $status (database, migrations or pool)"
+fi
 pass "GET /readyz"
 
 # 2. The widget script every business site loads.

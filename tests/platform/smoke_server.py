@@ -2,6 +2,7 @@
 
 import json
 import threading
+import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -25,6 +26,8 @@ CABINET_SCRIPT: str = "/_next/static/chunks/main-app-4f1c.js"
 # closes without one, or the page is cut off after part of its body.
 NO_ANSWER: int = 0
 CUT_OFF: int = -1
+# How long the body of a `slow` path takes after its status line.
+SLOW_SECONDS: float = 2.5
 
 
 def login_page(method: str | None = "email") -> str:
@@ -50,8 +53,9 @@ class FakeDeployment:
 
     widget_script: str = "(function () { window.workshopWidget = true; })();"
     configured_channels: list[str] = field(default_factory=lambda: ["email"])
-    # None leaves the field out of the sign-in options.
-    is_email_login_available: bool | None = True
+    # None leaves the field out of the sign-in options; any other value goes
+    # as it is (the API sends a boolean).
+    is_email_login_available: object = True
     reply_inline: bool = True
     reply_text: str = REPLY
     security_txt: str = SECURITY_TXT
@@ -66,6 +70,10 @@ class FakeDeployment:
     login_reads: int = 0
     # Paths a broken release publishes (they answer 200 instead of 404).
     published: frozenset[str] = frozenset()
+    # Paths that answer 200 and are cut off after part of the body, or
+    # whose body comes SLOW_SECONDS after the status line.
+    cut_off: frozenset[str] = frozenset()
+    slow: frozenset[str] = frozenset()
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
 
@@ -86,7 +94,11 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             path: str = self.path.split("?", 1)[0]
-            if path in deployment.published:
+            if path in deployment.cut_off:
+                self.answer_cut_off("ref: refs/heads/main")
+            elif path in deployment.slow:
+                self.answer_slowly("ref: refs/heads/main")
+            elif path in deployment.published:
                 self.answer_text(200, "ref: refs/heads/main", "text/plain")
             elif path == "/healthz":
                 self.answer(200, {"status": "ok"})
@@ -171,6 +183,20 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             self.end_headers()
             self.wfile.write(encoded)
             self.close_connection = True
+
+        def answer_slowly(self, text: str) -> None:
+            encoded: bytes = text.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.flush()
+            time.sleep(SLOW_SECONDS)
+            try:
+                self.wfile.write(encoded)
+            except OSError:
+                # The client gave up waiting, as it should.
+                self.close_connection = True
 
         def log_message(self, format: str, *args: object) -> None:  # noqa: A002
             del format, args

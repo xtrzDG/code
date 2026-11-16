@@ -49,15 +49,21 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   where login codes go by e-mail only. A cabinet whose server cannot read
   the API opens on phone: where codes go by e-mail only that page is read
   three times, `SMOKE_LOGIN_READ_PAUSE_SECONDS` (2) apart, and then fails;
-  where a phone channel delivers codes both open on phone, so the check
-  proves only that the page names its form. A page that names no form, a
-  release from before this check, is a `skip` line) and
+  a read again that names no form fails at once. Where a phone channel
+  delivers codes both open on phone, so the check proves only that the
+  page names its form. A first page that names no form, a release from
+  before this check, is a `skip` line) and
   `/.well-known/security.txt` (below) and, with `SMOKE_WIDGET_BUSINESS_ID`,
   a test chat through the website widget (`/v1/widget/{business_id}/config`,
   a message accepted with `202` and the worker's answer polled from
   `/v1/widget/{business_id}/messages`, so the check also proves the worker
-  runs). CI runs the script's API checks against the freshly built backend
-  image (without a cabinet address).
+  runs). A path that must stay hidden fails when its status line says
+  2xx, whatever becomes of the body after it; any other answer that is cut
+  off or comes too late (`SMOKE_REQUEST_SECONDS`, 15) fails as `000`, with
+  curl's cause on the line under it. CI runs the script's API checks against the
+  freshly built backend image (without a cabinet address, and with
+  `SMOKE_ALLOW_API_DOCS=1`: development serves `/docs`, `/redoc` and
+  `/openapi.json`, so CI does not check that those are hidden).
 
 ### Signed images
 

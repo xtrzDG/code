@@ -127,6 +127,36 @@ def test_a_release_that_publishes_what_it_must_not_fails(published: str) -> None
     assert "refs/heads/main" not in result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("path", ["/.git/HEAD", f"{CABINET_SCRIPT}.map"])
+@pytest.mark.parametrize("answer", ["cut off", "slow"])
+def test_a_published_path_fails_whatever_becomes_of_its_body(
+    path: str, answer: str
+) -> None:
+    deployment = (
+        FakeDeployment(cut_off=frozenset({path}))
+        if answer == "cut off"
+        else FakeDeployment(slow=frozenset({path}))
+    )
+    with running_deployment(deployment) as url:
+        result = run_smoke(url, f"{url}/cabinet", request_seconds="1")
+
+    # Its status line said 200: what happens to the body after it does not count.
+    assert result.returncode == 1
+    assert f"{path} answered 200: a release must not publish it" in result.stderr
+    assert "refs/heads/main" not in result.stdout + result.stderr
+
+
+def test_an_answer_cut_off_names_curl_s_cause_not_the_database() -> None:
+    with running_deployment(FakeDeployment(cut_off=frozenset({"/readyz"}))) as url:
+        result = run_smoke(url)
+
+    assert result.returncode == 1
+    assert "FAIL  GET /readyz answered 000\n" in result.stderr
+    assert "curl: (18)" in result.stderr
+    assert "(after status 200)" in result.stderr
+    assert "database" not in result.stderr
+
+
 def test_development_api_docs_may_be_allowed_but_never_git() -> None:
     docs = FakeDeployment(published=frozenset({"/docs", "/openapi.json"}))
     git = FakeDeployment(published=frozenset({"/.git/HEAD"}))
@@ -160,6 +190,8 @@ def test_an_unreachable_deployment_and_a_wrong_business_fail() -> None:
     assert "GET widget config answered 404" in wrong_business.stderr
     assert unreachable.returncode == 1
     assert "did not answer" in unreachable.stderr
+    # The last try's cause: nothing listens there any more.
+    assert "curl: (7)" in unreachable.stderr
 
 
 def test_usage_is_printed_without_an_address() -> None:

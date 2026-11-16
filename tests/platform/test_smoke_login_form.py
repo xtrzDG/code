@@ -68,6 +68,15 @@ pytestmark = needs_smoke_tools
             ),
             "ok    cabinet /login opens on the phone form",
         ),
+        # A flag that is no boolean counts as the cabinet's JavaScript reads it.
+        (
+            FakeDeployment(is_email_login_available=[]),
+            "ok    cabinet /login opens on the e-mail form",
+        ),
+        (
+            FakeDeployment(is_email_login_available=0, login_page=login_page("phone")),
+            "ok    cabinet /login opens on the phone form",
+        ),
     ],
 )
 def test_a_page_on_the_form_the_options_call_for_passes(
@@ -128,14 +137,14 @@ def test_the_reads_wait_for_each_other() -> None:
 
 
 @pytest.mark.parametrize(
-    "later_answer",
+    ("later_answer", "causes"),
     [
-        (NO_ANSWER, ""),
-        (CUT_OFF, login_page("email")),
+        ((NO_ANSWER, ""), ["curl: (52)"]),
+        ((CUT_OFF, login_page("email")), ["curl: (18)", "(after status 200)"]),
     ],
 )
 def test_a_read_again_that_gets_no_whole_answer_fails_without_the_old_page(
-    later_answer: tuple[int, str],
+    later_answer: tuple[int, str], causes: list[str]
 ) -> None:
     deployment = FakeDeployment(
         first_login_answers=[(200, login_page("phone")), later_answer]
@@ -145,6 +154,8 @@ def test_a_read_again_that_gets_no_whole_answer_fails_without_the_old_page(
 
     assert result.returncode == 1
     assert "/cabinet/login answered 000" in result.stderr
+    # The line under it says why.
+    assert all(cause in result.stderr for cause in causes), result.stderr
     # The first read's page is not printed as this read's answer.
     assert "data-login-method" not in result.stderr
 
@@ -157,6 +168,7 @@ def test_a_first_read_that_is_cut_off_fails() -> None:
     assert result.returncode == 1
     assert "GET " in result.stderr
     assert "/cabinet/login answered 000" in result.stderr
+    assert "(after status 200)" in result.stderr
 
 
 def test_a_page_on_phone_and_then_on_no_form_fails() -> None:
@@ -184,18 +196,29 @@ def test_a_page_that_names_an_unknown_form_fails_at_once() -> None:
     assert deployment.login_reads == 1
 
 
-def test_only_the_form_element_names_the_form() -> None:
-    quoted = (
+@pytest.mark.parametrize(
+    "quote",
+    [
+        '<script>self.x={"data-login-method":"email"};'
+        ' /* data-login-method="email" */</script>',
+        "<script>document.write('<form data-login-method=\"email\">')</script>",
+        '<!-- <form data-login-method="email"> -->',
+        '<template><form data-login-method="email">login</form></template>',
+        # A form of the page that names no method is passed over.
+        '<form action="/search">search</form>',
+    ],
+)
+def test_only_the_page_s_own_form_element_names_the_form(quote: str) -> None:
+    page = (
         '<html><head><script src="/_next/static/chunks/main-app-4f1c.js?dpl=1"'
-        ' async></script><script>self.x={"data-login-method":"email"};'
-        ' /* data-login-method="email" */</script></head><body>'
+        f" async></script></head><body>{quote}"
         '<form novalidate="" data-login-method="phone">login</form></body></html>'
     )
-    deployment = FakeDeployment(login_page=quoted)
+    deployment = FakeDeployment(login_page=page)
     with running_deployment(deployment) as url:
         result = run_smoke(url, f"{url}/cabinet")
 
-    # The form says phone, the options e-mail: the quotes in the script do not count.
+    # The form says phone, the options e-mail: the quote before it does not count.
     assert result.returncode == 1
     assert "opens on the phone form in 3 reads" in result.stderr
 
