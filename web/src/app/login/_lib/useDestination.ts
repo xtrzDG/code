@@ -7,7 +7,10 @@
  * method starts as the one of the page's first HTML (openingMethod.ts) and
  * changes only when the visitor changes it. An answer that arrives later
  * and says that the method shown cannot deliver leaves its form in place:
- * the form explains, offers the other method and cannot send.
+ * the form explains, offers the other method and cannot send. The answer
+ * for no country comes first, the chosen country's next: what is the same
+ * for every country (e-mail, sign-in being down, the documents) keeps the
+ * last answer meanwhile, so a notice never goes and comes back.
  */
 
 import { useState } from "react";
@@ -49,13 +52,18 @@ export function useDestination(openingMethod: LoginMethod) {
   const countryCode = chosenCountry ?? guessedCountry;
   const country = countryList.find((item) => item.country_code === countryCode);
 
-  const loginOptions = useQuery(queryKeys.auth.loginOptions(countryCode ?? null), () =>
-    api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
+  const loginOptions = useQuery(
+    queryKeys.auth.loginOptions(countryCode ?? null),
+    () => api.GET("/v1/auth/login-options", { params: { query: countryCode ? { country_code: countryCode } : {} } }),
+    { keepPreviousData: true },
   );
-  const options = loginOptions.data;
+  /** The chosen country's own answer: its phone channels. */
+  const options = loginOptions.isPlaceholder ? undefined : loginOptions.data;
+  /** The last answer of any country, for what is the same in all of them. */
+  const lastOptions = loginOptions.data;
   const phoneBlock = phoneLoginBlock(options);
   const phoneChannels = options?.phone_channels ?? [];
-  const isUnavailable = isSignInUnavailable(options);
+  const isUnavailable = isSignInUnavailable(lastOptions);
 
   return {
     countries,
@@ -63,15 +71,15 @@ export function useDestination(openingMethod: LoginMethod) {
     countryCode,
     country,
     method,
-    isEmailOffered: isEmailLoginOffered(options),
+    isEmailOffered: isEmailLoginOffered(lastOptions),
     phoneBlock,
     phoneChannels,
     deliveryChannel: chooseDeliveryChannel(phoneChannels, chosenChannel),
     isUnavailable,
     /** The terms and privacy policy the code step's acceptance line names. */
-    termsVersion: options?.terms_version ?? null,
-    privacyVersion: options?.privacy_version ?? null,
-    canSend: canSendLoginCode(method, options),
+    termsVersion: lastOptions?.terms_version ?? null,
+    privacyVersion: lastOptions?.privacy_version ?? null,
+    canSend: canSendLoginCode(method, options, lastOptions),
     phoneNumber,
     email,
     error,

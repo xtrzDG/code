@@ -9,6 +9,7 @@ import { formatCallingCode } from "@/lib/countries";
 
 import { DELIVERY_CHANNEL_LABELS } from "../_lib/loginTexts";
 import type { Destination } from "../_lib/useDestination";
+import { NOTICE_BUTTON_CLASS } from "./noticeButton";
 
 /** Country, phone number and, when several work, the channel the code comes by. */
 export function PhoneFields({ destination, onUseEmail }: { destination: Destination; onUseEmail: () => void }) {
@@ -78,7 +79,7 @@ export function PhoneFields({ destination, onUseEmail }: { destination: Destinat
         <Alert tone="warning">
           <p>{phoneBlock === "restricted" ? t("loginOptions.restricted") : t("loginOptions.noPhoneChannels")}</p>
           {isEmailOffered ? (
-            <Button variant="secondary" size="sm" className="mt-3" onClick={onUseEmail}>
+            <Button variant="secondary" size="sm" className={NOTICE_BUTTON_CLASS} onClick={onUseEmail}>
               {t("loginOptions.useEmail")}
             </Button>
           ) : null}

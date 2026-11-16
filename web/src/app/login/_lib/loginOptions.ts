@@ -48,12 +48,19 @@ export function isSignInUnavailable(options: LoginOptions | undefined): boolean 
  * A code can be asked for by the method shown: sign-in is up and the method
  * delivers. The form of a method that does not deliver stays where it is
  * (it explains and offers the other one), it only cannot send.
+ * `lastOptions` is the last answer of any country: whether e-mail delivers
+ * and whether sign-in is down are the same for every country, so they hold
+ * while the chosen country's own answer (`options`) loads.
  */
-export function canSendLoginCode(method: LoginMethod, options: LoginOptions | undefined): boolean {
-  if (isSignInUnavailable(options)) {
+export function canSendLoginCode(
+  method: LoginMethod,
+  options: LoginOptions | undefined,
+  lastOptions: LoginOptions | undefined = options,
+): boolean {
+  if (isSignInUnavailable(lastOptions)) {
     return false;
   }
-  return method === "email" ? isEmailLoginOffered(options) : phoneLoginBlock(options) === null;
+  return method === "email" ? isEmailLoginOffered(lastOptions) : phoneLoginBlock(options) === null;
 }
 
 /** The phone channel to ask for: the chosen one if it still works, else the country's first. */

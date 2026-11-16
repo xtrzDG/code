@@ -72,6 +72,25 @@ describe("login options", () => {
     expect(canSendLoginCode("email", { ...nothing, is_email_login_available: true })).toBe(false);
   });
 
+  it("keeps what is the same for every country while the chosen country's answer loads", () => {
+    const noEmail = options({ is_email_login_available: false, configured_channels: ["sms", "telegram"] });
+    const nothing = options({
+      phone_channels: [],
+      configured_channels: [],
+      is_phone_login_available: false,
+      is_email_login_available: false,
+    });
+
+    // E-mail and sign-in being down come from the last answer of any country.
+    expect(canSendLoginCode("email", undefined, noEmail)).toBe(false);
+    expect(canSendLoginCode("phone", undefined, nothing)).toBe(false);
+    // The phone form waits for its own country: until then it may send.
+    expect(canSendLoginCode("phone", undefined, noEmail)).toBe(true);
+    expect(canSendLoginCode("phone", options({ phone_channels: [], is_phone_login_available: false }), noEmail)).toBe(
+      false,
+    );
+  });
+
   it("opens on e-mail only where no phone channel is set up for any country", () => {
     const noChannelHere = options({ phone_channels: [], is_phone_login_available: false });
 

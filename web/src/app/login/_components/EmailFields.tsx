@@ -4,6 +4,7 @@ import { Alert, Button, Field, Input } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 
 import type { Destination } from "../_lib/useDestination";
+import { NOTICE_BUTTON_CLASS } from "./noticeButton";
 
 /** The e-mail address and, when codes cannot go by e-mail, the way to the phone form. */
 export function EmailFields({ destination, onUsePhone }: { destination: Destination; onUsePhone: () => void }) {
@@ -28,7 +29,7 @@ export function EmailFields({ destination, onUsePhone }: { destination: Destinat
       {!isEmailOffered && !isUnavailable ? (
         <Alert tone="warning">
           <p>{t("loginOptions.noEmail")}</p>
-          <Button variant="secondary" size="sm" className="mt-3" onClick={onUsePhone}>
+          <Button variant="secondary" size="sm" className={NOTICE_BUTTON_CLASS} onClick={onUsePhone}>
             {t("loginOptions.usePhone")}
           </Button>
         </Alert>

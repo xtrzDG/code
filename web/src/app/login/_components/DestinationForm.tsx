@@ -23,8 +23,9 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
   const formRef = useRef<HTMLFormElement>(null);
   const focusField = useRef(false);
 
-  // A notice's button leaves the page with its form: focus goes on to the
-  // field of the form that took its place (the method switch keeps its own).
+  // A notice's button leaves the page with its form, and so does the
+  // method switch when it goes with the e-mail form: focus goes on to the
+  // field of the form that took their place (a switch that stays keeps it).
   useEffect(() => {
     if (focusField.current) {
       focusField.current = false;
@@ -32,9 +33,17 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
     }
   }, [method]);
 
-  function switchByNotice(other: LoginMethod) {
+  function switchToField(other: LoginMethod) {
     focusField.current = other !== method;
     destination.setMethod(other);
+  }
+
+  function chooseMethod(option: LoginMethod) {
+    if (option === "phone" && !destination.isEmailOffered) {
+      switchToField(option);
+    } else {
+      destination.setMethod(option);
+    }
   }
 
   return (
@@ -81,7 +90,7 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
                   name="method"
                   value={option}
                   checked={method === option}
-                  onChange={() => destination.setMethod(option)}
+                  onChange={() => chooseMethod(option)}
                   className="sr-only"
                 />
                 {option === "phone" ? t("auth.methodPhone") : t("auth.methodEmail")}
@@ -91,9 +100,9 @@ export function DestinationForm({ flow, sessionExpired }: { flow: LoginFlow; ses
         </fieldset>
 
         {method === "phone" ? (
-          <PhoneFields destination={destination} onUseEmail={() => switchByNotice("email")} />
+          <PhoneFields destination={destination} onUseEmail={() => switchToField("email")} />
         ) : (
-          <EmailFields destination={destination} onUsePhone={() => switchByNotice("phone")} />
+          <EmailFields destination={destination} onUsePhone={() => switchToField("phone")} />
         )}
 
         <Button
