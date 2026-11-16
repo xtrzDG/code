@@ -46,13 +46,18 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   `/readyz` (the database answers, the release's migrations are applied),
   `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` (it answers,
   and its first HTML holds the form those sign-in options call for: e-mail
-  where login codes go by e-mail only; a cabinet whose server cannot read
-  the API opens on phone and fails there) and
+  where login codes go by e-mail only. A cabinet whose server cannot read
+  the API opens on phone: where codes go by e-mail only that page is read
+  three times, `SMOKE_LOGIN_READ_PAUSE_SECONDS` (2) apart, and then fails;
+  where a phone channel delivers codes both open on phone, so the check
+  proves only that the page names its form. A page that names no form, a
+  release from before this check, is a `skip` line) and
   `/.well-known/security.txt` (below) and, with `SMOKE_WIDGET_BUSINESS_ID`,
   a test chat through the website widget (`/v1/widget/{business_id}/config`,
   a message accepted with `202` and the worker's answer polled from
   `/v1/widget/{business_id}/messages`, so the check also proves the worker
-  runs). CI runs the same script against the freshly built image.
+  runs). CI runs the script's API checks against the freshly built backend
+  image (without a cabinet address).
 
 ### Signed images
 

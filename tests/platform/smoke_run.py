@@ -21,6 +21,7 @@ def run_smoke(
     business_id: str = "",
     expected_reply: str = "",
     allow_api_docs: str = "",
+    login_read_pause: str = "0",
 ) -> subprocess.CompletedProcess[str]:
     environment = {
         **{
@@ -33,6 +34,7 @@ def run_smoke(
         "SMOKE_WIDGET_BUSINESS_ID": business_id,
         "SMOKE_EXPECT_REPLY": expected_reply,
         "SMOKE_ALLOW_API_DOCS": allow_api_docs,
+        "SMOKE_LOGIN_READ_PAUSE_SECONDS": login_read_pause,
         # Local requests never go through a proxy.
         "NO_PROXY": "127.0.0.1",
         "no_proxy": "127.0.0.1",

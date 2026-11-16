@@ -18,7 +18,11 @@
 #   5. GET  <cabinet>/login             the cabinet answers (if its URL is given)
 #                                       and its first HTML holds the form the
 #                                       sign-in options call for: e-mail where
-#                                       login codes go by e-mail only
+#                                       login codes go by e-mail only (a page
+#                                       on phone is read three times,
+#                                       SMOKE_LOGIN_READ_PAUSE_SECONDS apart;
+#                                       a page that names no form, a release
+#                                       older than this check, is a skip)
 #      GET  <cabinet>/.well-known/security.txt  names the security mailbox
 #                                       and its https Canonical address
 #   6. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
@@ -34,7 +38,8 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,33p' "$0" >&2
+  # The header above, up to its first line that is not a comment.
+  awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$0" >&2
   exit 2
 fi
 
@@ -44,6 +49,7 @@ cabinet_url="${cabinet_url%/}"
 wait_seconds="${SMOKE_WAIT_SECONDS:-60}"
 request_seconds="${SMOKE_REQUEST_SECONDS:-15}"
 reply_seconds="${SMOKE_REPLY_SECONDS:-30}"
+login_read_pause="${SMOKE_LOGIN_READ_PAUSE_SECONDS:-2}"
 business_id="${SMOKE_WIDGET_BUSINESS_ID:-}"
 expected_reply="${SMOKE_EXPECT_REPLY:-}"
 body_file="$(mktemp)"
@@ -72,7 +78,8 @@ refuse_published() {
 }
 
 # request METHOD URL [JSON_BODY] [HEADER]: the status code; the body goes to
-# $body_file. A connection failure is status 000.
+# $body_file. A connection failure, a timeout or a body cut off is status
+# 000 (with an empty body: an earlier answer is never read twice).
 request() {
   local method="$1" url="$2" data="${3:-}" header="${4:-X-Smoke-Test: 1}"
   local arguments=(--silent --show-error --max-time "$request_seconds"
@@ -81,7 +88,13 @@ request() {
   if [ -n "$data" ]; then
     arguments+=(--header 'Content-Type: application/json' --data "$data")
   fi
-  curl "${arguments[@]}" "$url" 2>/dev/null || true
+  : >"$body_file"
+  local status
+  if ! status="$(curl "${arguments[@]}" "$url" 2>/dev/null)"; then
+    : >"$body_file"
+    status="000"
+  fi
+  printf '%s' "$status"
 }
 
 # json_field NAME: a top-level field of the JSON body as text (objects and
@@ -110,11 +123,13 @@ if name == "assistant_reply":
         None,
     )
 elif name == "login_form":
+    # As the cabinet: a missing or null flag offers e-mail, else its truth.
     channels = body.get("configured_channels")
     by_email_only = isinstance(channels, list) and all(
         channel == "email" for channel in channels
     )
-    is_email_offered = body.get("is_email_login_available") is not False
+    flag = body.get("is_email_login_available")
+    is_email_offered = flag is None or bool(flag)
     value = "email" if is_email_offered and by_email_only else "phone"
 else:
     value = body.get(name)
@@ -124,9 +139,12 @@ PYTHON
 }
 
 # page_login_form: the method the sign-in form in $body_file names
-# (data-login-method="email" or "phone"), or nothing when the page names none.
+# (<form … data-login-method="email" or "phone">), or nothing when the page
+# names none (the attribute of the form element itself, not of a script or
+# a comment that quotes it).
 page_login_form() {
-  grep -Eo 'data-login-method="[a-z]+"' "$body_file" | head -n 1 | cut -d '"' -f 2 || true
+  grep -Eo '<form[^>]* data-login-method="[a-z]+"' "$body_file" | head -n 1 \
+    | sed -E 's/.*data-login-method="([a-z]+)"$/\1/' || true
 }
 
 # form_name METHOD: the form as a message names it.
@@ -188,23 +206,35 @@ if [ -n "$cabinet_url" ]; then
   # page and puts their form into the first HTML
   # (web/src/app/login/_lib/openingMethod.ts). A cabinet that cannot read
   # its API opens on phone, and so does one page whose read took over two
-  # seconds: that page is read again before the check fails.
+  # seconds: that page is read again before the check fails. Where a phone
+  # channel delivers codes, both open on phone: there the check proves
+  # only that the page names its form.
   page_form="$(page_login_form)"
   reads=1
   while [ "$page_form" = "phone" ] && [ "$login_form" = "email" ] && [ "$reads" -lt 3 ]; do
-    sleep 2
+    sleep "$login_read_pause"
     status="$(request GET "$cabinet_url/login")"
     [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
     page_form="$(page_login_form)"
     reads=$((reads + 1))
+    if [ -z "$page_form" ]; then
+      : >"$body_file"
+      fail "cabinet /login opened on phone, then named no form: a page from another release or cut off"
+    fi
   done
   if [ -z "$page_form" ]; then
     printf 'skip  the form of cabinet /login (a release whose page does not name it)\n'
   elif [ "$page_form" = "$login_form" ]; then
     pass "cabinet /login opens on the $(form_name "$page_form") form"
+    if [ "$reads" -gt 1 ]; then
+      printf 'note  cabinet /login opened on phone in %s of %s reads\n' "$((reads - 1))" "$reads"
+    fi
+  elif [ "$page_form" = "phone" ]; then
+    : >"$body_file"
+    fail "cabinet /login opens on the phone form in $reads reads, the sign-in options call for the e-mail form: the cabinet's server did not read them within two seconds (its BACKEND_URL, a slow API or the API's request limit)"
   else
     : >"$body_file"
-    fail "cabinet /login opens on the $(form_name "$page_form") form, the sign-in options call for the $(form_name "$login_form") form (a cabinet that cannot read its API, BACKEND_URL, opens on phone)"
+    fail "cabinet /login opens on the $(form_name "$page_form") form, the sign-in options call for the $(form_name "$login_form") form: the cabinet reads another API than $api_url, or its rule differs from this script's"
   fi
 
   # Source maps go to the error tracker only (deleted after the upload).

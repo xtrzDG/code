@@ -21,6 +21,10 @@ SECURITY_TXT: str = (
     "Canonical: https://app.workshop.test/.well-known/security.txt\n"
 )
 CABINET_SCRIPT: str = "/_next/static/chunks/main-app-4f1c.js"
+# Statuses of `first_login_answers` that are no HTTP answer: the connection
+# closes without one, or the page is cut off after part of its body.
+NO_ANSWER: int = 0
+CUT_OFF: int = -1
 
 
 def login_page(method: str | None = "email") -> str:
@@ -105,7 +109,12 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
                 self.answer(200, deployment.login_options())
             elif path == "/cabinet/login":
                 status, page = deployment.next_login_answer()
-                self.answer_text(status, page, "text/html")
+                if status == NO_ANSWER:
+                    self.close_connection = True
+                elif status == CUT_OFF:
+                    self.answer_cut_off(page)
+                else:
+                    self.answer_text(status, page, "text/html")
             elif path == CABINET_SCRIPT:
                 self.answer_text(200, "self.x = 1;", "text/javascript")
             elif path == "/cabinet/.well-known/security.txt":
@@ -153,6 +162,15 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             self.send_header("Content-Length", str(len(encoded)))
             self.end_headers()
             self.wfile.write(encoded)
+
+        def answer_cut_off(self, page: str) -> None:
+            encoded: bytes = page.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(encoded) + 1000))
+            self.end_headers()
+            self.wfile.write(encoded)
+            self.close_connection = True
 
         def log_message(self, format: str, *args: object) -> None:  # noqa: A002
             del format, args

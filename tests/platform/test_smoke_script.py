@@ -167,3 +167,9 @@ def test_usage_is_printed_without_an_address() -> None:
 
     assert result.returncode == 2
     assert "scripts/smoke.sh https://" in result.stderr
+    # The whole header and nothing after it: every line a comment, the last
+    # one the exit codes.
+    lines = result.stderr.splitlines()
+    assert all(line.startswith("#") for line in lines)
+    assert lines[-1] == "# Exit codes: 0 all passed, 1 a check failed, 2 wrong usage."
+    assert result.stdout == ""
