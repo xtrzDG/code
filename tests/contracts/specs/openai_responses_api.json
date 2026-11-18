@@ -619,6 +619,26 @@
    ],
    "type": "object"
   },
+  "BackgroundCompletionWindowEnum": {
+   "enum": [
+    "soonest",
+    "2h",
+    "8h"
+   ],
+   "type": "string"
+  },
+  "BackgroundOptionsParam": {
+   "properties": {
+    "completion_window": {
+     "$ref": "#/$defs/BackgroundCompletionWindowEnum"
+    },
+    "continuation_id": {
+     "type": "string"
+    }
+   },
+   "required": [],
+   "type": "object"
+  },
   "CacheMissReasonTypeEnum": {
    "enum": [
     "model_changed",
@@ -1634,6 +1654,9 @@
      "properties": {
       "access_programs": {
        "$ref": "#/$defs/AccessProgramsParam"
+      },
+      "background_options": {
+       "$ref": "#/$defs/BackgroundOptionsParam"
       },
       "context_management": {
        "anyOf": [
@@ -5147,7 +5170,8 @@
       "gpt-5.6-cyber",
       "gpt-6-cyber",
       "gpt-rosalind-research",
-      "gpt-6-rosalind"
+      "gpt-6-rosalind",
+      "gpt-6.2-astra-law"
      ],
      "type": "string"
     }
@@ -5161,7 +5185,9 @@
     {
      "enum": [
       "gpt-6-astra",
+      "gpt-6.2-astra",
       "gpt-6.1-sol",
+      "gpt-6.2-sol",
       "gpt-6.1-terra",
       "gpt-6-sol",
       "gpt-6-luna",
