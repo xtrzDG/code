@@ -471,11 +471,7 @@ jobs:
 
       # Runtime and dev dependencies of the cabinet, high and critical: dev
       # tools run here and on developers' machines with the source at hand.
-      # This scan and every one after it run even when an earlier scan failed
-      # (`!cancelled()`): one red audit must not hide what the others find,
-      # and the job still fails.
       - name: Cabinet dependencies (npm audit)
-        if: ${{ !cancelled() }}
         working-directory: web
         run: npm audit --audit-level=high
 
@@ -485,7 +481,7 @@ jobs:
       # summary is also a comment on the pull request (a fork's read-only
       # token cannot comment: the summary stays in the run).
       - name: Dependencies this pull request changes (dependency review)
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        if: github.event_name == 'pull_request'
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           config-file: ./.github/dependency-review-config.yml
@@ -507,7 +503,6 @@ jobs:
 
       # Reviewed false positives are listed by fingerprint in .gitleaksignore.
       - name: Secrets in the whole history (gitleaks)
-        if: ${{ !cancelled() }}
         run: |
           archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
@@ -519,7 +514,6 @@ jobs:
       # Static analysis of the backend; bandit-baseline.json holds the
       # findings reviewed on its date (SECURITY.md), new ones fail.
       - name: Python static analysis (bandit)
-        if: ${{ !cancelled() }}
         run: uv run --frozen --only-group dev bandit -c pyproject.toml -r app scripts -b bandit-baseline.json
 
   images:
