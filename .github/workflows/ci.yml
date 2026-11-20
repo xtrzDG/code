@@ -479,9 +479,11 @@ jobs:
       # critical advisory or a denied licence fails it; the rules and the
       # reviewed exceptions are in .github/dependency-review-config.yml. Its
       # summary is also a comment on the pull request (a fork's read-only
-      # token cannot comment: the summary stays in the run).
+      # token cannot comment: the summary stays in the run). Like every step
+      # after it, it runs also when a step above failed, and the job still
+      # fails.
       - name: Dependencies this pull request changes (dependency review)
-        if: github.event_name == 'pull_request'
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
         with:
           config-file: ./.github/dependency-review-config.yml
@@ -502,7 +504,9 @@ jobs:
             --base "$RUNNER_TEMP/base" --summary "$GITHUB_STEP_SUMMARY"
 
       # Reviewed false positives are listed by fingerprint in .gitleaksignore.
+      # Runs also when a step above failed (the job still fails).
       - name: Secrets in the whole history (gitleaks)
+        if: ${{ !cancelled() }}
         run: |
           archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           curl --silent --show-error --fail --location --output "$RUNNER_TEMP/$archive" \
@@ -512,8 +516,10 @@ jobs:
           "$RUNNER_TEMP/gitleaks" git --redact --no-banner --log-opts="--all" .
 
       # Static analysis of the backend; bandit-baseline.json holds the
-      # findings reviewed on its date (SECURITY.md), new ones fail.
+      # findings reviewed on its date (SECURITY.md), new ones fail. Runs
+      # also when a step above failed (the job still fails).
       - name: Python static analysis (bandit)
+        if: ${{ !cancelled() }}
         run: uv run --frozen --only-group dev bandit -c pyproject.toml -r app scripts -b bandit-baseline.json
 
   images:
