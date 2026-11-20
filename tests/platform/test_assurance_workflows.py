@@ -3,7 +3,8 @@ The supply-chain and scheduled guards stay in place: the workflow audit
 (actionlint, zizmor) is a required check with both tools pinned by version
 and SHA-256; CodeQL reads the workflows too; CI audits the cabinet's dev
 dependencies at level high and runs Trivy's misconfiguration and secret
-scanners; no package runs install scripts and uv builds nothing; every
+scanners; a failed audit skips neither gitleaks nor bandit and still fails
+the job; no package runs install scripts and uv builds nothing; every
 lockfile is audited nightly, the release images are rescanned weekly,
 staging is attacked weekly and production checked hourly; high-risk pull
 requests are labelled by path.
@@ -93,6 +94,21 @@ def test_ci_audits_dev_dependencies_and_scans_images_for_secrets() -> None:
         "cabinet-node-packages",
         "python-standard-library",
     }
+
+
+def test_a_failed_audit_skips_neither_secrets_nor_static_analysis() -> None:
+    job = load(WORKFLOWS / "ci.yml")["jobs"]["security"]
+    steps = cast(list[dict[str, Any]], job["steps"])
+    named = {str(step.get("name", "")): step for step in steps}
+
+    for name in (
+        "Secrets in the whole history (gitleaks)",
+        "Python static analysis (bandit)",
+    ):
+        assert named[name]["if"] == "${{ !cancelled() }}", name
+    # A failed step still fails the job.
+    assert "continue-on-error" not in job
+    assert not [step for step in steps if "continue-on-error" in step]
 
 
 def test_no_package_runs_install_scripts_and_uv_builds_nothing() -> None:

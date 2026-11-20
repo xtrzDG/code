@@ -61,7 +61,8 @@ def test_every_pull_request_goes_through_the_dependency_review() -> None:
     job = workflow("ci.yml")["jobs"]["security"]
     [review] = uses(job, "actions/dependency-review-action")
 
-    assert review["if"] == "github.event_name == 'pull_request'"
+    # Also when an audit before it failed (a high advisory with no fixed release).
+    assert review["if"] == "${{ !cancelled() && github.event_name == 'pull_request' }}"
     assert review["with"]["config-file"] == "./.github/dependency-review-config.yml"
     assert "security" in workflow("ci.yml")["jobs"]["ci-passed"]["needs"]
 
