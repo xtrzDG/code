@@ -44,12 +44,26 @@ pull request ──► CI (ci.yml: backend, cabinet, images, security, e2e)
   commit by hand: the worker runs the same document and job code as the API.
 - `scripts/smoke.sh <api-url> [cabinet-url]` checks `/healthz`,
   `/readyz` (the database answers, the release's migrations are applied),
-  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` and
+  `/widget.js`, `/v1/auth/login-options`, the cabinet's `/login` (it answers,
+  and its first HTML holds the form those sign-in options call for: e-mail
+  where login codes go by e-mail only. A cabinet whose server cannot read
+  the API opens on phone: where codes go by e-mail only that page is read
+  three times, `SMOKE_LOGIN_READ_PAUSE_SECONDS` (2) apart, and then fails;
+  a read again that names no form fails at once. Where a phone channel
+  delivers codes both open on phone, so the check proves only that the
+  page names its form. A first page that names no form, a release from
+  before this check, is a `skip` line) and
   `/.well-known/security.txt` (below) and, with `SMOKE_WIDGET_BUSINESS_ID`,
   a test chat through the website widget (`/v1/widget/{business_id}/config`,
   a message accepted with `202` and the worker's answer polled from
   `/v1/widget/{business_id}/messages`, so the check also proves the worker
-  runs). CI runs the same script against the freshly built image.
+  runs). A path that must stay hidden fails when its status line says
+  2xx, whatever becomes of the body after it; any other answer that is cut
+  off or comes too late (`SMOKE_REQUEST_SECONDS`, 15) fails as `000`, with
+  curl's cause on the line under it. CI runs the script's API checks against the
+  freshly built backend image (without a cabinet address, and with
+  `SMOKE_ALLOW_API_DOCS=1`: development serves `/docs`, `/redoc` and
+  `/openapi.json`, so CI does not check that those are hidden).
 
 ### Signed images
 
@@ -171,8 +185,8 @@ and only the queries' own business filters keep businesses apart.
 ### Setting the roles up (once per database server)
 
 Before the first deploy of migration 1200, connect with `psql` as a role
-with CREATEROLE (on Render: the database's own user, **Connect →
-External**) and run:
+with CREATEROLE (on Render: the database's own user; how to reach the
+database follows the SQL) and run:
 
 ```sql
 -- The groups. Migration 1200 creates them itself when its role has
@@ -191,15 +205,50 @@ create role workshop_platform_app login nosuperuser nobypassrls
 \password workshop_platform_app
 ```
 
+`\password` asks for the password at a terminal. Where nobody can answer
+it (a job), leave those two lines out and write each password into its
+`create role` statement:
+
+```sql
+create role workshop_tenant_app login password '<password>'
+  nosuperuser nobypassrls nocreatedb nocreaterole in role workshop_tenant;
+create role workshop_platform_app login password '<password>'
+  nosuperuser nobypassrls nocreatedb nocreaterole in role workshop_platform;
+```
+
+Give each role its own long random password of letters and digits only
+(40 characters, for example): with no symbols nothing needs URL-encoding
+in the two addresses below.
+
+On Render the database accepts no connection from outside: both
+Blueprints set `ipAllowList: []`, so `psql` with the external connection
+string (**Connect → External**) cannot connect as it is. Two ways work:
+
+- Add your own IP address to the database's access list in the
+  dashboard, connect with the external connection string, and remove the
+  address again afterwards.
+- Create a temporary cron job service in the database's region from the
+  public image `postgres:16-alpine` that runs the SQL with `psql` against
+  the internal connection string (Connect → Internal), run it once by
+  hand and delete it afterwards: it holds the connection string and the
+  passwords. The first production launch did this, for the SQL above and
+  for the check of the roles (`docs/operations/go-live.md`, section 3).
+
+A one-off job on `workshop-api` does not work before the API's first
+successful deploy: Render refuses it ("service has no successful
+deploy"), and the API cannot deploy before the roles exist.
+
 Then set `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` on
 `workshop-api` (the Blueprint asks for them, `sync: false`): the host,
 port and database of `DATABASE_URL` (Connect → Internal) with the login
 role and its password, for example
 `postgresql://workshop_tenant_app:<password>@<internal host>:5432/<database>`.
-The workers and the nightly `workshop-backup` cron copy both from the API
-(`fromService`): production settings refuse any process without them, the
-backup's too, although `pg_dump` itself connects as the migration role
-(`DATABASE_URL`) so that the dump holds every business. Staging does the same
+In the Blueprint the workers and the nightly `workshop-backup` cron
+copy both from the API (`fromService`; services created through
+Render's API hold their own copies, see below): production settings
+refuse any process without them, the backup's too, although
+`pg_dump` itself connects as the migration role (`DATABASE_URL`) so
+that the dump holds every business. Staging does the same
 with its own roles and passwords. Only then deploy the release with 1200:
 it refuses to start in production without the addresses, while the
 release before it ignores them. When `workshop migrate` stops with
@@ -207,6 +256,35 @@ release before it ignores them. When `workshop migrate` stops with
 migration role is not in `workshop_platform`: run the `grant` above and
 deploy again. A `LIVE_EVENTS_DATABASE_URL` (a direct session past a
 transaction pooler) should log in as the platform role too.
+
+On a new environment the Blueprint's first sync creates the database
+together with `workshop-api`, so the API's first deploy fails by design
+("Production connects with two roles ...") and the roles are set up
+after it. The two addresses alone do not make the next deploy pass:
+production refuses to start until everything it requires is set
+(`docs/operations/go-live.md`, "Production refuses to start"). In the
+first production launch that deploy failed again; still missing were the
+public addresses (`APP_BASE_URL`, `CABINET_BASE_URL`,
+`CORS_ALLOWED_ORIGINS`), the five `RECORDINGS_S3_*` values, the live
+Turnstile keys, a provider of login codes (`SMTP_*` there),
+`OPENAI_API_KEY` and the seller (`SELLER_*`). The API started on the
+first deploy after all of them were set, so set every required value
+before deploying again.
+
+In that launch Render also cancelled the creation of the services that
+copy from the API (both workers and `workshop-backup`) when the API's
+first deploy failed, and the later Blueprint sync that should have
+created them failed at once, for a reason Render's API does not return
+and that is not known yet. The two workers were then created through
+Render's API with the Blueprint's settings and the values it copies from
+`workshop-api`, as plain values: a change on `workshop-api` does not
+reach them, so when a value that the Blueprint has the workers copy
+changes there (one of the two addresses, a provider key), set it on both
+workers as well. `workshop-backup` was created the same way later that
+day, with `DATABASE_URL` and the two addresses as plain values (a
+changed address goes on it too), and suspended at once: the rollback
+command needs every service to exist ("Rollback", step 1), and the
+backup must not run before its `BACKUP_*` values are set.
 
 Docker Compose creates all of this at the first start of its database
 volume (`docker/postgres/init/01-create-app-role.sh`, login roles
@@ -774,8 +852,16 @@ report a broken flow right after a deploy:
    reaches at the end), finds each one's last live deploy of that
    commit and rolls it back through the Render API; it changes nothing
    when one service never ran that commit, and stops at the first refusal
-   (`tests/platform/test_rollback_script.py`). By hand, the same: Render →
-   each service → Events → the last good deploy → Rollback, in that order.
+   (`tests/platform/test_rollback_script.py`). It looks every one of those
+   services up by name before it prints its plan, and a name Render does
+   not list ends it there with an uncaught `LookupError` ("Render has no
+   service named ..."): no plan, nothing rolled back. For that reason the
+   first production launch created `workshop-backup` before its backup
+   variables were known and suspended it ("Setting the roles up" above);
+   with all five services in place the plan of 2026-11-15 named a deploy
+   for each. By hand (the only way while a service is missing), the same:
+   Render → each service → Events → the last good deploy → Rollback, in
+   that order.
 2. **Stop the bad commit from coming back.** Move `release` to the good
    commit, the only force push ever made to it: add "Repository admin" to
    the bypass of `release`'s ruleset, `git push --force-with-lease origin
@@ -803,7 +889,8 @@ so it reads and writes every row, and its queries keep filtering by
 business. The database's own isolation of its scopes is gone until the
 old policies are back. To give them back, once the rollback above is
 done (no release with 1200 runs any more), connect as the migration role
-and run:
+(on Render by one of the ways of "Setting the roles up": the database
+accepts no connection from outside) and run:
 
 ```sql
 select workshop.revert_tenant_and_platform_roles();

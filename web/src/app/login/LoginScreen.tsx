@@ -5,6 +5,7 @@ import { useEffect } from "react";
 
 import { clearSessionStorage } from "@/components/shell/signOut";
 import { useI18n } from "@/i18n/client";
+import type { LoginMethod } from "@/lib/countries";
 import { legalPath, localeHomePath, type LegalPage } from "@/lib/publicSite/paths";
 
 import { BotCheck } from "./_components/BotCheck";
@@ -21,13 +22,23 @@ const LOGIN_LEGAL_PAGES = ["terms", "privacy", "security", "contact"] as const s
  * visitors get an account automatically. When the API asks for it (a risky
  * request), a Cloudflare Turnstile check comes first; people with an
  * authenticator app (and platform admins) take a second step. The steps
- * live in `_components/`, the state in `_lib/useLoginFlow.ts`. What an
- * earlier session left in this tab's session storage (the assistant's test
- * chat) is forgotten here, also when that session ended by expiring.
+ * live in `_components/`, the state in `_lib/useLoginFlow.ts`. The page
+ * opens on `openingMethod`, which the server chose (`_lib/openingMethod.ts`).
+ * What an earlier session left in this tab's session storage (the
+ * assistant's test chat) is forgotten here, also when that session ended by
+ * expiring.
  */
-export function LoginScreen({ next, sessionExpired }: { next: string; sessionExpired: boolean }) {
+export function LoginScreen({
+  next,
+  sessionExpired,
+  openingMethod,
+}: {
+  next: string;
+  sessionExpired: boolean;
+  openingMethod: LoginMethod;
+}) {
   const { t, locale } = useI18n();
-  const flow = useLoginFlow(next);
+  const flow = useLoginFlow(next, openingMethod);
   useEffect(() => clearSessionStorage(), []);
 
   return (

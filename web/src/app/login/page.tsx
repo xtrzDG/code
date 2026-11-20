@@ -4,6 +4,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { getI18n } from "@/i18n/server";
 import { safeNextPath } from "@/lib/navigation";
 
+import { loadOpeningLoginMethod } from "./_lib/openingMethod";
 import { LoginScreen } from "./LoginScreen";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const query = await searchParams;
+  const [query, openingMethod] = await Promise.all([searchParams, loadOpeningLoginMethod()]);
   const next = typeof query.next === "string" ? safeNextPath(query.next) : safeNextPath(null);
   const expired = query.reason === "expired";
 
@@ -20,7 +21,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <div className="flex min-h-dvh flex-col">
       <TopBar />
       <main id="main" className="flex flex-1 items-start justify-center px-4 py-10 sm:items-center sm:py-16">
-        <LoginScreen next={next} sessionExpired={expired} />
+        <LoginScreen next={next} sessionExpired={expired} openingMethod={openingMethod} />
       </main>
     </div>
   );

@@ -16,7 +16,7 @@ import type { OtpChallengeView, OtpDeliveryChannel } from "@/api/types";
 import { useToast } from "@/components/ui";
 import { useI18n } from "@/i18n/client";
 import type { MessageKey } from "@/i18n/translate";
-import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError } from "@/lib/countries";
+import { buildOtpStartBody, classifyOtpStartError, classifyOtpVerifyError, type LoginMethod } from "@/lib/countries";
 import { afterSignInPath } from "@/lib/security/secondFactorSuggestion";
 
 import { findBotCheckSiteKey } from "./botCheck";
@@ -40,10 +40,10 @@ interface BotCheckStage {
   attempt: number;
 }
 
-export function useLoginFlow(next: string) {
+export function useLoginFlow(next: string, openingMethod: LoginMethod) {
   const { t, locale } = useI18n();
   const toast = useToast();
-  const destination = useDestination();
+  const destination = useDestination(openingMethod);
   const [isSending, setSending] = useState(false);
   const [botCheck, setBotCheck] = useState<BotCheckStage | null>(null);
 

@@ -356,8 +356,10 @@ services:
       paths:
         - web/**
     envVars:
-      # The staging API's internal address, e.g. http://workshop-staging-api:8000
-      # (never the public one: every sign-in would share Render's egress IP).
+      # The staging API's internal address from the dashboard (Connect ->
+      # Internal), e.g. http://workshop-staging-api:8000. Render may add a
+      # suffix to the name: copy the address, never guess it (never the
+      # public one: every sign-in would share Render's egress IP).
       - key: BACKEND_URL
         sync: false
       - key: COOKIE_SECURE

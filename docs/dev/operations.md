@@ -48,26 +48,32 @@ is the Russian [`docs/LAUNCH.md`](../LAUNCH.md).
 
 `render.yaml` is a Blueprint: in Render choose **New → Blueprint** and pick
 the repository (step by step, with the list of keys and webhook addresses, in
-[`docs/LAUNCH.md`](../LAUNCH.md)). Everything is created in Frankfurt:
+[`docs/LAUNCH.md`](../LAUNCH.md)). Everything is in Frankfurt:
 
 | Resource | What it is |
 | --- | --- |
 | `workshop-db` | managed Postgres 16, reachable only from inside Render |
 | `workshop-api` | the API from `Dockerfile`; `workshop migrate` before every deploy, readiness at `/readyz`, 30 s for requests to finish on shutdown |
-| `workshop-worker` | the background worker from the same image; 60 s for jobs to finish on shutdown |
+| `workshop-worker` | the worker that answers customers, from the same image; 60 s for jobs to finish on shutdown |
+| `workshop-batch-worker` | the batch worker from the same image, with more memory: exports, imports, summaries, reports, autotest runs and the nightly jobs |
 | `workshop-backup` | the nightly backup (a cron service from the same image): `workshop backup` |
 | `workshop-cabinet` | the cabinet from `web/Dockerfile` |
 
 On creation Render asks for the secrets (`sync: false`): the model provider
 and its keys, the login code providers, Meta (and the WhatsApp templates),
 Telegram, ElevenLabs, Flitt, Langfuse, Sentry; leave the ones you do not need
-empty. The worker gets from the API only the keys `render.yaml` names for
-it; set every other variable (model tuning, `OPENAI_BASE_URL`,
-`LANGFUSE_HOST`, `RECORDING_RETENTION_DAYS`, `WORKER_POLL_SECONDS` and the
-like) in the environment group `workshop-backend`, which both the API and
-the worker read. `ENCRYPTION_KEY` is generated once (never replace it in
-place: keys rotate through `ENCRYPTION_KEYS`, see below). After the first
-deploy set `APP_BASE_URL` (the API's public address, for example
+empty. In the Blueprint the workers get from the API only the keys
+`render.yaml` names for them (workers created through Render's API hold plain
+values instead: `docs/operations/go-live.md`, step 4, item 5); set every
+other variable (model tuning, `OPENAI_BASE_URL`, `LANGFUSE_HOST`,
+`RECORDING_RETENTION_DAYS`, `WORKER_POLL_SECONDS` and the like) in the
+environment group `workshop-backend`, which both the API and the workers
+read. `ENCRYPTION_KEY` is generated once (never replace it in place: keys
+rotate through `ENCRYPTION_KEYS`, see below). The API's first deploy fails by
+design, because the database roles do not exist yet, and the next one fails
+too unless everything production requires is set (`docs/LAUNCH.md`,
+section 3, steps 4 and 5). So before deploying again set all of it, including
+`APP_BASE_URL` (the API's public address, for example
 `https://workshop-api.onrender.com`), `CABINET_BASE_URL` (the cabinet's
 public address, for example `https://workshop-cabinet.onrender.com`, where
 Google Calendar and the payment page send the owner back),

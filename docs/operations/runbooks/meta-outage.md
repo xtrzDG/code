@@ -29,7 +29,10 @@
 - **One business's token:** the owner connects the channel again on the
   Channels page with a new token. For the platform's own number
   (`WHATSAPP_SYSTEM_USER_TOKEN`), create a new system-user token in Meta
-  Business Settings and set it on `workshop-api`; redeploy.
+  Business Settings and set it on `workshop-api`. In the Blueprint the
+  workers copy it; workers created through Render's API hold their own
+  copy (`../go-live.md`, step 4, item 5), so set it on both of them as
+  well. Redeploy.
 - **Tokens running out:** `/admin/system` lists Meta tokens that run out
   within 14 days; ask those owners to reconnect before they do. The hourly
   `check_channel_credentials` job asks Meta (`debug_token`, with

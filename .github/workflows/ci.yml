@@ -968,7 +968,7 @@ jobs:
       # repository's attestations and the registry (actions/attest, which
       # actions/attest-sbom v4.1.0 wraps at this same commit).
       - name: SBOM attestation of the backend image
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ steps.push.outputs.backend-name }}
           subject-digest: ${{ steps.push.outputs.backend-digest }}
@@ -976,7 +976,7 @@ jobs:
           push-to-registry: true
 
       - name: SBOM attestation of the cabinet image
-        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-name: ${{ steps.push.outputs.web-name }}
           subject-digest: ${{ steps.push.outputs.web-digest }}
@@ -986,7 +986,7 @@ jobs:
       # The installer checks the cosign binary against the digest pinned in
       # the action itself.
       - name: Install cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
 
       # Keyless: the certificate names this repository, ci.yml, refs/heads/main
       # and the commit, and the signature is logged in Sigstore's public

@@ -14,11 +14,15 @@ of this file. Anything not needed any more is removed the same day.
       who still need it, each with the smallest role that is enough.
 - [ ] `PLATFORM_ADMIN_EMAILS` and `PLATFORM_ADMIN_PHONE_NUMBERS` on Render name the
       same people (the bootstrap list), nobody else.
-- [ ] Every platform admin has an authenticator and, in production, a
-      passkey (`ADMIN_PASSKEY_REQUIRED`); nobody signs in with a code alone,
-      and no admin account is shared by two people. Admin sessions end
-      after 15 idle minutes (`ADMIN_SESSION_IDLE_TIMEOUT_SECONDS`, 900):
-      nobody raised it on Render.
+- [ ] Every platform admin has a second factor: in production a passkey
+      (`ADMIN_PASSKEY_REQUIRED`), elsewhere a passkey or the authenticator
+      app. In production an admin without a second factor sets up a passkey
+      at the first sign-in, never the app, and one who has only the app adds
+      a passkey in Account → Security before the admin pages open. Nobody
+      signs in with a code alone, and no admin account is shared by two
+      people. Admin sessions end after 15 idle minutes
+      (`ADMIN_SESSION_IDLE_TIMEOUT_SECONDS`, 900): nobody raised it on
+      Render.
 - [ ] Support access grants of the quarter (each business's audit log,
       `support_access_start`) all had a reason; none is still open.
 

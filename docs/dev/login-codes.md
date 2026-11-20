@@ -1,7 +1,9 @@
 # Login codes and sign-in protection
 
 Owners and staff sign in with a one-time code sent to their phone number or
-e-mail address; platform admins add an authenticator app. The use cases are
+e-mail address; platform admins add a second factor, in production a passkey
+(`ADMIN_PASSKEY_REQUIRED`), elsewhere a passkey or an authenticator app. The
+use cases are
 in `app/use_cases/users/` (`otp_login/`, `mfa/`), the providers in
 `app/clients/` and `app/adapters/`.
 
@@ -72,20 +74,28 @@ start-up and sign-in answers 502 with an explanation.
   platform admins (`PLATFORM_ADMIN_EMAILS`, with SMTP configured) get an
   e-mail and Sentry an event, at most once an hour per limit.
 - **Bot check.** With `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`
-  (Cloudflare Turnstile) a risky code request (a new number or address, an
-  address that already asked for 3 codes this hour, half of the shared
-  budget used, a country of `OTP_HIGH_RISK_COUNTRIES`) gets 403 with the
-  reason `challenge_required` and the widget's key; the sign-in page shows
-  the check and repeats the request with its token. A returning owner on a
-  quiet day never sees it. When Cloudflare does not answer, a risky request
+  (Cloudflare Turnstile) a risky code request (every code to a phone, a
+  known number or not; a client address that already asked for 3 codes this
+  hour; half of either shared budget used; a phone of a country of
+  `OTP_HIGH_RISK_COUNTRIES`) gets 403 with the reason `challenge_required`
+  and the widget's key; the sign-in page shows the check and repeats the
+  request with its token. No signal reads whether the phone or e-mail
+  belongs to a user (`login_risk_signals.py`), and a code to an e-mail
+  address on a quiet day never sees the check. When Cloudflare does not
+  answer, a risky request
   is refused (fail closed). Without the keys the check is off (development,
   tests).
 - **Second factor.** An authenticator app (TOTP, RFC 6238) is set up in
   Account → Security; its secret is encrypted with `ENCRYPTION_KEYS`. A code
   works once; recovery codes are stored only as HMACs and work once too; the
   second sign-in step lives 5 minutes and allows 5 attempts. A platform admin
-  signs in only with the app, and the admin's role (SUPER, SUPPORT_READONLY,
-  BILLING) is read from the admin team (`platform_admins`) on every request;
+  never signs in with the code alone: where `ADMIN_PASSKEY_REQUIRED` is on
+  (production) the second step is a passkey, an admin who has one is refused
+  the app's code (a recovery code stays the way back in), and one who has
+  only the app signs in with it but opens no admin page before adding a
+  passkey in Account → Security; elsewhere it is a passkey or the app. The
+  admin's role (SUPER, SUPPORT_READONLY, BILLING) is read from the admin team
+  (`platform_admins`) on every request;
   the `PLATFORM_ADMIN_*` lists only create the first SUPER admin. Exporting
   and deleting a contact's data, team changes, connecting a channel (except
   the website chat), entering a client's cabinet and rotating the key need a
@@ -93,10 +103,12 @@ start-up and sign-in answers 502 with an explanation.
   the reason `step_up_required`; the cabinet asks for a code and repeats the
   action).
 - **Sessions and devices.** A session idle for 7 days ends
-  (`SESSION_IDLE_TIMEOUT_SECONDS`); an admin's after 12 idle hours and at
-  most a day after sign-in. The time and address of last use are written at
-  most every 5 minutes. Account → Security lists the devices and ends one or
-  all the others; a sign-in from a new device sends a personal notice.
+  (`SESSION_IDLE_TIMEOUT_SECONDS`); an admin's after 15 idle minutes
+  (`ADMIN_SESSION_IDLE_TIMEOUT_SECONDS`) and at most a day after sign-in
+  (`ADMIN_SESSION_LIFETIME_SECONDS`). The time and address of last use are
+  written at most every 5 minutes. Account → Security lists the devices and
+  ends one or all the others; a sign-in from a new device sends a personal
+  notice.
 - **Support in a client's cabinet.** An admin enters a cabinet only with a
   reason: 60 minutes, read-only; the owner sees a banner and gets a notice;
   the start and end (`support_access_start`, `support_access_end`) are in the

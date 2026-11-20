@@ -15,8 +15,12 @@ within minutes of a deploy, owners report a broken flow.
 
 Follow `../deploys.md`, "Rollback":
 
-1. Render → `workshop-api`, `workshop-worker`, `workshop-cabinet` → Events
-   → the last good deploy → Rollback (API, then worker, then cabinet).
+1. `uv run python -m scripts.rollback <good-commit>` prints the plan; with
+   `--apply` it rolls back every service that deploys `release`. By hand,
+   when a service is missing or the command cannot run: Render →
+   `workshop-api`, `workshop-worker`, `workshop-batch-worker`,
+   `workshop-cabinet`, `workshop-backup` → Events → the last good deploy →
+   Rollback, in that order.
 2. Move `release` to the good commit so it is not deployed again:
    `git push --force-with-lease origin <good-commit>:release`.
 3. Run the smoke workflow against production; watch Sentry and

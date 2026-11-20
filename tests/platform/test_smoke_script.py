@@ -1,12 +1,8 @@
 """scripts/smoke.sh against a local stand-in of a deployment."""
 
-import os
-import shutil
-import subprocess
-
 import pytest
 
-from tests.platform.environment_sources import ROOT
+from tests.platform.smoke_run import needs_smoke_tools, run_smoke
 from tests.platform.smoke_server import (
     BUSINESS_ID,
     CABINET_SCRIPT,
@@ -16,43 +12,7 @@ from tests.platform.smoke_server import (
     running_deployment,
 )
 
-SMOKE_SCRIPT: str = str(ROOT / "scripts" / "smoke.sh")
-
-pytestmark = pytest.mark.skipif(
-    any(shutil.which(tool) is None for tool in ("bash", "curl", "python3")),
-    reason="the smoke script needs bash, curl and python3",
-)
-
-
-def run_smoke(
-    *arguments: str,
-    business_id: str = "",
-    expected_reply: str = "",
-    allow_api_docs: str = "",
-) -> subprocess.CompletedProcess[str]:
-    environment = {
-        **{
-            name: value
-            for name, value in os.environ.items()
-            if not name.startswith("SMOKE_")
-        },
-        "SMOKE_WAIT_SECONDS": "4",
-        "SMOKE_REPLY_SECONDS": "10",
-        "SMOKE_WIDGET_BUSINESS_ID": business_id,
-        "SMOKE_EXPECT_REPLY": expected_reply,
-        "SMOKE_ALLOW_API_DOCS": allow_api_docs,
-        # Local requests never go through a proxy.
-        "NO_PROXY": "127.0.0.1",
-        "no_proxy": "127.0.0.1",
-    }
-    return subprocess.run(
-        ["bash", SMOKE_SCRIPT, *arguments],
-        env=environment,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=60,
-    )
+pytestmark = needs_smoke_tools
 
 
 def test_a_healthy_deployment_passes_every_check() -> None:
@@ -66,13 +26,14 @@ def test_a_healthy_deployment_passes_every_check() -> None:
         )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert result.stdout.splitlines()[:9] == [
+    assert result.stdout.splitlines()[:10] == [
         "ok    GET /healthz",
         "ok    GET /readyz",
         "ok    GET /widget.js",
         "ok    GET /v1/auth/login-options",
         "ok    API hides /.git/HEAD /.git/config /docs /redoc /openapi.json",
         "ok    GET cabinet /login",
+        "ok    cabinet /login opens on the e-mail form",
         "ok    cabinet hides /.git/HEAD and its source maps",
         "ok    GET cabinet /.well-known/security.txt",
         "ok    GET widget config",
@@ -166,6 +127,36 @@ def test_a_release_that_publishes_what_it_must_not_fails(published: str) -> None
     assert "refs/heads/main" not in result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("path", ["/.git/HEAD", f"{CABINET_SCRIPT}.map"])
+@pytest.mark.parametrize("answer", ["cut off", "slow"])
+def test_a_published_path_fails_whatever_becomes_of_its_body(
+    path: str, answer: str
+) -> None:
+    deployment = (
+        FakeDeployment(cut_off=frozenset({path}))
+        if answer == "cut off"
+        else FakeDeployment(slow=frozenset({path}))
+    )
+    with running_deployment(deployment) as url:
+        result = run_smoke(url, f"{url}/cabinet", request_seconds="1")
+
+    # Its status line said 200: what happens to the body after it does not count.
+    assert result.returncode == 1
+    assert f"{path} answered 200: a release must not publish it" in result.stderr
+    assert "refs/heads/main" not in result.stdout + result.stderr
+
+
+def test_an_answer_cut_off_names_curl_s_cause_not_the_database() -> None:
+    with running_deployment(FakeDeployment(cut_off=frozenset({"/readyz"}))) as url:
+        result = run_smoke(url)
+
+    assert result.returncode == 1
+    assert "FAIL  GET /readyz answered 000\n" in result.stderr
+    assert "curl: (18)" in result.stderr
+    assert "(after status 200)" in result.stderr
+    assert "database" not in result.stderr
+
+
 def test_development_api_docs_may_be_allowed_but_never_git() -> None:
     docs = FakeDeployment(published=frozenset({"/docs", "/openapi.json"}))
     git = FakeDeployment(published=frozenset({"/.git/HEAD"}))
@@ -199,6 +190,8 @@ def test_an_unreachable_deployment_and_a_wrong_business_fail() -> None:
     assert "GET widget config answered 404" in wrong_business.stderr
     assert unreachable.returncode == 1
     assert "did not answer" in unreachable.stderr
+    # The last try's cause: nothing listens there any more.
+    assert "curl: (7)" in unreachable.stderr
 
 
 def test_usage_is_printed_without_an_address() -> None:
@@ -206,3 +199,9 @@ def test_usage_is_printed_without_an_address() -> None:
 
     assert result.returncode == 2
     assert "scripts/smoke.sh https://" in result.stderr
+    # The whole header and nothing after it: every line a comment, the last
+    # one the exit codes.
+    lines = result.stderr.splitlines()
+    assert all(line.startswith("#") for line in lines)
+    assert lines[-1] == "# Exit codes: 0 all passed, 1 a check failed, 2 wrong usage."
+    assert result.stdout == ""

@@ -21,11 +21,11 @@ minutes, RTO 4 hours, call forwarding switched on within 15 minutes.
 
 **Call recordings are not in the backups.** The backup is the database
 dump only. Recordings live in their own EU bucket (`RECORDINGS_S3_*`),
-each sealed with a key of its business; that bucket is set up with
-object versioning and a rule that expires noncurrent versions after 30
-days (an overwritten or deleted recording stays recoverable that long,
-`docs/operations/go-live.md` section 6) and relies on the provider's own
-durability. Losing that bucket loses the recordings; the database,
+each sealed with a key of its business; that bucket is set up without
+object versioning (a recording deleted by retention or by an erasure is
+gone at once, `docs/operations/go-live.md` section 6) and relies on the
+provider's own durability. Losing that bucket loses the recordings; the
+database,
 transcripts and call summaries come back from the backups. This is a
 decision, not a gap: recordings are short-lived (the owner's retention),
 large, and the transcript keeps what was said.
@@ -330,8 +330,12 @@ Render itself gone?
 **A. Inside Render: point-in-time recovery** (RPO minutes, RTO under 1 h).
 Render dashboard → `workshop-db` → Recovery → restore to just before the
 incident into a new database; set the new database's internal connection
-string as `DATABASE_URL` of `workshop-api`, `workshop-worker` and
-`workshop-backup`; deploy; check below.
+string as `DATABASE_URL` of `workshop-api`, `workshop-worker`,
+`workshop-batch-worker` and `workshop-backup`, and point
+`DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` at the new database
+wherever they are held (the application's pools connect through those two,
+not through `DATABASE_URL`; step 4 of path B says where); deploy; check
+below.
 
 **B. Render unavailable or the window passed: the off-site backup**
 (RPO 24 h, RTO 2 h).
@@ -341,7 +345,7 @@ string as `DATABASE_URL` of `workshop-api`, `workshop-worker` and
 | 1. A new Postgres 16 **with the pgvector extension available** in the EU (Render in another account, or any EU provider); as a superuser run `create extension vector;` in `template1` (so every database the restore creates has it: the application roles may not create this untrusted extension, and the dump's `CREATE EXTENSION IF NOT EXISTS vector` is then a no-op); create the migration role (neither superuser nor BYPASSRLS) with `CREATEDB` and `CREATEROLE` for the restore, and the groups and login roles of `docs/operations/deploys.md`, "Database roles" | 15 min |
 | 2. On a trusted machine with the drill or escrow identity: restore the newest backup (below) | 30–60 min (about 10 min per GB of dump) |
 | 3. `workshop migrate` against the restored database (migrations newer than the backup) | 5 min |
-| 4. Point `DATABASE_URL` of the API, the worker and the backup cron at it, and `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` of the API (the workers copy them) at the new login roles; `ENCRYPTION_KEYS`/`ENCRYPTION_KEY` must hold the keys of the backup's night; deploy | 20 min |
+| 4. Point `DATABASE_URL` of the API, both workers and the backup cron at it, and `DATABASE_URL_TENANT` and `DATABASE_URL_PLATFORM` at the new login roles: on the API and on every service that holds its own copy (in the Blueprint the workers and the backup cron copy them from the API; a service created through Render's API holds plain values: `docs/operations/go-live.md`, step 4, item 5); `ENCRYPTION_KEYS`/`ENCRYPTION_KEY` must hold the keys of the backup's night; deploy | 20 min |
 | 5. Checks below; tell owners what happened since the backup | 15 min |
 
 Restoring with this code base (it checks everything the drill checks and

@@ -794,6 +794,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -2538,6 +2539,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -5496,6 +5498,7 @@
          "gpt-6-sol",
          "gpt-6-luna",
          "gpt-6.1-sol",
+         "gpt-6.1-terra",
          "gpt-5-mini",
          "gpt-5-nano",
          "gpt-3.5-turbo",
@@ -6223,6 +6226,17 @@
     "agent_id": {
      "type": "string"
     },
+    "agent_message_count": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "agent_name": {
      "anyOf": [
       {
@@ -6358,6 +6372,17 @@
      "anyOf": [
       {
        "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "user_message_count": {
+     "anyOf": [
+      {
+       "type": "integer"
       },
       {
        "type": "null"
@@ -6602,6 +6627,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationTtsUsageModel"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "voice_surcharge_charge": {
+     "anyOf": [
+      {
+       "type": "integer"
       },
       {
        "type": "null"
@@ -7615,6 +7651,7 @@
         "ui",
         "api",
         "template",
+        "architect",
         "unknown"
        ],
        "type": "string"
@@ -7634,6 +7671,7 @@
         "ui",
         "api",
         "template",
+        "architect",
         "unknown"
        ],
        "type": "string"
@@ -12988,6 +13026,20 @@
      ],
      "default": null
     },
+    "start_procedure_ids": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "starting_workflow_node_id": {
      "anyOf": [
       {
@@ -13153,6 +13205,20 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationInitiationSourceInfo"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "start_procedure_ids": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
       },
       {
        "type": "null"
@@ -14743,6 +14809,17 @@
      ],
      "default": null
     },
+    "noisy_environment_message_translation": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/LanguagePresetTranslation"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "overrides": {
      "$ref": "#/$defs/ConversationConfigClientOverrideInput"
     },
@@ -14766,6 +14843,17 @@
   "LanguagePresetOutput": {
    "properties": {
     "first_message_translation": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/LanguagePresetTranslation"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "noisy_environment_message_translation": {
      "anyOf": [
       {
        "$ref": "#/$defs/LanguagePresetTranslation"
@@ -15962,6 +16050,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -16143,6 +16232,22 @@
      ],
      "default": null
     },
+    "service_tier": {
+     "anyOf": [
+      {
+       "enum": [
+        "standard",
+        "fast"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "temperature": {
      "anyOf": [
       {
@@ -16286,6 +16391,7 @@
          "gpt-6-sol",
          "gpt-6-luna",
          "gpt-6.1-sol",
+         "gpt-6.1-terra",
          "gpt-5-mini",
          "gpt-5-nano",
          "gpt-3.5-turbo",
@@ -17304,6 +17410,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -17498,6 +17605,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -17775,6 +17883,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -17946,6 +18055,22 @@
         "high",
         "xhigh",
         "max"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "service_tier": {
+     "anyOf": [
+      {
+       "enum": [
+        "standard",
+        "fast"
        ],
        "type": "string"
       },
@@ -18938,6 +19063,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -21458,6 +21584,17 @@
     "id": {
      "type": "string"
     },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "ran_against_draft": {
      "anyOf": [
       {
@@ -21885,6 +22022,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -22035,6 +22173,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -24543,6 +24682,28 @@
      ],
      "default": null
     },
+    "noisy_environment_detection": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "noisy_environment_message": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "retranscribe_on_turn_timeout": {
      "anyOf": [
       {
@@ -24663,6 +24824,17 @@
   },
   "TurnConfigOverride": {
    "properties": {
+    "noisy_environment_message": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "soft_timeout_config": {
      "anyOf": [
       {
@@ -24679,6 +24851,17 @@
   },
   "TurnConfigOverrideConfig": {
    "properties": {
+    "noisy_environment_message": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "soft_timeout_config": {
      "anyOf": [
       {
@@ -24738,6 +24921,17 @@
      "anyOf": [
       {
        "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "noisy_environment_message": {
+     "anyOf": [
+      {
+       "type": "string"
       },
       {
        "type": "null"
@@ -24853,6 +25047,23 @@
      "anyOf": [
       {
        "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "type": "object"
+  },
+  "UnitTestGuardrailTriggerEvaluationModel": {
+   "properties": {
+    "type": {
+     "anyOf": [
+      {
+       "const": "any",
+       "type": "string"
       },
       {
        "type": "null"
@@ -25319,6 +25530,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -25455,6 +25667,7 @@
         "gpt-6-sol",
         "gpt-6-luna",
         "gpt-6.1-sol",
+        "gpt-6.1-terra",
         "gpt-5-mini",
         "gpt-5-nano",
         "gpt-3.5-turbo",
@@ -25771,6 +25984,17 @@
   },
   "UnitTestToolCallEvaluationModelInput": {
    "properties": {
+    "guardrail_trigger": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/UnitTestGuardrailTriggerEvaluationModel"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "parameters": {
      "anyOf": [
       {
@@ -25823,6 +26047,17 @@
   },
   "UnitTestToolCallEvaluationModelOutput": {
    "properties": {
+    "guardrail_trigger": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/UnitTestGuardrailTriggerEvaluationModel"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "parameters": {
      "anyOf": [
       {
@@ -26398,7 +26633,40 @@
   },
   "WhatsAppCallPermissionRequest": {
    "properties": {
+    "granted_by_user_call": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "permanent": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "requested_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "responded_at_unix": {
      "anyOf": [
       {
        "type": "integer"
@@ -26453,6 +26721,25 @@
      ],
      "default": null
     },
+    "call_result": {
+     "anyOf": [
+      {
+       "enum": [
+        "answered",
+        "voicemail",
+        "busy",
+        "no_answer",
+        "failed"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "direction": {
      "anyOf": [
       {
@@ -26464,6 +26751,17 @@
        "type": "string"
       },
       {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "opening_message": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/WhatsAppOpeningMessage"
+      },
       {
        "type": "null"
       }
@@ -26498,6 +26796,109 @@
    },
    "required": [
     "whatsapp_user_id"
+   ],
+   "type": "object"
+  },
+  "WhatsAppOpeningMessage": {
+   "properties": {
+    "billable": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "delivered_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "error_code": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "failed_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "pricing_category": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "read_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "replied_at_unix": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "sent_at_unix": {
+     "type": "integer"
+    },
+    "template_name": {
+     "type": "string"
+    },
+    "wamid": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    }
+   },
+   "required": [
+    "template_name",
+    "sent_at_unix"
    ],
    "type": "object"
   },
@@ -26863,6 +27264,17 @@
      ],
      "default": null
     },
+    "mobile_fullscreen": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "override_link": {
      "anyOf": [
       {
@@ -27098,6 +27510,17 @@
      "default": null
     },
     "transcript_enabled": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "transcript_speech_sync_enabled": {
      "anyOf": [
       {
        "type": "boolean"
@@ -28198,6 +28621,20 @@
       },
       {
        "$ref": "#/$defs/WorkflowEdgeModelInputForwardCondition_Unconditional"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "reroutes": {
+     "anyOf": [
+      {
+       "items": {
+        "$ref": "#/$defs/PositionInput"
+       },
+       "type": "array"
       },
       {
        "type": "null"
@@ -29432,6 +29869,16 @@
       }
      ]
     },
+    "name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "repeat_count": {
      "anyOf": [
       {
@@ -29677,6 +30124,6 @@
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only elevenlabs",
   "source": "https://github.com/elevenlabs/elevenlabs-python",
   "title": "ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
-  "version": "elevenlabs 2.74.1"
+  "version": "elevenlabs 2.77.0"
  }
 }

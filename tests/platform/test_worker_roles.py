@@ -1,6 +1,7 @@
 """
-The worker roles of the Render Blueprints: customer replies run on at least
-two workers, batch jobs on another, every lane has exactly one role, each
+The worker roles of the Render Blueprints: customer replies run on their
+own worker (two once the database has room for them), batch jobs on
+another, every lane has exactly one role, each
 role's pool fits its threads (a lane behind a closed release gate takes
 no role yet), and only light customer-facing periodic jobs
 run with the workers that answer customers.
@@ -20,9 +21,11 @@ from app.utilities.config_helpers.app_settings.app_settings_assembler import (
 )
 from app.utilities.jobs.live_lanes import closed_lanes
 from tests.platform.connection_budget import (
+    PLAN_CONNECTION_LIMITS,
     WORKER_COMMAND,
     BlueprintService,
     blueprint_services,
+    database_plan,
     pool_size,
 )
 from tests.platform.environment_sources import read
@@ -70,8 +73,10 @@ def test_production_runs_a_customer_role_and_a_batch_role() -> None:
         for service in workers("render.yaml")
     }
 
+    # Launch size: one customer worker on basic-1gb (a second one needs the
+    # connections of pro-8gb first, see the test below).
     assert roles == {
-        "workshop-worker": (CUSTOMER_LANES, 2),
+        "workshop-worker": (CUSTOMER_LANES, 1),
         "workshop-batch-worker": (BATCH_LANES, 1),
     }
     # Batch jobs hold more data than a customer turn.
@@ -91,10 +96,22 @@ def test_every_lane_has_exactly_one_role(blueprint_path: str) -> None:
     assert sorted(served) == sorted(LIVE_LANES)
 
 
-def test_customer_replies_survive_one_lost_worker() -> None:
+def test_customer_replies_survive_one_lost_worker_once_the_database_has_room() -> None:
+    """
+    Two customer workers keep replies going through a lost worker, but at a
+    deploy they need 76 connections: the 100 of a plan below 8 GB hold only
+    the launch size's one (a crashed worker restarts and its cut-off turns
+    run again once their lease ends). On a plan with 200 connections or
+    more, production runs two.
+    """
+
+    plan_limit = PLAN_CONNECTION_LIMITS[database_plan("render.yaml")]
     for service in workers("render.yaml"):
         if JobLane.INBOUND in settings_of(service).worker_lanes:
-            assert service.instances >= 2, service.name
+            if plan_limit >= 200:
+                assert service.instances >= 2, service.name
+            else:
+                assert service.instances == 1, service.name
 
 
 @pytest.mark.parametrize("blueprint_path", ["render.yaml", "render.staging.yaml"])

@@ -63,15 +63,21 @@ answers, not lost ones.
   the providers; post a `degraded` announcement for the chat components
   if answers are slower than usual, and watch the fallback's quota.
 - **Both circuits open, or the fallback is off or has no key:** this is
-  when switching by hand is still needed. Set `LLM_PROVIDER` (and its
-  model variables) to the provider that works in the `workshop-backend`
-  env group and redeploy `workshop-api` and `workshop-worker` (Render →
-  Manual deploy → same commit). A provider that is up but rate limited
-  recovers faster with a lower `LLM_MAX_CONCURRENCY` (per process).
+  when switching by hand is still needed. Set `LLM_PROVIDER` to the
+  provider that works: on `workshop-api`, where the Blueprint declares
+  it, and on both workers when they hold their own copy (created through
+  Render's API: `../go-live.md`, step 4, item 5; in the Blueprint they
+  copy it). Change its model variables, if you set any, in the
+  `workshop-backend` env group. Then redeploy `workshop-api` and both
+  workers (Render → Manual deploy → same commit). A provider that is up
+  but rate limited recovers faster with a lower `LLM_MAX_CONCURRENCY`
+  (per process).
 - **Quota or spend limit:** raise it on the provider's billing page; check
   [spend-spike](spend-spike.md) first so the limit is not hiding abuse.
 - **Key revoked:** create a new key in the EU project and set it on
-  `workshop-api` (the worker copies it); redeploy.
+  `workshop-api`. In the Blueprint the workers copy it; workers created
+  through Render's API hold their own copy (`../go-live.md`, step 4,
+  item 5), so set it on both of them as well. Redeploy.
 
 ## Fix and recover
 

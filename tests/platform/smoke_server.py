@@ -2,6 +2,7 @@
 
 import json
 import threading
+import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -21,10 +22,29 @@ SECURITY_TXT: str = (
     "Canonical: https://app.workshop.test/.well-known/security.txt\n"
 )
 CABINET_SCRIPT: str = "/_next/static/chunks/main-app-4f1c.js"
-LOGIN_PAGE: str = (
-    f'<html><head><script src="{CABINET_SCRIPT}?dpl=1" async></script></head>'
-    "<body>login</body></html>"
-)
+# Statuses of `first_login_answers` that are no HTTP answer: the connection
+# closes without one, or the page is cut off after part of its body.
+NO_ANSWER: int = 0
+CUT_OFF: int = -1
+# How long the body of a `slow` path takes after its status line.
+SLOW_SECONDS: float = 2.5
+
+
+def login_page(method: str | None = "email") -> str:
+    """The cabinet's /login whose form names `method` (None: it names none)."""
+
+    form: str = (
+        "login"
+        if method is None
+        else f'<form novalidate="" data-login-method="{method}">login</form>'
+    )
+    return (
+        f'<html><head><script src="{CABINET_SCRIPT}?dpl=1" async></script></head>'
+        f"<body>{form}</body></html>"
+    )
+
+
+LOGIN_PAGE: str = login_page()
 
 
 @dataclass
@@ -33,6 +53,9 @@ class FakeDeployment:
 
     widget_script: str = "(function () { window.workshopWidget = true; })();"
     configured_channels: list[str] = field(default_factory=lambda: ["email"])
+    # None leaves the field out of the sign-in options; any other value goes
+    # as it is (the API sends a boolean).
+    is_email_login_available: object = True
     reply_inline: bool = True
     reply_text: str = REPLY
     security_txt: str = SECURITY_TXT
@@ -40,17 +63,42 @@ class FakeDeployment:
     # `checks.data_tasks` of /readyz; None leaves the line out (an older release).
     data_tasks: dict[str, object] | None = None
     login_page: str = LOGIN_PAGE
+    # What /cabinet/login answers first, one (status, page) a read; then `login_page`.
+    first_login_answers: list[tuple[int, str]] = field(
+        default_factory=list[tuple[int, str]]
+    )
+    login_reads: int = 0
     # Paths a broken release publishes (they answer 200 instead of 404).
     published: frozenset[str] = frozenset()
+    # Paths that answer 200 and are cut off after part of the body, or
+    # whose body comes SLOW_SECONDS after the status line.
+    cut_off: frozenset[str] = frozenset()
+    slow: frozenset[str] = frozenset()
     polls: int = 0
     posted: list[dict[str, object]] = field(default_factory=list[dict[str, object]])
+
+    def login_options(self) -> dict[str, object]:
+        options: dict[str, object] = {"configured_channels": self.configured_channels}
+        if self.is_email_login_available is not None:
+            options["is_email_login_available"] = self.is_email_login_available
+        return options
+
+    def next_login_answer(self) -> tuple[int, str]:
+        self.login_reads += 1
+        if self.login_reads <= len(self.first_login_answers):
+            return self.first_login_answers[self.login_reads - 1]
+        return 200, self.login_page
 
 
 def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self) -> None:
             path: str = self.path.split("?", 1)[0]
-            if path in deployment.published:
+            if path in deployment.cut_off:
+                self.answer_cut_off("ref: refs/heads/main")
+            elif path in deployment.slow:
+                self.answer_slowly("ref: refs/heads/main")
+            elif path in deployment.published:
                 self.answer_text(200, "ref: refs/heads/main", "text/plain")
             elif path == "/healthz":
                 self.answer(200, {"status": "ok"})
@@ -70,11 +118,15 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             elif path == "/widget.js":
                 self.answer_text(200, deployment.widget_script, "text/javascript")
             elif path == "/v1/auth/login-options":
-                self.answer(
-                    200, {"configured_channels": deployment.configured_channels}
-                )
+                self.answer(200, deployment.login_options())
             elif path == "/cabinet/login":
-                self.answer_text(200, deployment.login_page, "text/html")
+                status, page = deployment.next_login_answer()
+                if status == NO_ANSWER:
+                    self.close_connection = True
+                elif status == CUT_OFF:
+                    self.answer_cut_off(page)
+                else:
+                    self.answer_text(status, page, "text/html")
             elif path == CABINET_SCRIPT:
                 self.answer_text(200, "self.x = 1;", "text/javascript")
             elif path == "/cabinet/.well-known/security.txt":
@@ -122,6 +174,29 @@ def build_handler(deployment: FakeDeployment) -> type[BaseHTTPRequestHandler]:
             self.send_header("Content-Length", str(len(encoded)))
             self.end_headers()
             self.wfile.write(encoded)
+
+        def answer_cut_off(self, page: str) -> None:
+            encoded: bytes = page.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(encoded) + 1000))
+            self.end_headers()
+            self.wfile.write(encoded)
+            self.close_connection = True
+
+        def answer_slowly(self, text: str) -> None:
+            encoded: bytes = text.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/plain")
+            self.send_header("Content-Length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.flush()
+            time.sleep(SLOW_SECONDS)
+            try:
+                self.wfile.write(encoded)
+            except OSError:
+                # The client gave up waiting, as it should.
+                self.close_connection = True
 
         def log_message(self, format: str, *args: object) -> None:  # noqa: A002
             del format, args

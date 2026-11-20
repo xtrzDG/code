@@ -882,7 +882,8 @@ each process's startup.
   than one worker answers: in the k6 scenario with production's one
   worker the pickup delay grew all along (p50 16 s, p95 20 s after five
   minutes; the weekly run's 12 s and later 70 s), with two workers it
-  stayed at p50 87 ms, p95 1.4 s. Production runs two customer workers
+  stayed at p50 87 ms, p95 1.4 s. Production starts with one customer
+  worker (launch size) and runs two once the database plan has room
   ("Worker roles" below). Raise the `inbound` concurrency (within
   `LLM_MAX_CONCURRENCY` and `DB_POOL_SIZE`: a turn holds a connection
   while it runs; mind the provider's rate limits) or add customer
@@ -913,20 +914,23 @@ customers:
 
 | Service | Instances, plan | Lanes | Shared periodic jobs | Sizing |
 | --- | --- | --- | --- | --- |
-| `workshop-worker` | 2 x `starter` | `inbound`, `outbound` (`ops` joins with the release that opens the gate `ops_lane`) | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults; 13 with `ops=1`), `DB_POOL_SIZE` 14 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
-| `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | `default=4,autotests=2`, `DB_POOL_SIZE` 8 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
+| `workshop-worker` | 1 x `starter` at launch size (2 x with `pro-8gb`) | `inbound`, `outbound` (`ops` joins with the release that opens the gate `ops_lane`) | `send_booking_reminders` (outbound), `sweep_stale_inbound_events` (inbound) | 12 lane threads (`inbound=8,outbound=4`, the defaults; 13 with `ops=1`), `DB_POOL_SIZE` 14 and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 20, `LLM_MAX_CONCURRENCY` 12 |
+| `workshop-batch-worker` | 1 x `standard` (2 GB) | `default`, `autotests` | every other one (exports, website imports, summaries, digests and reports, the nightly jobs) | launch size `default=3,autotests=1`, `DB_POOL_SIZE` 6 (`default=4,autotests=2` and 8 with `pro-8gb`) and `DB_PLATFORM_POOL_SIZE` 4, `THREADPOOL_SIZE` 12, `LLM_MAX_CONCURRENCY` 6 |
 
 - A periodic job belongs to a lane (`PeriodicJobSpec.lane`, `default`
   unless set); a worker runs the shared ones of its lanes, still once
   per period across all workers (`periodic_job_runs`), and every worker
   runs the process-local ones (the model-call trace flush). The reaper
   and the lease heartbeat run on every worker.
-- Two customer workers: one can die or deploy while the other answers
-  ("When a worker dies" below). A third adds 2 x 19 connections at a
-  deploy.
+- Launch size runs one customer worker: while it restarts or deploys,
+  customer messages wait in the queue and its cut-off turns run again once
+  their lease ends ("When a worker dies" below). With two, one can die or
+  deploy while the other answers; each further one adds 2 x 19 connections
+  at a deploy, which needs `pro-8gb` ("Connection budget" below).
 - `tests/platform/test_worker_roles.py` keeps it so: every lane is
   served by exactly one role in both Blueprints (a lane nobody serves
-  would never run), customer replies run on at least two instances, each
+  would never run), customer replies run on at least two instances once
+  the database plan accepts 200 connections (exactly one below that), each
   worker's pool holds its lane threads plus the periodic thread and the
   heartbeat, and its `LLM_MAX_CONCURRENCY` covers its `inbound` threads.
 - Sizing a role: `DB_POOL_SIZE` >= its lane threads + 2;
@@ -1097,8 +1101,10 @@ touches the database.
 
 ## Connection budget
 
-Production's database is Render's `pro-8gb` Postgres: 200 connections
-(plans below 8 GB accept 100, 16 GB 400, 32 GB 500). The worst moment is
+Production starts at launch size: Render's `basic-1gb` Postgres with a
+15 GB disk, 100 connections (plans below 8 GB accept 100, `pro-8gb` 200,
+16 GB 400, 32 GB 500), and one instance of the API and of the customer
+worker. The worst moment is
 a deploy: Render starts the new instances of every service before it
 stops the old ones, while the backup may run and the migration runs
 before. `tests/platform/test_connection_budget.py` reads every Blueprint
@@ -1118,21 +1124,26 @@ connections of the tenant role, which serve everything in a business's
 scope, and `DB_PLATFORM_POOL_SIZE` of the platform role (sign-in, the job
 queue's claims, rate limits, platform-wide work: short statements, so a
 smaller pool; default a quarter of `DB_POOL_SIZE`, at least 2).
-Production (`render.yaml`): 2 x 2 x (10 + 4 + 1) = 60 for the API,
-2 x 2 x (14 + 4 + 1) = 76 for the customer workers, 2 x 1 x (8 + 4 + 1)
-= 26 for the batch worker, 2 + 1 + 5: 170 of 200. The tenant pools gave
-up two connections each (12 to 10, 16 to 14, 10 to 8) for the platform
-pools, so the work a process can run at once stays about the same while
-the second pool fits; there is no room left for a third customer worker
-without one of the routes below. Staging (one API, one worker serving
+Production (`render.yaml`, launch size): 2 x 1 x (10 + 4 + 1) = 30 for
+the API, 2 x 1 x (14 + 4 + 1) = 38 for the customer worker,
+2 x 1 x (6 + 4 + 1) = 22 for the batch worker (four jobs at once at
+launch size, `default=3,autotests=1`, plus its periodic thread and
+heartbeat), 2 + 1 + 5: 98 of 100. The tenant pools
+gave up two connections each (12 to 10, 16 to 14) for the platform pools,
+so the work a process can run at once stays about the same while the
+second pool fits. There is no room for a second API or worker instance
+on a plan below 8 GB: grow to `pro-8gb` first, then two API and two
+customer worker instances with the batch worker back at six jobs
+(`default=4,autotests=2`) and a tenant pool of 8 come to 2 x 2 x (10 + 4 + 1) + 2 x 2 x (14 + 4 + 1) + 2 x (8 + 4 + 1)
++ 8 = 170 of 200. Staging (one API, one worker serving
 every lane, `basic-256mb`): 2 x (10 + 4 + 1) + 2 x (19 + 4 + 1) + 8 = 86
 of 100. The defaults (64 threads, 32 + 8 connections) would not fit: a
 Blueprint without `DB_POOL_SIZE` on any service fails the test, and so
 does a worker without `DB_PLATFORM_POOL_SIZE`.
 
-The worker roles need 170 connections at a deploy (150 before the
-second pool), more than the 100 of
-the plan before (`basic-256mb`); of the routes below the larger plan won: PgBouncer in session mode multiplexes
+Two instances of each role need 170 connections at a deploy (150 before
+the second pool), more than the 100 of the plans below 8 GB; of the
+routes below the larger plan won for that size: PgBouncer in session mode multiplexes
 nothing a busy pool holds (every customer turn keeps its connection for
 the turn's advisory lock), adds a service to run and monitor, and the
 Blueprint cannot hand its address to the others the way it hands the

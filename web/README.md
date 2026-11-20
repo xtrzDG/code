@@ -292,11 +292,15 @@ browser: the host's Chromium draws other pixels than CI's. Then:
   (`e2e/support/apiClock.ts`).
 - **No model, no motion, one typeface.** The rehearsal model plays the
   assistant (`LLM_PROVIDER=scripted`); reduced motion, `animations:
-  "disabled"`, the caret hidden. The brand faces are `font-display:
-  optional`, which keeps the fallback when a file comes late on a busy
-  machine: every context loads them first and declares them again with
-  `font-display: block` (`e2e/visual/fonts.ts`), so text always waits for
-  the cabinet's own files.
+  "disabled"`, the caret hidden. A marker that glides to its place (the
+  current tab's underline) still lands on a later animation frame, and the
+  standing clock runs a page's frames from timers that a busy machine runs
+  late: before each picture `e2e/visual/shots.ts` runs the frames itself
+  (`page.clock.runFor`) until a run of them moves nothing. The brand faces
+  are `font-display: optional`, which keeps the fallback when a file comes
+  late on a busy machine: every context loads them first and declares them
+  again with `font-display: block` (`e2e/visual/fonts.ts`), so text always
+  waits for the cabinet's own files.
 - **Masks** paint over what a run makes itself: the audit log's entries (the
   run's own visits), the admin's reply time of the last hour, and the new
   business's clock times. No ratio of differing pixels is allowed.
@@ -1969,8 +1973,26 @@ Its motion and 3D hero: see [Motion](#motion).
   payer that way, without the SameSite=Lax session cookie) with a 303 to the same
   address, so the browser repeats it as a GET that carries the session.
 - `/login` asks `GET /v1/auth/login-options` for the chosen country: the method
-  switch hides e-mail when it cannot deliver codes, the phone form offers a
-  channel choice when several work, and explains when none does. The code
+  switch goes when e-mail cannot deliver codes (never from under a visitor on
+  the e-mail form), the phone form offers a channel choice when several work,
+  and explains when none does. The form
+  in the page's first HTML is the server's choice (`_lib/openingMethod.ts`
+  reads the options once while the page renders): phone, or e-mail where no
+  phone channel has a provider in any country (codes go by e-mail only);
+  when that read fails or takes more than two seconds, phone. After that
+  only the visitor changes the method: when the browser's own check answers
+  that the method shown cannot deliver, its form stays (the field, its focus
+  and what was typed), explains, offers the other method and cannot send.
+  What holds for every country (whether e-mail delivers, whether any phone
+  channel is set up, sign-in being down) keeps the last answer while the
+  chosen country's own answer loads or after it failed, so such a notice
+  does not go and come back (`_lib/useDestination.ts`).
+  The form names its method (`data-login-method`), which the smoke test of
+  a deployment compares with the API's options (`scripts/smoke.sh`).
+  `/login` is also the health-check path of the image (`Dockerfile`, five
+  seconds a check) and of Render (`render.yaml`), so every probe makes that
+  read: an API that hangs holds each probe for two seconds, and the page
+  still answers 200. The code
   screen offers the country's other channels ("No code? Send by SMS instead":
   a number without WhatsApp is reported only later), which the API allows at
   once. Phone numbers and codes typed in any script (Arabic-Indic, Persian,
@@ -2074,8 +2096,10 @@ Its motion and 3D hero: see [Motion](#motion).
   `SameSite=Lax`, a write needs `Sec-Fetch-Site: same-origin` or the site's `Origin` (else 403
   `forbidden_origin`); audited exports refuse other sites (`src/server/sameOrigin.ts`).
 - Two-factor sign-in: after the login code, people with an authenticator app
-  (and every platform admin, who sets one up at the first sign-in) enter its
-  code or a recovery code (`app/login/_components/SecondStepForm.tsx`); the
+  enter its code or a recovery code
+  (`app/login/_components/SecondStepForm.tsx`); a platform admin without a
+  second factor sets one up there first: a passkey, or the app where the API
+  still offers it (never with `ADMIN_PASSKEY_REQUIRED`, on in production). The
   admin pages want a two-factor session. A sensitive action (exporting or
   erasing a contact's data, team changes, connecting a channel, the admin's
   actions) answered with 401 and `WWW-Authenticate: Bearer

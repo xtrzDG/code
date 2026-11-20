@@ -31,7 +31,7 @@ system dependencies and the cached packages all follow the image.
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `evals` | the evals replay gate ("The evals replay gate" below): when the change touches what the model sees, every recorded conversation replayed offline, without keys | — | not measured yet |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |
-| `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 222 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
+| `visual` | the visual tests and the review gate (`web/README.md`): starts the downloaded build and an API whose clock starts at a fixed moment, the browser in Playwright's image (pulled at the job's start, in the background), compares 180 screenshots; keeps the differences on failure | `web-build` | ~5:00 (tests ~3:20) |
 | `publish-images` (`main` only) | pushes the two images `images` built and scanned to ghcr.io under the commit SHA, with SLSA build provenance and a keyless cosign signature, then verifies both (`scripts/verify_images.sh`) | every gate above | not measured yet |
 | `durations` | the run summary of every job's duration | all | ~0:20 |
 
@@ -251,7 +251,7 @@ never sees it. npm's download cache comes from `setup-node`, uv's from
 
 ## Visual tests
 
-`visual` runs `npm run e2e:visual` once, not in shards: its 222 pictures
+`visual` runs `npm run e2e:visual` once, not in shards: its 180 pictures
 take about three minutes on three workers (`web/e2e/visual/project.ts`), and
 its first project (the demo owner's sign-in, the platform admin's pages)
 must run before the rest. It installs neither a browser nor the PDF

@@ -16,6 +16,15 @@
 #      serves them), and of the cabinet /.git/HEAD and the source map of
 #      the first script its /login page loads
 #   5. GET  <cabinet>/login             the cabinet answers (if its URL is given)
+#                                       and its first HTML holds the form the
+#                                       sign-in options call for: e-mail where
+#                                       login codes go by e-mail only (a page
+#                                       on phone is read three times,
+#                                       SMOKE_LOGIN_READ_PAUSE_SECONDS apart,
+#                                       and fails if a read names no form; a
+#                                       first page that names no form, a
+#                                       release older than this check, is a
+#                                       skip)
 #      GET  <cabinet>/.well-known/security.txt  names the security mailbox
 #                                       and its https Canonical address
 #   6. a test chat through the website widget of SMOKE_WIDGET_BUSINESS_ID
@@ -31,7 +40,8 @@
 set -euo pipefail
 
 if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
-  sed -n '2,30p' "$0" >&2
+  # The header above, up to its first line that is not a comment.
+  awk 'NR == 1 { next } /^#/ { print; next } { exit }' "$0" >&2
   exit 2
 fi
 
@@ -41,14 +51,19 @@ cabinet_url="${cabinet_url%/}"
 wait_seconds="${SMOKE_WAIT_SECONDS:-60}"
 request_seconds="${SMOKE_REQUEST_SECONDS:-15}"
 reply_seconds="${SMOKE_REPLY_SECONDS:-30}"
+login_read_pause="${SMOKE_LOGIN_READ_PAUSE_SECONDS:-2}"
 business_id="${SMOKE_WIDGET_BUSINESS_ID:-}"
 expected_reply="${SMOKE_EXPECT_REPLY:-}"
 body_file="$(mktemp)"
-trap 'rm -f "$body_file"' EXIT
+error_file="$(mktemp)"
+trap 'rm -f "$body_file" "$error_file"' EXIT
 
 pass() { printf 'ok    %s\n' "$1"; }
 fail() {
   printf 'FAIL  %s\n' "$1" >&2
+  if [ -s "$error_file" ]; then
+    printf '      %s\n' "$(head -c 300 "$error_file")" >&2
+  fi
   if [ -s "$body_file" ]; then
     printf '      response: %s\n' "$(head -c 500 "$body_file")" >&2
   fi
@@ -56,20 +71,27 @@ fail() {
 }
 
 # refuse_published BASE PATH: fail when BASE PATH answers 2xx, which it
-# must not (the body is not printed: it may hold what must stay hidden).
+# must not. The status line decides, whatever becomes of the body after it
+# (cut off, slower than SMOKE_REQUEST_SECONDS); the body is not kept, it
+# may hold what must stay hidden.
 refuse_published() {
   local status
-  status="$(request GET "$1$2")"
+  status="$(curl --silent --max-time "$request_seconds" --output /dev/null \
+    --write-out '%{http_code}' --header 'X-Smoke-Test: 1' \
+    --header "X-Request-Id: smoke-$$" "$1$2" 2>/dev/null || true)"
   case "$status" in
     2??)
       : >"$body_file"
+      : >"$error_file"
       fail "GET $1$2 answered $status: a release must not publish it"
       ;;
   esac
 }
 
 # request METHOD URL [JSON_BODY] [HEADER]: the status code; the body goes to
-# $body_file. A connection failure is status 000.
+# $body_file. A connection failure, a timeout or a body cut off is status
+# 000, with an empty body (an earlier answer is never read twice) and
+# curl's cause in $error_file, which `fail` prints.
 request() {
   local method="$1" url="$2" data="${3:-}" header="${4:-X-Smoke-Test: 1}"
   local arguments=(--silent --show-error --max-time "$request_seconds"
@@ -78,12 +100,29 @@ request() {
   if [ -n "$data" ]; then
     arguments+=(--header 'Content-Type: application/json' --data "$data")
   fi
-  curl "${arguments[@]}" "$url" 2>/dev/null || true
+  : >"$body_file"
+  : >"$error_file"
+  local status cause code=0
+  status="$(curl "${arguments[@]}" "$url" 2>"$error_file")" || code=$?
+  if [ "$code" -ne 0 ]; then
+    : >"$body_file"
+    cause="$(head -n 1 "$error_file")"
+    [ -n "$cause" ] || cause="curl: ($code)"
+    if [ "${status:-000}" != "000" ]; then
+      cause="$cause (after status $status)"
+    fi
+    printf '%s\n' "$cause" >"$error_file"
+    status="000"
+  fi
+  printf '%s' "$status"
 }
 
 # json_field NAME: a top-level field of the JSON body as text (objects and
-# lists as JSON), or `assistant_reply`: the text of the first assistant
-# message in `items`. Prints nothing when it is missing, null or empty.
+# lists as JSON), `assistant_reply`: the text of the first assistant
+# message in `items`, or `login_form`: the form the sign-in options open
+# the cabinet's /login on (openingLoginMethod in
+# web/src/app/login/_lib/loginOptions.ts). Prints nothing when it is
+# missing, null or empty.
 json_field() {
   python3 - "$1" "$body_file" <<'PYTHON' 2>/dev/null || true
 import json
@@ -103,11 +142,73 @@ if name == "assistant_reply":
         ),
         None,
     )
+elif name == "login_form":
+    # As the cabinet: a missing or null flag offers e-mail, else its truth
+    # in JavaScript (a list or an object is true, NaN is false).
+    channels = body.get("configured_channels")
+    by_email_only = isinstance(channels, list) and all(
+        channel == "email" for channel in channels
+    )
+    flag = body.get("is_email_login_available")
+    is_email_offered = (
+        flag is None
+        or isinstance(flag, (list, dict))
+        or (bool(flag) and flag == flag)
+    )
+    value = "email" if is_email_offered and by_email_only else "phone"
 else:
     value = body.get(name)
 if value not in (None, "", [], {}):
     print(value if isinstance(value, str) else json.dumps(value))
 PYTHON
+}
+
+# page_login_form: the method the sign-in form in $body_file names
+# (<form … data-login-method="email" or "phone">), or nothing when the page
+# names none. Only the page's own form elements count, the first that
+# names one: not a form quoted in a script, a comment or a template.
+page_login_form() {
+  python3 - "$body_file" <<'PYTHON' 2>/dev/null || true
+import re
+import sys
+from html.parser import HTMLParser
+
+
+class FormMethod(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.templates = 0
+        self.method = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "template":
+            self.templates += 1
+        elif tag == "form" and self.templates == 0 and self.method is None:
+            value = dict(attrs).get("data-login-method") or ""
+            if re.fullmatch("[a-z]+", value):
+                self.method = value
+
+    def handle_endtag(self, tag):
+        if tag == "template" and self.templates > 0:
+            self.templates -= 1
+
+
+parser = FormMethod()
+with open(sys.argv[1], encoding="utf-8", errors="replace") as page:
+    parser.feed(page.read())
+parser.close()
+if parser.method:
+    print(parser.method)
+PYTHON
+}
+
+# form_name METHOD: the form as a message names it.
+form_name() {
+  if [ "$1" = "email" ]; then
+    printf 'e-mail'
+  else
+    printf '%s' "$1"
+  fi
 }
 
 # 1. The instance is up (Render may still be switching traffic).
@@ -122,8 +223,11 @@ done
 pass "GET /healthz"
 
 status="$(request GET "$api_url/readyz")"
-[ "$status" = "200" ] && [ "$(json_field status)" = "ready" ] \
-  || fail "GET /readyz answered $status (database, migrations or pool)"
+if [ "$status" != "200" ] || [ "$(json_field status)" != "ready" ]; then
+  # 000 is no whole answer: the line under it names curl's cause.
+  [ "$status" != "000" ] || fail "GET /readyz answered $status"
+  fail "GET /readyz answered $status (database, migrations or pool)"
+fi
 pass "GET /readyz"
 
 # 2. The widget script every business site loads.
@@ -137,6 +241,7 @@ status="$(request GET "$api_url/v1/auth/login-options")"
 [ "$status" = "200" ] || fail "GET /v1/auth/login-options answered $status"
 [ -n "$(json_field configured_channels)" ] \
   || fail "GET /v1/auth/login-options has no configured_channels"
+login_form="$(json_field login_form)"
 pass "GET /v1/auth/login-options"
 
 # 4. What a release must not publish (SEC-06).
@@ -154,6 +259,41 @@ if [ -n "$cabinet_url" ]; then
   status="$(request GET "$cabinet_url/login")"
   [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
   pass "GET cabinet /login"
+
+  # The cabinet's server reads the sign-in options while it renders the
+  # page and puts their form into the first HTML
+  # (web/src/app/login/_lib/openingMethod.ts). A cabinet that cannot read
+  # its API opens on phone, and so does one page whose read took over two
+  # seconds: that page is read again before the check fails. Where a phone
+  # channel delivers codes, both open on phone: there the check proves
+  # only that the page names its form.
+  page_form="$(page_login_form)"
+  reads=1
+  while [ "$page_form" = "phone" ] && [ "$login_form" = "email" ] && [ "$reads" -lt 3 ]; do
+    sleep "$login_read_pause"
+    status="$(request GET "$cabinet_url/login")"
+    [ "$status" = "200" ] || fail "GET $cabinet_url/login answered $status"
+    page_form="$(page_login_form)"
+    reads=$((reads + 1))
+    if [ -z "$page_form" ]; then
+      : >"$body_file"
+      fail "cabinet /login opened on phone, then named no form: a page from another release or cut off"
+    fi
+  done
+  if [ -z "$page_form" ]; then
+    printf 'skip  the form of cabinet /login (a release whose page does not name it)\n'
+  elif [ "$page_form" = "$login_form" ]; then
+    pass "cabinet /login opens on the $(form_name "$page_form") form"
+    if [ "$reads" -gt 1 ]; then
+      printf 'note  cabinet /login opened on phone in %s of %s reads\n' "$((reads - 1))" "$reads"
+    fi
+  elif [ "$page_form" = "phone" ]; then
+    : >"$body_file"
+    fail "cabinet /login opens on the phone form in $reads reads, the sign-in options call for the e-mail form: the cabinet's server did not read them within two seconds (its BACKEND_URL, a slow API or the API's request limit)"
+  else
+    : >"$body_file"
+    fail "cabinet /login opens on the $(form_name "$page_form") form, the sign-in options call for the $(form_name "$login_form") form: the cabinet reads another API than $api_url, or its rule differs from this script's"
+  fi
 
   # Source maps go to the error tracker only (deleted after the upload).
   script_url="$(grep -Eo '(https?://[^"'"'"' ]+)?/_next/static/[^"'"'"' ?#]+\.js' \
