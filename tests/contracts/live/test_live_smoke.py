@@ -8,12 +8,13 @@ its sandbox secrets is skipped (tests/contracts/README.md lists them).
 Never give these production credentials.
 """
 
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any, cast
 from urllib.parse import parse_qsl
 
 import httpx
 import pytest
-from typed_time_provider import Microseconds, WallClock
+from typed_time_provider import MICROSECONDS_IN_SECOND, Microseconds, WallClock
 
 from app.adapters.payments.flitt_payment_gateway_adapter import (
     FlittPaymentGatewayAdapter,
@@ -23,6 +24,8 @@ from app.clients.google.google_calendar_client import GoogleCalendarClient
 from app.clients.meta.graph_api_client import DEFAULT_GRAPH_API_VERSION
 from app.clients.telegram.telegram_bot_client import TelegramBotClient
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
+from app.schemas.dto.payments import PaymentCheckoutRequest, RecurringCharge
+from app.schemas.typings.billing.constrained_strings import AutoDebitStartDate
 from app.schemas.typings.bookings.constrained_strings import CalendarRedirectUrl
 from app.schemas.typings.bookings.strings import CalendarRefreshToken
 from app.schemas.typings.calendar_sync.constrained_floats import BusyTimeFetchSeconds
@@ -48,6 +51,10 @@ from tests.contracts.live.live_network import (
 from tests.contracts.vendor_schemas import assert_inbound, assert_outbound
 
 FIXED_CLOCK: WallClock[Microseconds] = AdjustableClock().wall_clock
+# Flitt refuses a first automatic charge on a day already past, so the live
+# call moves the offline contract tests' fixed day to a week from today.
+REAL_CLOCK: WallClock[Microseconds] = WallClock(preferred_time_unit_type=Microseconds)
+LIVE_FIRST_CHARGE_DAYS_AHEAD: int = 7
 
 pytestmark = pytest.mark.skipif(
     not is_live(), reason="The live smoke runs nightly with CONTRACTS_LIVE=1."
@@ -133,6 +140,26 @@ def test_twilio_test_credentials(network: RecordingNetwork) -> None:
     )
 
 
+def live_checkout_request() -> PaymentCheckoutRequest:
+    """The contract tests' checkout, its first automatic charge a week from today."""
+
+    request: PaymentCheckoutRequest = checkout_request()
+    today: date = datetime.fromtimestamp(
+        REAL_CLOCK.now_unix() / MICROSECONDS_IN_SECOND, UTC
+    ).date()
+    first_charge_day: date = today + timedelta(days=LIVE_FIRST_CHARGE_DAYS_AHEAD)
+    first_charge: datetime = datetime.combine(first_charge_day, time(), tzinfo=UTC)
+    recurring: RecurringCharge = request.recurring_charge.model_copy(
+        update={
+            "start_date": AutoDebitStartDate(first_charge_day.isoformat()),
+            "starts_at": Microseconds(
+                int(first_charge.timestamp()) * MICROSECONDS_IN_SECOND
+            ),
+        }
+    )
+    return request.model_copy(update={"recurring_charge": recurring})
+
+
 def test_flitt_test_merchant_checkout(network: RecordingNetwork) -> None:
     # Flitt's documented test merchant: public credentials, no secrets.
     gateway = FlittPaymentGatewayAdapter(
@@ -145,7 +172,7 @@ def test_flitt_test_merchant_checkout(network: RecordingNetwork) -> None:
         wall_clock=FIXED_CLOCK,
     )
 
-    gateway.create_checkout(checkout_request())
+    gateway.create_checkout(live_checkout_request())
 
     request, response = network.last()
     sent: dict[str, Any] = json_of(request.content)

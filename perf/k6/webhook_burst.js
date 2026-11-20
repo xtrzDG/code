@@ -7,9 +7,14 @@
 //   k6 run -e MANIFEST=$PWD/perf/manifest.json perf/k6/webhook_burst.js
 import http from "k6/http";
 import { check } from "k6";
-import { API_URL, pick, telegramBusinesses } from "./lib/manifest.js";
+import { API_URL, clientAddress, pick, telegramBusinesses } from "./lib/manifest.js";
 
 const RATE = Number(__ENV.WEBHOOK_RATE || 200);
+// Telegram delivers from its own address ranges, not from one address:
+// each delivery comes from one of TELEGRAM_ADDRESSES client addresses (the
+// load stack trusts X-Forwarded-For), so the webhook admission's flood
+// budget per client network sees that pool, not the one k6 container.
+const TELEGRAM_ADDRESSES = Number(__ENV.TELEGRAM_ADDRESSES || 8);
 
 export const options = {
   scenarios: {
@@ -53,6 +58,7 @@ export default function () {
       headers: {
         "Content-Type": "application/json",
         "X-Telegram-Bot-Api-Secret-Token": business.telegram_webhook_secret,
+        "X-Forwarded-For": clientAddress(200000 + (sequence % TELEGRAM_ADDRESSES)),
       },
     },
   );
