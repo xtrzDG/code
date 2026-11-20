@@ -27,7 +27,7 @@ system dependencies and the cached packages all follow the image.
 | `coverage` | combines every part's coverage (floor 95 %), merges the parts' durations into the `backend-test-durations` artifact | `backend-tests` | ~0:30 |
 | `web-build` | `npm ci`, `.next/cache` restored, `next build`, the secret scan of the build, the payment pages' scripts against their inventory, the build kept as the `cabinet-build` artifact | — | ~1:45 (build ~1:00) |
 | `web-checks` | check:intl (the step "Node formats Italian and English (full ICU)"), lint, knip, typecheck, vitest with coverage, generated client; on `main` the Sentry source maps | — | ~2:45 |
-| `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit | — | ~0:40 |
+| `security` | pip-audit, npm audit, on a pull request the dependency review (its summary also a comment) and the registry check of new direct dependencies, gitleaks, bandit; each scan runs even when an earlier one failed | — | ~0:40 |
 | `images` | both Docker images: build, smoke test, Trivy, SBOM | — | ~3:50 |
 | `evals` | the evals replay gate ("The evals replay gate" below): when the change touches what the model sees, every recorded conversation replayed offline, without keys | — | not measured yet |
 | `e2e` (1/10 … 10/10) | starts the downloaded build and its own API, runs its spec files | `web-build` | ~4:40 (tests ~3:30) |

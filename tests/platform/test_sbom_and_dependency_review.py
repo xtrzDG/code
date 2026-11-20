@@ -61,9 +61,33 @@ def test_every_pull_request_goes_through_the_dependency_review() -> None:
     job = workflow("ci.yml")["jobs"]["security"]
     [review] = uses(job, "actions/dependency-review-action")
 
-    assert review["if"] == "github.event_name == 'pull_request'"
+    assert review["if"] == "${{ !cancelled() && github.event_name == 'pull_request' }}"
     assert review["with"]["config-file"] == "./.github/dependency-review-config.yml"
     assert "security" in workflow("ci.yml")["jobs"]["ci-passed"]["needs"]
+
+
+def test_every_scan_runs_even_when_an_earlier_one_failed() -> None:
+    # One red audit must not skip the secrets scan, the static analysis or
+    # the review of changed dependencies; the job still fails on it.
+    job = workflow("ci.yml")["jobs"]["security"]
+    scans: dict[str, dict[str, Any]] = {
+        str(step["name"]): step
+        for step in steps(job)
+        if str(step.get("name", "")).startswith(
+            (
+                "Cabinet dependencies",
+                "Dependencies this pull request changes",
+                "New dependencies on their registries",
+                "Secrets in the whole history",
+                "Python static analysis",
+            )
+        )
+    }
+
+    assert len(scans) == 5
+    for name, step in scans.items():
+        assert str(step.get("if", "")).startswith("${{ !cancelled()"), name
+        assert "continue-on-error" not in step, name
 
 
 def test_the_review_fails_on_high_advisories_and_denied_licences() -> None:
