@@ -480,8 +480,8 @@ jobs:
       # reviewed exceptions are in .github/dependency-review-config.yml. Its
       # summary is also a comment on the pull request (a fork's read-only
       # token cannot comment: the summary stays in the run). Like every step
-      # after it, it runs also when a step above failed: one failed audit
-      # hides no other check, and the job still fails.
+      # after it, it runs also when a step above failed, and the job still
+      # fails.
       - name: Dependencies this pull request changes (dependency review)
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
