@@ -1,7 +1,5 @@
 """Stripe's automatic charges, their retries and a card replaced in its portal."""
 
-import pytest
-
 from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
@@ -30,7 +28,6 @@ from tests.payments.payment_world import (
     stripe_session,
 )
 
-pytestmark = pytest.mark.usefixtures("stripe_gate_open")
 MASTERCARD: dict[str, object] = {
     "id": "pm_test_0002",
     "card": {"brand": "mastercard", "last4": "4444", "exp_month": 1, "exp_year": 2031},

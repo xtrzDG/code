@@ -41,9 +41,9 @@ def ops_lane_gate(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> bool:
     """
-    The alerts' own lane once its release gate is open; before that (the
-    release that ships it) they share the outbound lane, where Meta holds
-    at most half of the threads.
+    The alerts' own lane, its release gate open as in this release; with
+    the gate closed (the release that shipped the lane) they share the
+    outbound lane, where Meta holds at most half of the threads.
     """
 
     is_open: bool = request.param

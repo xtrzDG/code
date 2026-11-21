@@ -5,8 +5,9 @@ class InboundEventKind(StrEnum):
     """
     What a webhook brought into the inbox, and so which job processes it.
     COMMENT_TRIGGER is an Instagram comment that named one of the owner's
-    keywords: it gets one private reply (written only once its release gate
-    opens, app/utilities/storage/release_gates.py).
+    keywords: it gets one private reply (written only while its release
+    gate is open, as it is from this release:
+    app/utilities/storage/release_gates.py).
     """
 
     CUSTOMER_MESSAGE = "customer_message"
@@ -46,7 +47,7 @@ class OutboundMessageKind(StrEnum):
     confirmation of a booking the assistant made or moved in a chat, with
     its manage link (BOOKING_CONFIRMATION), and the private reply to an
     Instagram comment that named one of the owner's keywords
-    (COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).
+    (COMMENT_REPLY, behind the same release gate as COMMENT_TRIGGER).
     """
 
     CUSTOMER_REPLY = "customer_reply"

@@ -5,8 +5,8 @@ class PaymentProvider(StrEnum):
     """
     Payment service that charges owners: Flitt (concept: auto-debit) in
     Georgia and Armenia, Stripe in the EU, the US and Israel
-    (`PaymentProviderRegistry`). STRIPE is stored only once the
-    `stripe_payments` release gate opens.
+    (`PaymentProviderRegistry`). STRIPE is stored only while the
+    `stripe_payments` release gate is open, as it is from this release.
     """
 
     FLITT = "flitt"

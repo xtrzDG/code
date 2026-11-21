@@ -7,8 +7,8 @@ class StatusComponent(StrEnum):
     website chat and hosted chat page (CHAT), WhatsApp, Instagram and
     Messenger (META), Telegram, phone calls (VOICE), the owner cabinet
     with its sign-in (CABINET) and payments (PAYMENTS: deposits, payment
-    links and subscriptions through Flitt and Stripe, REL-06; stored
-    behind the `status_payments` release gate).
+    links and subscriptions through Flitt and Stripe, REL-06; stored since
+    the `status_payments` release gate opened).
     """
 
     CHAT = "chat"

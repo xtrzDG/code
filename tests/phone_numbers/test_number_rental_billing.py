@@ -1,6 +1,5 @@
 """Each rental month of a number: billed, on the platform, or the number goes back."""
 
-import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.billing import InvoiceKind, UsageKind
@@ -12,6 +11,7 @@ from app.schemas.domain.billing import InvoiceDocument, UsageEventDocument
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.users import UserDocument
 from app.schemas.dto.billing_cabinet import StartTrialCommand, StartTrialRequest
+from app.utilities.storage.release_gates import PHONE_NUMBER_RENTAL_GATE, is_gate_open
 from tests.billing.grace_steps import end_trial, pay_open_invoices
 from tests.phone_numbers.phone_world import PhoneWorld
 
@@ -60,7 +60,6 @@ def rental_usage(
     ]
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_a_paying_customer_gets_a_bill_each_month() -> None:
     world = PhoneWorld()
     owner, business = paying_business(world)
@@ -87,7 +86,6 @@ def test_a_paying_customer_gets_a_bill_each_month() -> None:
     assert len(rental_usage(world, business)) == 2
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_a_month_in_the_trial_is_on_the_platform() -> None:
     world = PhoneWorld()
     # In the trial, with the card the owner saved.
@@ -101,7 +99,6 @@ def test_a_month_in_the_trial_is_on_the_platform() -> None:
     assert world.rented(business).status is PhoneNumberStatus.ACTIVE
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_nobody_paying_gives_the_number_back_after_its_first_month() -> None:
     world = PhoneWorld()
     owner, business = world.owner_and_business()
@@ -121,7 +118,6 @@ def test_nobody_paying_gives_the_number_back_after_its_first_month() -> None:
     assert world.notifier.texts() != []
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_months_missed_while_the_job_was_down_are_billed_one_by_one() -> None:
     world = PhoneWorld()
     owner, business = paying_business(world)
@@ -138,14 +134,16 @@ def test_months_missed_while_the_job_was_down_are_billed_one_by_one() -> None:
     assert world.rented(business).billed_until > world.clock.now()
 
 
-def test_before_the_rental_gate_opens_no_month_is_billed_or_recorded() -> None:
+def test_with_the_rental_gate_open_the_first_month_is_billed_and_recorded() -> None:
     world = PhoneWorld()
     owner, business = paying_business(world)
     world.rent_austin_number(owner, business)
     rented_at = world.rented(business).rented_at
 
-    assert bill(world) == 0
+    assert is_gate_open(PHONE_NUMBER_RENTAL_GATE) is True
+    assert bill(world) == 1
 
-    assert rental_invoices(world, business) == []
-    assert rental_usage(world, business) == []
-    assert world.rented(business).billed_until == rented_at
+    [invoice] = rental_invoices(world, business)
+    assert invoice.period_start == rented_at
+    assert len(rental_usage(world, business)) == 1
+    assert world.rented(business).billed_until == invoice.period_end

@@ -12,7 +12,8 @@ class MissedCallReason(StrEnum):
     assistant answered, the caller hung up without a word) and
     TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)
     and CALLBACK_REQUESTED (the caller asked to be called back and the call
-    left staff nothing to act on; written once its release gate opens).
+    left staff nothing to act on; written since its release gate opened,
+    such a call was TRANSFER_UNANSWERED before).
     """
 
     NO_ANSWER = "no_answer"

@@ -4,7 +4,6 @@ customer the owner blocked, one who said STOP, and one whose STOP outlived
 their erasure (the suppression list).
 """
 
-import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.channels import ChannelKind
@@ -52,7 +51,6 @@ def answer_comment(world: CommentWorld) -> None:
     world.run_worker()
 
 
-@pytest.mark.usefixtures("next_release")
 class TestSilencedAuthors:
     def test_a_blocked_customer_gets_no_private_reply(self) -> None:
         world = CommentWorld()

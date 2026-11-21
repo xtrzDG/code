@@ -47,9 +47,9 @@ class AcceptInstagramCommentsUseCase(UseCaseContract[MetaWebhookRequest, InboxIn
     left alone, and nothing of it is stored.
 
     The comment's id is the event's platform id, so a redelivered webhook
-    finds its event and the comment is answered once. Until the release
-    gate of comment replies opens (the next release), comments are only
-    read.
+    finds its event and the comment is answered once. While the release
+    gate of comment replies is closed (it is open from this release),
+    comments are only read.
     """
 
     def __init__(
@@ -78,8 +78,8 @@ class AcceptInstagramCommentsUseCase(UseCaseContract[MetaWebhookRequest, InboxIn
         self._instagram_adapter.verify_signature(input_data.payload, None)
         if not is_gate_open(COMMENT_REPLIES_GATE):
             logger.info(
-                "%d Instagram comments read; comment replies start with the "
-                "next release.",
+                "%d Instagram comments read; comment replies wait for their "
+                "release gate.",
                 len(comments),
             )
             return InboxIntake()

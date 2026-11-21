@@ -5,8 +5,6 @@ subscription, a done-for-you trial pays its setup fee on the page, and the
 page names the charges in the owner's language.
 """
 
-import pytest
-
 from app.schemas.constants.billing import (
     InvoiceKind,
     InvoiceStatus,
@@ -43,7 +41,6 @@ from tests.payments.test_stripe_renewals import (
     decline_renewal,
 )
 
-pytestmark = pytest.mark.usefixtures("stripe_gate_open")
 RECURRING_NAME: str = "line_items[0][price_data][product_data][name]"
 ONE_TIME_AMOUNT: str = "line_items[1][price_data][unit_amount]"
 

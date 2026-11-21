@@ -12,13 +12,13 @@ class SetupStepCode(StrEnum):
     assistant from the owner's own phone (PHONE_TEST), a second channel
     where customers write (SECOND_CHANNEL), and the link or QR code where
     customers see it (SHARE), and for an owner a second factor that
-    protects the customers' data (PROTECT_DATA). PROTECT_DATA is new in
-    this release and never stored (a closed release gate): the owner puts
+    protects the customers' data (PROTECT_DATA). Storage takes PROTECT_DATA
+    among the skipped steps (its release gate is open), but the owner puts
     it away with the reminder banner (security_nudges), not as a skip.
 
-    The steps after the launch are new in this release: a skip of one is
-    stored apart (`SetupStateDocument.skipped_after_launch`), which the
-    release before ignores.
+    A skip of a step after the launch is stored apart
+    (`SetupStateDocument.skipped_after_launch`), which a release before
+    those steps ignores.
     """
 
     BUSINESS = "business"

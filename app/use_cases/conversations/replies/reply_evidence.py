@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 
 from app.contracts.repositories.conversation_repositories import MessageRepoContract
+from app.schemas.constants.assistants import AssistantToolName
 from app.schemas.constants.channels import MessageDirection
 from app.schemas.constants.conversations import MessageAuthor
 from app.schemas.domain.conversations import LlmTurnDocument, ToolCallRecord
@@ -117,12 +118,16 @@ def gather_reply_evidence(
         if message.author is MessageAuthor.STAFF:
             staff_texts.append(str(message.text))
 
-        # Tool results of earlier replies and of voice-agent calls count.
+        # Tool results of earlier replies and of voice-agent calls count,
+        # but offered options do not: their result only counts the options
+        # (as within a turn, `record_tool_outcome`), and that count backs no
+        # price.
         tool_calls.extend(message.tool_calls)
         tool_texts.extend(
             without_customer_values(str(record.result_json), customer_values)
             for record in message.tool_calls
             if not record.is_error
+            and record.tool_name is not AssistantToolName.OFFER_CHOICES
         )
 
     return ReplyEvidence(

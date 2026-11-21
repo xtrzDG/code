@@ -1,12 +1,11 @@
 """
 The release gate of the status page's payments component (REL-06).
 
-This release reads `payments` in the stored announcements and status days
-and shows the component's level now (from the alerts that affect
-payments); the day records and announcements that name it are written
-once the next release opens the gate, when the release before it reads
-the value too. Until then its history shows no data and an admin cannot
-announce it yet.
+Open from this release (the release before it reads `payments` in the
+stored announcements and status days): the day records name payments, so
+its history fills from the deploy day on, and an admin may announce it.
+Its level comes from the alerts that affect payments (no provider is
+called), whether or not a provider can take payments yet.
 """
 
 from app.schemas.dto.release_gates import ReleaseGate
@@ -26,13 +25,13 @@ STATUS_RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("platform_announcements"),
         path=StoredEnumPath("components[]"),
         values=[PAYMENTS_COMPONENT],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=PAYMENTS_STATUS_GATE,
         collection_name=DocumentCollectionName("platform_status_days"),
         path=StoredEnumPath("components[].component"),
         values=[PAYMENTS_COMPONENT],
-        is_open=False,
+        is_open=True,
     ),
 )

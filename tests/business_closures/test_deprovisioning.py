@@ -148,16 +148,20 @@ def test_automatic_charges_stop_at_their_provider() -> None:
     gateway = Gateway()
 
     records = deprovisioner(
-        # Stripe is behind a closed release gate in storage; None is Flitt.
-        subscriptions=[charging(PaymentProvider.FLITT), charging(None)],
+        # None is Flitt; Stripe's release gate is open, so storage keeps it.
+        subscriptions=[
+            charging(PaymentProvider.FLITT),
+            charging(None),
+            charging(PaymentProvider.STRIPE),
+        ],
         gateway=gateway,
     ).deprovision(BUSINESS, NOW)
 
     assert outcomes(records)[DeprovisionTarget.PAYMENT_SCHEDULE] == (
         DeprovisionOutcome.DONE,
-        2,
+        3,
     )
-    assert gateway.stopped == ["flitt:sub-0000", "flitt:sub-0000"]
+    assert gateway.stopped == ["flitt:sub-0000", "flitt:sub-0000", "stripe:sub-0000"]
 
 
 def test_a_provider_that_fails_to_stop_charges_fails_the_deletion() -> None:

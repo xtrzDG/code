@@ -180,10 +180,14 @@ def test_a_booking_is_confirmed_by_two_taps() -> None:
         ["Yes, book it", "No"],
     ]
     assert {str(choices.language) for choices in stored} == {"en"}
-    # Until its release gate opens, offer_choices is not kept among a
-    # message's tool calls (an older release could not read the name).
+    # With its release gate open, offer_choices is kept among a message's
+    # tool calls (the release before reads the name).
     assert [
         [call.tool_name for call in message.tool_calls]
         for message in world.messages(booked.conversation_id)
         if message.tool_calls
-    ] == [[AssistantToolName.CHECK_AVAILABILITY], [AssistantToolName.CREATE_BOOKING]]
+    ] == [
+        [AssistantToolName.CHECK_AVAILABILITY, AssistantToolName.OFFER_CHOICES],
+        [AssistantToolName.OFFER_CHOICES],
+        [AssistantToolName.CREATE_BOOKING],
+    ]

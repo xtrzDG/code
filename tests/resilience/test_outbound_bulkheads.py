@@ -1,8 +1,8 @@
 """
 The outbound lane's bulkheads, the platform alerts' own lane and the split
 provider timeouts: a provider holds at most its share of the threads, the
-alerts move to the ops lane once its release gate opens, and a provider
-that hangs holds a thread for one read budget, not more.
+alerts use the ops lane (its release gate is open), and a provider that
+hangs holds a thread for one read budget, not more.
 """
 
 import smtplib
@@ -84,22 +84,22 @@ def test_a_slot_comes_back_when_the_send_fails() -> None:
         assert is_taken_again is True
 
 
-def test_alerts_use_the_ops_lane_only_once_its_gate_is_open() -> None:
-    opened = [
-        gate.model_copy(update={"is_open": True})
+def test_alerts_use_the_ops_lane_now_its_gate_is_open() -> None:
+    closed = [
+        gate.model_copy(update={"is_open": False})
         if gate.name == OPS_LANE_GATE
         else gate
         for gate in RELEASE_GATES
     ]
     queued_jobs = DocumentCollectionName("queued_jobs")
 
-    assert platform_alert_lane() is JobLane.OUTBOUND
-    assert platform_alert_lane(opened) is JobLane.OPS
-    # The release that ships the lane cannot store a job in it yet: the one
-    # before would not know the value.
+    assert platform_alert_lane() is JobLane.OPS
+    assert platform_alert_lane(closed) is JobLane.OUTBOUND
+    # This release stores jobs in the lane (the one before knows the value);
+    # a release with the gate closed could not.
+    refuse_closed_values({"lane": "ops"}, closed_gates_of(queued_jobs))
     with pytest.raises(ClosedReleaseGateError):
-        refuse_closed_values({"lane": "ops"}, closed_gates_of(queued_jobs))
-    refuse_closed_values({"lane": "ops"}, closed_gates_of(queued_jobs, opened))
+        refuse_closed_values({"lane": "ops"}, closed_gates_of(queued_jobs, closed))
 
 
 def test_provider_clients_connect_within_3_s_and_read_within_10_s() -> None:

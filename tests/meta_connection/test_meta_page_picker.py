@@ -107,7 +107,7 @@ class TestPickPage:
         assert response.json()["account_id"] == PICKED_INSTAGRAM_ID
         assert response.json()["comment_replies"] == {
             "is_on": False,
-            "is_available": False,
+            "is_available": True,
             "keywords": [],
             "reply_text": None,
         }

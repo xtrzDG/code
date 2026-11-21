@@ -1,6 +1,7 @@
 """
-A booking's side of its deposit: the status a held booking gets (PENDING
-until the `booking_deposits` release gate opens, then PENDING_DEPOSIT),
+A booking's side of its deposit: the status a held booking gets
+(PENDING_DEPOSIT while the `booking_deposits` release gate is open, as it
+is from this release; PENDING behind a closed gate),
 which bookings may still take or keep a deposit, and the deposit summary
 the booking carries for its list.
 """

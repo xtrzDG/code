@@ -77,10 +77,10 @@ class BillPhoneNumberRentalsUseCase(UseCaseContract[JobTick, JobReport]):
       (RELEASING, for want of payment; the maintenance job returns it and
       turns the phone channel off) and the owners are told.
 
-    Until the release gate `phone_number_rental` opens (the release after
-    the one that taught every reader the kind), months are neither billed
-    nor recorded: `billed_until` waits, and the first run after the gate
-    opens catches up month by month. Each step is written once: a month's
+    While the release gate `phone_number_rental` is closed (it is open
+    from this release), months are neither billed nor recorded:
+    `billed_until` waits, and the first run after the gate opens catches up
+    month by month. Each step is written once: a month's
     invoice and usage event are skipped when they exist, and `billed_until`
     moves on only from the value it was read with.
     """
