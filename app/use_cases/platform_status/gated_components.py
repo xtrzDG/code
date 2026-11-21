@@ -1,8 +1,8 @@
 """
-The status components storage may name yet (REL-06): payments is shown
-from this release, but it is written into the day records and the
-announcements only once its release gate opens (`status_payments`), when
-the release before reads the value too.
+The status components storage may name (REL-06): payments is written into
+the day records and the announcements only while its release gate
+(`status_payments`) is open, which it is from this release (the release
+before reads the value too).
 """
 
 from collections.abc import Iterable, Sequence
@@ -34,12 +34,13 @@ def require_announceable(
     """
     Raises:
         ValidationFailedError: an announcement names a component storage
-            may not name yet (payments, until the next release).
+            may not name (payments, while its release gate is closed).
     """
 
     allowed: tuple[StatusComponent, ...] = stored_components(gates)
     if any(component not in allowed for component in components):
         raise ValidationFailedError(
-            "The payments component can be named in announcements from the "
-            "next release; name the components it affects among the others."
+            "The payments component cannot be named in announcements while "
+            "its release gate is closed; name the components it affects "
+            "among the others."
         )

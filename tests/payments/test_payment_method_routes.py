@@ -1,7 +1,5 @@
 """The card on file routes and the Stripe webhook route over HTTP."""
 
-import pytest
-
 from app.schemas.typings.billing.prefixed_id import PaymentOrderId
 from tests.billing.billing_settings import CABINET_ORIGIN, CHECKOUT_URL
 from tests.billing.billing_testbed import bearer
@@ -87,7 +85,6 @@ def test_the_card_routes_check_tokens_roles_and_state() -> None:
     assert world.testbed.flitt.checkout_orders == []
 
 
-@pytest.mark.usefixtures("stripe_gate_open")
 def test_a_signed_stripe_event_is_applied_over_http() -> None:
     world = RouteWorld()
     world.start_trial()

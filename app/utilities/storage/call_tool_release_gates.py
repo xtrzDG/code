@@ -1,11 +1,12 @@
 """
 The release gates of the phone tool send_call_transcript (ACC-03).
 
-Every call's conversation offers the tool, but no version stores it and no
-stored message names it until the next release opens these gates (the
-release before cannot read the name yet): the voice platform's report of
-the finished call names the tool, and the post-call flow texts the caller
-the transcript from that report.
+Open from this release (the release before it reads the name): every
+call's conversation offers the tool and the message that records a voice
+tool call keeps it; no version lists it (conversation tools are no
+version's). The post-call flow texts the caller the transcript from the
+voice platform's report of the finished call either way; calls need a
+phone line.
 """
 
 from app.schemas.dto.release_gates import ReleaseGate
@@ -25,13 +26,13 @@ CALL_TOOL_RELEASE_GATES: tuple[ReleaseGate, ...] = (
         collection_name=DocumentCollectionName("assistant_versions"),
         path=StoredEnumPath("tools[]"),
         values=[CALL_TRANSCRIPT_TOOL],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=CALL_TRANSCRIPT_TOOL_GATE,
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[CALL_TRANSCRIPT_TOOL],
-        is_open=False,
+        is_open=True,
     ),
 )

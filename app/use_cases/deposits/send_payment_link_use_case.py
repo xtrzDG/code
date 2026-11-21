@@ -53,8 +53,8 @@ class SendPaymentLinkUseCase(
     conversation). The amount comes from the business's policy and the link
     from the owner's own payment page, never from the model. A new deposit
     is stored AWAITING with its reference, the booking keeps its place
-    until the hold ends (PENDING until the release gate opens, then
-    PENDING_DEPOSIT), and the payment line in the customer's language goes
+    until the hold ends (PENDING_DEPOSIT now that its release gate is
+    open), and the payment line in the customer's language goes
     under the reply; a deposit already waiting is sent again unchanged,
     even after the owner turned deposits off (its hold still stands). A
     paid one is not asked again, nor a new one while deposits are off or

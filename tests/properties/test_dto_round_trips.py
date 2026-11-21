@@ -1,8 +1,9 @@
 """
 DTO and stored-document round trips (SDLC-07): what storage writes reads
 back as the same document (an audit entry with its request origin, a day
-of the status page), DTOs survive their JSON, and a value behind a closed
-release gate (the status page's payments) is never written.
+of the status page with payments, whose release gate is open), DTOs
+survive their JSON, and a value behind a closed release gate is never
+written.
 """
 
 from datetime import date
@@ -42,12 +43,21 @@ from app.schemas.typings.platform_status.constrained_strings import StatusDay
 from app.schemas.typings.storage.constrained_strings import DocumentCollectionName
 from app.schemas.typings.users.prefixed_id import UserId
 from app.use_cases.platform_status.gated_components import stored_components
+from app.utilities.storage.status_release_gates import STATUS_RELEASE_GATES
 
 AUDIT = PersistedDocumentCodec(
     AuditLogEntryDocument, DocumentCollectionName("audit_logs")
 )
 STATUS_DAYS = PersistedDocumentCodec(
     PlatformStatusDayDocument, DocumentCollectionName("platform_status_days")
+)
+# The status days as a release with the payments gate closed writes them.
+GATED_STATUS_DAYS = PersistedDocumentCodec(
+    PlatformStatusDayDocument,
+    DocumentCollectionName("platform_status_days"),
+    release_gates=[
+        gate.model_copy(update={"is_open": False}) for gate in STATUS_RELEASE_GATES
+    ],
 )
 printable = st.text(
     alphabet=st.characters(min_codepoint=0x20, max_codepoint=0x7E),
@@ -120,7 +130,7 @@ def test_a_status_day_reads_back_as_written(day: PlatformStatusDayDocument) -> N
 
 
 @given(status_days(), st.sampled_from(StatusLevel))
-def test_a_payments_record_is_never_written_before_its_gate_opens(
+def test_a_payments_record_reads_back_now_its_gate_is_open(
     day: PlatformStatusDayDocument, level: StatusLevel
 ) -> None:
     with_payments = day.model_copy(
@@ -134,8 +144,9 @@ def test_a_payments_record_is_never_written_before_its_gate_opens(
         }
     )
 
+    assert STATUS_DAYS.decode(STATUS_DAYS.encode(with_payments)) == with_payments
     with pytest.raises(ClosedReleaseGateError):
-        STATUS_DAYS.encode(with_payments)
+        GATED_STATUS_DAYS.encode(with_payments)
 
 
 @given(

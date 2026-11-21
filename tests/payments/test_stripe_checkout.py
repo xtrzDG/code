@@ -37,7 +37,6 @@ from tests.payments.payment_world import (
     stripe_session,
 )
 
-pytestmark = pytest.mark.usefixtures("stripe_gate_open")
 MICROSECONDS_PER_SECOND: int = 1_000_000
 
 

@@ -112,7 +112,8 @@ def test_the_digest_tells_every_chat_once_about_a_client_still_critical() -> Non
     assert {delivery.channel for delivery in deliveries} == {
         ManagerContactChannel.TELEGRAM
     }
-    assert {job.lane for job in digest.queue.jobs} == {JobLane.OUTBOUND}
+    # The platform alerts' own lane (its release gate is open).
+    assert {job.lane for job in digest.queue.jobs} == {JobLane.OPS}
     text = str(deliveries[0].text)
     assert text.startswith("Clients that turned critical since the last digest: 1")
     assert "• Trattoria (GE): " in text

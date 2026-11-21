@@ -17,10 +17,11 @@ class RecordVoiceToolCallUseCase(
 ):
     """
     Keep a voice-agent tool call in the conversation feed (a system message
-    with the tool call record; a tool behind a closed release gate, such as
-    decline_recording, is kept by the message's text only) and return its
-    result to the agent. The call transcript itself arrives after the call
-    from the voice platform.
+    with the tool call record; a tool behind a closed release gate is kept
+    by the message's text only, and decline_recording and
+    send_call_transcript are open from this release) and return its result
+    to the agent. The call transcript itself arrives after the call from
+    the voice platform.
     """
 
     def __init__(

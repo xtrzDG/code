@@ -15,8 +15,8 @@ export type StatusDay = Schema<"StatusDayView">;
 export type Announcement = Schema<"AnnouncementView">;
 export type AnnouncementLevel = Schema<"AnnouncementLevel">;
 
-/** What an admin may announce; "payments" joins once the API stores it (its release gate opens). */
-export const STATUS_COMPONENTS: readonly StatusComponent[] = ["chat", "meta", "telegram", "voice", "cabinet"];
+/** What an admin may announce: every component (the API stores "payments" since its release gate opened). */
+export const STATUS_COMPONENTS: readonly StatusComponent[] = ["chat", "meta", "telegram", "voice", "cabinet", "payments"];
 export const ANNOUNCEMENT_LEVELS: readonly AnnouncementLevel[] = ["info", "maintenance", "degraded", "outage"];
 
 /** How often an open page looks again (the API measures every five minutes). */

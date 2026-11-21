@@ -11,6 +11,53 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-21 — the release gates open: deposits held, Stripe, comment replies, the seasonal pause, rented numbers, callback requests, stored tool calls, the ops lane, payments on the status page
+
+Spec: `799dec293bc66e18`
+
+Every release gate of the API opens: the release before this one
+(launch-2026-11-05) reads all the values below, so this one writes them
+(docs/operations/deploys.md, "Enum values one release ahead"). No value is
+new to the description; what changes is that the API now returns or
+accepts them. Only the descriptions of `BookingStatus`, `PaymentProvider`,
+`MissedCallReason`, `JobLane`, `StatusComponent`, `SetupStepCode`,
+`SubscriptionStatus`, `InboundEventKind` and `OutboundMessageKind` changed
+in the document.
+
+- **Changed** A booking held for its deposit has `status`
+  `pending_deposit` (with its deposit `awaiting`) in the cabinet's and the
+  public API's booking views and in the assistant's tool results; before,
+  it was `pending`. Clients read it like `pending` (2026-10-12 entry).
+- **Changed** `GET …/billing/payment-method` answers `provider` `stripe` for
+  a business in the EU, the US or Israel once the platform has its Stripe
+  keys; paying (`POST …/billing/checkout`) and saving or replacing the card
+  (`POST …/billing/payment-method`) then open a Stripe page. Payment
+  orders and subscriptions may name `stripe` (`payment_provider`,
+  `payment_method_summary.provider`).
+- **Changed** A channel view's `comment_replies.is_available` is `true`: with
+  the Meta app connected, an Instagram comment that names one of the
+  owner's keywords gets one private reply.
+- **Changed** With `SUBSCRIPTION_PAUSE_ENABLED` (off unless set),
+  `GET …/billing/lifecycle` offers the seasonal pause to an active monthly
+  subscription instead of `feature_off`, `POST …/billing/pause` schedules
+  it instead of answering 409, and a subscription may be `paused`.
+- **Changed** Each month of a rented phone number is billed as it begins:
+  invoices and usage events of the kind `number_rental`.
+- **Changed** A call that asked to be called back and left staff nothing to
+  act on is a missed call with `reason` `callback_requested` (the call
+  settings' text-back history, `TextBackView.reason`, and the staff alert)
+  instead of `transfer_unanswered`.
+- **Changed** Conversation views list the tool calls `offer_choices`,
+  `send_payment_link`, `decline_recording` and `send_call_transcript` of
+  the messages stored from now on (a call the tool refused, with
+  `is_error`).
+- **Changed** `GET /v1/admin/system` lists the lane `ops`, where the platform
+  alerts now run.
+- **Changed** `POST /v1/admin/announcements` and
+  `PATCH /v1/admin/announcements/{announcement_id}` accept the component
+  `payments` (no longer 422), and the status page's payments history
+  records levels from the deploy day on.
+
 ## 2026-11-03 — readiness checklist round 2: queued payment webhooks, card-testing brake, campaign holds, feature flags, call transcripts, health notes withheld, knowledge mentions in exports
 
 Spec: `133bc52d25af19c1`

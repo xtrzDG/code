@@ -81,14 +81,15 @@ def test_a_resolved_alert_is_told_once_and_can_fire_again() -> None:
     assert state.resolved_at is None
 
 
-def test_each_recipient_gets_its_own_outbound_job() -> None:
+def test_each_recipient_gets_its_own_ops_job() -> None:
     world = OpsWorld()
     put(world.jobs, job(QueuedJobStatus.DEAD, name="import_website"))
 
     world.alerts_use_case().run(TICK)
 
     telegram, email = world.queue.jobs
-    assert {telegram.lane, email.lane} == {JobLane.OUTBOUND}
+    # The alerts' own lane: its release gate is open in this release.
+    assert {telegram.lane, email.lane} == {JobLane.OPS}
     assert telegram.business_id is None and email.business_id is None
     assert telegram.serial_key != email.serial_key
     assert str(ALERT_CHAT) not in str(telegram.serial_key)

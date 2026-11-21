@@ -17,7 +17,8 @@ class PaymentSettings(ImmutableDTO):
       unverified.
 
     Owners are routed to Stripe only when both are set and the
-    `stripe_payments` release gate is open (docs/LAUNCH.md).
+    `stripe_payments` release gate is open, as it is from this release
+    (docs/LAUNCH.md).
     """
 
     stripe_secret_key: PlatformSecret | None = Field(default=None, repr=False)

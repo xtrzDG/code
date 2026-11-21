@@ -3,11 +3,11 @@
  * move to another service brings a one-time credit instead, which keeps
  * the subscription and is offered once; a reason with nothing to offer
  * cancels right away. The seasonal pause stores a subscription as
- * `paused`, a value behind a closed release gate in this release
- * (docs/operations/deploys.md): even with SUBSCRIPTION_PAUSE_ENABLED the
- * demo salon, paid monthly, sees no pause card and a season's break brings
- * no pause offer until the next release opens the gate. (The API tests
- * play that next release: pausing, billing while paused, resuming.)
+ * `paused`; its release gate is open in this release
+ * (docs/operations/deploys.md), so with SUBSCRIPTION_PAUSE_ENABLED (set
+ * for the e2e API) the demo salon, paid monthly, sees the pause card and a
+ * season's break brings the pause offer. (The API tests cover pausing,
+ * billing while paused and resuming.)
  */
 
 import type { APIRequestContext, Locator, Page } from "@playwright/test";
@@ -84,7 +84,7 @@ test("an owner closing the business cancels without an offer, and may go back fr
   await expect(page.getByText(billing.status.cancelled, { exact: true })).toBeVisible();
 });
 
-test("the demo salon is offered no seasonal pause while its release gate is closed", async ({ page, context, request }) => {
+test("the demo salon is offered the seasonal pause now its release gate is open", async ({ page, context, request }) => {
   const demo = await signInAsDemoOwner(request);
   await signInContext(context, demo.token);
   const response = await request.get(`${API_URL}/v1/businesses`, { headers: { authorization: `Bearer ${demo.token}` } });
@@ -93,14 +93,16 @@ test("the demo salon is offered no seasonal pause while its release gate is clos
 
   await page.goto(`/b/${salon!.id}/settings/billing`);
   await expect(page.getByRole("button", { name: billing.cancel })).toBeVisible();
-  await expect(page.getByRole("region", { name: texts.pause.title })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: texts.pause.title })).toBeVisible();
 
-  // A season's break has nothing to offer yet: the dialog cancels directly.
+  // A season's break offers the pause instead; going back changes nothing.
   await page.getByRole("button", { name: billing.cancel }).click();
   const dialog = page.getByRole("dialog", { name: billing.dialogs.cancelTitle });
   await dialog.getByLabel(texts.reasons.seasonal_break).check();
-  await expect(dialog.getByRole("button", { name: texts.cancel.continue })).toBeHidden();
-  await expect(dialog.getByRole("button", { name: billing.dialogs.cancelConfirm })).toBeVisible();
+  await dialog.getByRole("button", { name: texts.cancel.continue }).click();
+  const offer = page.getByRole("dialog", { name: texts.cancel.offerTitle });
+  await expect(offer.getByText(texts.offers.pause.title)).toBeVisible();
+  await offer.getByRole("button", { name: texts.cancel.back }).click();
   await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
 });

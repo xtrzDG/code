@@ -77,8 +77,8 @@ def is_callback_left_open(report: FinishedCallReport, call: RecordedCall) -> boo
 
 def callback_reason(gates: Sequence[ReleaseGate] | None = None) -> MissedCallReason:
     """
-    CALLBACK_REQUESTED once its release gate opens (the release before reads
-    it then); TRANSFER_UNANSWERED until that release.
+    CALLBACK_REQUESTED while its release gate is open (from this release:
+    the release before reads it); TRANSFER_UNANSWERED behind a closed gate.
     """
 
     if is_gate_open(CALLBACK_REQUESTED_GATE, gates):

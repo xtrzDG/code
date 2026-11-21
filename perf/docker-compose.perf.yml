@@ -50,12 +50,12 @@ services:
     environment:
       <<: *load-environment
       # Production's worker (render.yaml, workshop-worker): one instance,
-      # 20 threads, 14 + 4 connections, 12 model calls at once and the
+      # 20 threads, 15 + 4 connections, 12 model calls at once and the
       # default lanes (inbound=8). Connections: 4 x (10 + 4 + 1) API +
-      # (14 + 4 + 1) worker + 14 seed-load + 1 migrate + 3 reserved = 97 of
+      # (15 + 4 + 1) worker + 14 seed-load + 1 migrate + 3 reserved = 98 of
       # Postgres's 100 (tests/platform/test_load_stack_budget.py).
       THREADPOOL_SIZE: "20"
-      DB_POOL_SIZE: "14"
+      DB_POOL_SIZE: "15"
       DB_PLATFORM_POOL_SIZE: "4"
       LLM_MAX_CONCURRENCY: "12"
     extra_hosts: *offline-providers

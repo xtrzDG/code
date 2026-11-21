@@ -25,11 +25,12 @@ GATED_TOOLS: tuple[tuple[AssistantToolName, ReleaseGateName], ...] = (
 def storable_tool_calls(records: Sequence[ToolCallRecord]) -> list[ToolCallRecord]:
     """
     Every call, except offer_choices, send_payment_link, decline_recording
-    and send_call_transcript while their release gates are closed: the
-    release before cannot read those tool names yet; the reply keeps the
-    options it offered in its own `choices` and the payment line in its
-    text, and the voice platform's report of the call names a declined
-    recording and a transcript the caller asked for.
+    and send_call_transcript while their release gates are closed (all four
+    are open from this release): a release before them could not read
+    those tool names; the reply keeps the options it offered in its own
+    `choices` and the payment line in its text, and the voice platform's
+    report of the call names a declined recording and a transcript the
+    caller asked for.
     """
 
     withheld: set[AssistantToolName] = {

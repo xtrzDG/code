@@ -36,6 +36,7 @@ from app.utilities.billing.payment_retry_identity import (
     derive_payment_retry_id,
     parse_payment_retry_id,
 )
+from app.utilities.storage.release_gates import STRIPE_PAYMENTS_GATE, is_gate_open
 from tests.billing.billing_settings import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 
 # 2026-10-20 09:00 in Berlin; the clocks go back on 2026-10-25.
@@ -72,7 +73,6 @@ def test_the_european_union_has_twenty_seven_members() -> None:
     assert len(EUROPEAN_UNION_COUNTRY_CODES) == 27
 
 
-@pytest.mark.usefixtures("stripe_gate_open")
 def test_stripe_is_chosen_only_when_configured() -> None:
     assert PaymentProviderRegistry(configured()).select(CountryCode("DE")) is (
         PaymentProvider.STRIPE
@@ -85,9 +85,10 @@ def test_stripe_is_chosen_only_when_configured() -> None:
     ).select(CountryCode("US")) is (PaymentProvider.FLITT)
 
 
-def test_stripe_waits_for_its_release_gate() -> None:
+def test_stripe_is_chosen_now_its_release_gate_is_open() -> None:
+    assert is_gate_open(STRIPE_PAYMENTS_GATE) is True
     assert PaymentProviderRegistry(configured()).select(CountryCode("DE")) is (
-        PaymentProvider.FLITT
+        PaymentProvider.STRIPE
     )
 
 

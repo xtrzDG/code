@@ -69,8 +69,8 @@ def test_the_booking_is_held_with_its_deposit_on_its_row() -> None:
 
     held = world.booking(booking.id)
     assert held.status is held_status()
-    # The gate is closed in this release: the stored status stays PENDING.
-    assert held.status is BookingStatus.PENDING
+    # The gate is open in this release: the booking is stored PENDING_DEPOSIT.
+    assert held.status is BookingStatus.PENDING_DEPOSIT
     assert held.deposit is not None and receipt.issued is not None
     assert held.deposit.request_id == receipt.issued.request_id
     assert held.deposit_status is DepositStatus.AWAITING

@@ -44,18 +44,18 @@ def test_the_worst_case_fits_the_database_plan(blueprint_path: str) -> None:
 def test_production_counts_every_api_and_worker_instance_and_the_backup() -> None:
     budget = connection_budget("render.yaml")
 
-    # Launch size: one API instance, one customer worker and one batch
-    # worker, each with the tenant and the platform pool of its role: 98 of
-    # the 100 of basic-1gb.
+    # Launch size: one API instance, one customer worker (with the ops
+    # lane's thread) and one batch worker, each with the tenant and the
+    # platform pool of its role: all 100 of basic-1gb.
     assert budget.parts == {
         "reserved": RESERVED_CONNECTIONS,
         "workshop-api (migrate)": MIGRATE_CONNECTIONS,
         "workshop-api": DEPLOY_OVERLAP * 1 * (10 + 4 + LISTEN_CONNECTIONS),
-        "workshop-worker": DEPLOY_OVERLAP * 1 * (14 + 4 + LISTEN_CONNECTIONS),
+        "workshop-worker": DEPLOY_OVERLAP * 1 * (15 + 4 + LISTEN_CONNECTIONS),
         "workshop-batch-worker": DEPLOY_OVERLAP * (6 + 4 + LISTEN_CONNECTIONS),
         "workshop-backup": BACKUP_CONNECTIONS,
     }
-    assert (budget.plan, budget.limit, budget.worst_case) == ("basic-1gb", 100, 98)
+    assert (budget.plan, budget.limit, budget.worst_case) == ("basic-1gb", 100, 100)
 
 
 @pytest.mark.parametrize("blueprint_path", BLUEPRINTS)
