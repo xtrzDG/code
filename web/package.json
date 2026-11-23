@@ -37,7 +37,7 @@
     "@sentry/nextjs": "11.12.0",
     "clsx": "2.1.1",
     "libphonenumber-js": "1.13.16",
-    "motion": "13.4.6",
+    "motion": "14.14.0",
     "next": "16.4.6",
     "openapi-fetch": "0.17.0",
     "react": "19.3.1",
