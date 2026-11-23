@@ -63,7 +63,7 @@ services:
   k6:
     # Tag and digest: the run takes exactly the reviewed image (Dependabot,
     # docker-compose, moves both).
-    image: grafana/k6:1.3.0@sha256:3ddc8b1a33a2c3d8edc6e99b6a762ae36cba08788463458f5e6a7703e14eb77d
+    image: grafana/k6:2.4.0@sha256:d41bb79cd8de5a7ad619b53570e3712633e8bff0937010a5c6c57a4747e7a276
     profiles: ["load"]
     entrypoint: ["k6"]
     environment:
