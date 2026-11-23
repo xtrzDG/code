@@ -12,7 +12,7 @@
 # The base image is named once, in a FROM line, by tag and digest: the build
 # takes exactly the reviewed image, and Dependabot (docker) moves both when
 # the tag moves. node 22-bookworm-slim of 2026-11-02.
-FROM node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS node-base
+FROM node:26-bookworm-slim@sha256:5df79989ed685e09f0a98019db4cebfb22fb9df1a53c0161664a011f7ff6b0f1 AS node-base
 
 # --- Dependencies ------------------------------------------------------------
 FROM node-base AS deps
