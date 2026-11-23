@@ -8,6 +8,10 @@ from urllib.parse import quote, urlencode
 
 import pyotp
 
+# pyotp 2.12 ships py.typed, and its package re-exports TOTP without
+# __all__: pyright treats pyotp.TOTP as private, so it comes from its module.
+from pyotp.totp import TOTP
+
 from app.schemas.typings.mfa.constrained_integers import TotpTimeStep
 from app.schemas.typings.mfa.constrained_strings import TotpCode, TotpSecret
 from app.schemas.typings.mfa.strings import (
@@ -54,7 +58,7 @@ def current_totp_step(now_microseconds: int) -> TotpTimeStep:
 def totp_code_at(secret: TotpSecret, step: TotpTimeStep) -> TotpCode:
     """The code of a step (for tests and the code check)."""
 
-    return TotpCode(pyotp.TOTP(str(secret)).generate_otp(int(step)))
+    return TotpCode(TOTP(str(secret)).generate_otp(int(step)))
 
 
 def find_totp_step(
