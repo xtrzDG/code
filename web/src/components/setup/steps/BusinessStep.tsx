@@ -4,7 +4,9 @@
  * Step 1, "What's your business called?": the name, the kind of business
  * (cards; fixed once the business exists) and the one or two things every
  * customer of that kind asks (the niche's required questions about the
- * business). Checked on Continue; the screen around saves. In the edit
+ * business). Checked on Continue; the screen around saves. While the
+ * chosen kind's questions load, Continue waits (shown, but disabled):
+ * pressed then, it would check nothing and say nothing. In the edit
  * mode (Assistant → Business profile) there is no Continue: the screen
  * passes the problems of what is typed (`problems`), every question of the
  * section is asked, and `extra` holds the section's other fields.
@@ -65,6 +67,7 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
   const isEdit = mode === "edit";
   const niche = niches.data?.find((item) => item.key === form.nicheKey);
   const shownNiches = isNicheFixed ? (niche ? [niche] : []) : (niches.data ?? []);
+  const areQuestionsLoading = form.nicheKey !== "" && questions === null;
 
   const submit = () => {
     const found = {
@@ -84,7 +87,7 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
       mode={mode}
       title={isEdit ? t("profileEdit.sections.business.title") : t("tunnelBusiness.business.title")}
       text={isEdit ? t("profileEdit.sections.business.text") : t("tunnelBusiness.business.text")}
-      actions={(isEdit ? {} : { onContinue: submit, onBack, isBusy }) satisfies StepActions}
+      actions={(isEdit ? {} : { onContinue: submit, onBack, isBusy, canContinue: !areQuestionsLoading }) satisfies StepActions}
       aside={isEdit ? undefined : <LanguageSwitcher className="justify-center sm:hidden" />}
     >
       <div className="space-y-10">
@@ -130,7 +133,7 @@ export function BusinessStep({ form, onChange, niches, questions, isNicheFixed, 
           </div>
         )}
 
-        {form.nicheKey && questions === null ? (
+        {areQuestionsLoading ? (
           <LoadingRegion label={t("common.loading")}>
             <SkeletonText lines={2} />
           </LoadingRegion>
