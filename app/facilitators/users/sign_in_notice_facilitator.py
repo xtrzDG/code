@@ -1,5 +1,6 @@
 import logging
 from collections.abc import Sequence
+from contextlib import AbstractContextManager, nullcontext
 
 from typed_time_provider import Microseconds, WallClock
 
@@ -13,6 +14,7 @@ from app.contracts.notifications import (
 )
 from app.contracts.repositories.business_repositories import BusinessRepoContract
 from app.contracts.repositories.user_repositories import UserRepoContract
+from app.contracts.storage import StorageScopeContract
 from app.contracts.support_access import SignInNoticeFacilitatorContract
 from app.contracts.transformer_contract import TransformerContract
 from app.schemas.configurations.app_settings import AppSettings
@@ -29,6 +31,7 @@ from app.schemas.dto.notifications.staff_alerts import (
 )
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.dto.sessions import SessionDevice
+from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.handoffs.strings import ManagerContactAddress, ManagerName
@@ -73,7 +76,10 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
     the address it came from.
 
     Every notice links to Account → Security, where the session is ended.
-    Never raises.
+    The person's own requests (the sign-in, Account → Security) run in no
+    business's storage scope, so each business's alert and e-mail run in
+    that business's scope (`storage_scope`): its tenant collections refuse
+    unscoped code. Never raises.
     """
 
     def __init__(
@@ -88,8 +94,10 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
         wall_clock: WallClock[Microseconds],
         ip_countries: IpCountryLookupAdapterContract | None = None,
         user_repo: UserRepoContract | None = None,
+        storage_scope: StorageScopeContract | None = None,
     ) -> None:
         self._user_repo: UserRepoContract | None = user_repo
+        self._storage_scope: StorageScopeContract | None = storage_scope
         self._ip_countries: IpCountryLookupAdapterContract | None = ip_countries
         self._business_repo: BusinessRepoContract = business_repo
         self._staff_alerts: StaffAlertFacilitatorContract = staff_alerts
@@ -183,21 +191,30 @@ class SignInNoticeFacilitator(SignInNoticeFacilitatorContract):
 
         subject = StaffAlertSubject(key)
         for business in businesses:
-            self._staff_alerts.alert(
-                business,
-                StaffAlert(
-                    business_id=business.id,
-                    target=StaffLinkTarget.ACCOUNT_SECURITY,
-                    tag=PushNotificationTag(key),
-                    subject=subject,
-                    is_urgent=True,
-                    recipient_user_ids=[user.id],
-                ),
-                texts,
-            )
+            with self._scoped_to(business.id):
+                self._staff_alerts.alert(
+                    business,
+                    StaffAlert(
+                        business_id=business.id,
+                        target=StaffLinkTarget.ACCOUNT_SECURITY,
+                        tag=PushNotificationTag(key),
+                        subject=subject,
+                        is_urgent=True,
+                        recipient_user_ids=[user.id],
+                    ),
+                    texts,
+                )
 
         if user.email is not None:
-            self._email(user, businesses[0], texts, subject)
+            with self._scoped_to(businesses[0].id):
+                self._email(user, businesses[0], texts, subject)
+
+    def _scoped_to(self, business_id: BusinessId) -> AbstractContextManager[object]:
+        """The business's storage scope (none without the utility: plain stores)."""
+
+        if self._storage_scope is None:
+            return nullcontext()
+        return self._storage_scope.scoped_to_business(business_id)
 
     def _email(
         self,
