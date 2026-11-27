@@ -161,11 +161,16 @@ def test_the_shards_take_their_system_packages_from_the_cache() -> None:
     # mirror held every step of a shard on 26 October 2026); a miss fetches
     # them with timeouts and retries and keeps what apt downloaded.
     hit = run[: run.index("exit 0")]
-    assert "dpkg --install ~/system-packages/*.deb" in hit
+    # A cached package that replaces one of the image's (libasound2-data
+    # over libasound2t64, 27 November 2026) needs dpkg to deconfigure the
+    # older one in the same pass.
+    assert "dpkg --install --auto-deconfigure ~/system-packages/*.deb" in hit
     assert "apt-get" not in hit
     assert "npx playwright install chromium" in hit
     miss = run[run.index("exit 0") :]
     assert "Acquire::Retries" in miss and "Acquire::http::Timeout" in miss
+    # Every runner resolves the cache's versions, phased updates included.
+    assert 'APT::Get::Always-Include-Phased-Updates "true"' in miss
     assert miss.index("/var/cache/apt/archives {} +") < miss.index("apt-get update")
     assert miss.index("npx playwright install --with-deps chromium") < miss.rindex(
         "~/system-packages {} +"
