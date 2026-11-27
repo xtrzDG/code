@@ -30,8 +30,14 @@ async function saveRecoveryCodes(dialog: Locator): Promise<void> {
   await expect(dialog).toBeHidden();
 }
 
-/** Signs out (the session cookie goes) and signs in again up to the second step. */
+/**
+ * Signs out (the session cookie goes) and signs in again up to the second
+ * step. The cabinet page is left first: a page still loading would ask the
+ * API once more without the cookie, get a 401 and open the sign-in page by
+ * itself (`?reason=expired`), cutting this navigation short.
+ */
 async function signInAgain(page: Page, email: string, lastCodeAt: number): Promise<void> {
+  await page.goto("about:blank");
   await page.context().clearCookies({ name: "aw_session" });
   await page.goto("/login?next=/account/security");
   const wait = LOGIN_CODE_COOLDOWN_MS - (Date.now() - lastCodeAt);
