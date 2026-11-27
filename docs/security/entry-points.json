@@ -533,6 +533,7 @@
     {"name": "send_activation_nudges", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
     {"name": "platform_alerts", "access": "worker", "every_seconds": 300, "lane": "default", "runs_in": "one worker"},
     {"name": "check_channel_credentials", "access": "worker", "every_seconds": 3600, "lane": "default", "runs_in": "one worker"},
+    {"name": "refresh_whatsapp_tokens", "access": "worker", "every_seconds": 21600, "lane": "default", "runs_in": "one worker"},
     {"name": "critical_clients_digest", "access": "worker", "every_seconds": 86400, "lane": "default", "runs_in": "one worker"},
     {"name": "record_platform_status", "access": "worker", "every_seconds": 300, "lane": "default", "runs_in": "one worker"},
     {"name": "record_sli", "access": "worker", "every_seconds": 300, "lane": "default", "runs_in": "one worker"},

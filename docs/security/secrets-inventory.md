@@ -94,7 +94,7 @@ each workflow declares; it needs no rotation.
 
 | Credential | Sealed how | Who rotates |
 | --- | --- | --- |
-| Telegram bot tokens, Meta (WhatsApp, Instagram, Messenger) tokens | Fernet with the first key of `ENCRYPTION_KEYS` (`app/adapters/security/secret_cipher_adapter.py`) | the owner, by reconnecting; Meta tokens nearing expiry are flagged daily (`check_channel_credentials`) |
+| Telegram bot tokens, Meta (WhatsApp, Instagram, Messenger) tokens | Fernet with the first key of `ENCRYPTION_KEYS` (`app/adapters/security/secret_cipher_adapter.py`) | the owner, by reconnecting; Meta tokens nearing expiry are flagged daily (`check_channel_credentials`); WhatsApp tokens of Embedded Signup (60 days) are renewed by the platform before they end (`refresh_whatsapp_tokens`, the old token is left to run out), and the owners are told to reconnect when Meta refuses |
 | Google Calendar refresh tokens | same | the owner, by reconnecting (or disconnecting in the cabinet) |
 | TOTP seeds of owners, staff and admins | same (`app/use_cases/admin/security/totp_secret_resealer.py`) | the person, by enrolling again; re-sealed with every key rotation |
 | Public API keys | only a hash is stored (`app/use_cases/integrations/authenticate_api_key_use_case.py`) | the owner: create a new key, then revoke the old one |

@@ -10,7 +10,8 @@ import httpx
 import pytest
 from typed_time_provider import Microseconds
 
-from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient, earliest_end
+from app.clients.meta.meta_graph_readers import earliest_end
+from app.clients.meta.meta_token_debug_client import MetaTokenDebugClient
 from app.schemas.exceptions.application_errors import ExternalServiceError
 from app.schemas.exceptions.base_exception import ApplicationError
 from app.schemas.typings.channels.strings import ChannelSecret

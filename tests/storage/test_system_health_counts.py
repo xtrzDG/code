@@ -2,14 +2,15 @@
 The admin system page's and the alerts' counts across every business, on
 the in-memory and on the Postgres storage: jobs by state and lane, the
 oldest due job, dead letters by name, worker pulses, channels in ERROR and
-expiring tokens, handoffs, the outbox by state and failed tool calls.
+expiring tokens (and the WhatsApp tokens the renewal job looks at),
+handoffs, the outbox by state and failed tool calls.
 """
 
 import pytest
 
 from app.repositories.platform_activity_repository import PlatformActivityRepository
 from app.repositories.system_health_repository import SystemHealthRepository
-from app.schemas.constants.channels import ChannelStatus
+from app.schemas.constants.channels import ChannelKind, ChannelStatus
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.domain.businesses import BusinessDocument
@@ -128,6 +129,52 @@ def test_pulses_and_channels_that_need_the_team(
     assert [item.id for item in expiring] == [soon.id]
     assert sorted(str(item.name) for item in named) == ["Café Lumière", "Salon Ia"]
     assert repo.get_businesses([]) == []
+
+
+def test_whatsapp_tokens_ending_before_a_moment_soonest_first(
+    collections: CollectionFactory,
+) -> None:
+    repo, stores = health_repo(collections)
+    salon, cafe = business("Salon Ia"), business("Café Lumière")
+    # Connected, however long ago the token ended; in ERROR, from a moment.
+    long_gone = channel(cafe.id, expires_at=at(-30 * DAY))
+    from_start = channel(salon.id, ChannelStatus.ERROR, expires_at=at(-7 * DAY))
+    ended = channel(cafe.id, expires_at=at(-DAY))
+    failing = channel(salon.id, ChannelStatus.ERROR, expires_at=at(2 * DAY))
+    later = channel(cafe.id, expires_at=at(10 * DAY))
+    put(
+        stores["channels"],  # type: ignore[arg-type]
+        later,
+        failing,
+        ended,
+        from_start,
+        long_gone,
+        # In ERROR since before, too late, of another kind, switched off,
+        # not connected yet, without an end.
+        channel(cafe.id, ChannelStatus.ERROR, expires_at=at(-7 * DAY - 1)),
+        channel(cafe.id, expires_at=at(15 * DAY)),
+        channel(cafe.id, kind=ChannelKind.INSTAGRAM, expires_at=at(DAY)),
+        channel(cafe.id, ChannelStatus.DISABLED, expires_at=at(-30 * DAY)),
+        channel(cafe.id, ChannelStatus.PENDING, expires_at=at(DAY)),
+        channel(cafe.id),
+    )
+
+    def ending(limit: int) -> list[str]:
+        return [
+            str(item.id)
+            for item in repo.list_active_credentials_ending_before(
+                ChannelKind.WHATSAPP,
+                at(15 * DAY),
+                at(-7 * DAY),
+                DocumentQueryLimit(limit),
+            )
+        ]
+
+    assert ending(100) == [
+        str(item.id) for item in (long_gone, from_start, ended, failing, later)
+    ]
+    # The limit keeps the soonest across both statuses.
+    assert ending(3) == [str(item.id) for item in (long_gone, from_start, ended)]
 
 
 def test_activity_of_a_window_across_businesses(

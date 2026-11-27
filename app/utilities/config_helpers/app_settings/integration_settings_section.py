@@ -7,11 +7,19 @@ from app.schemas.typings.channels.constrained_strings import (
     MetaObjectId,
     WhatsAppTemplateName,
 )
+from app.schemas.typings.meta_connection.constrained_integers import (
+    MetaTokenRefreshDays,
+)
 from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.platform.strings import PlatformIdentifier, PlatformSecret
 from app.utilities.config_helpers.app_settings.environment_variable_readers import (
     optional_setting,
+    read_typed_integer,
 )
+
+# Meta issues WhatsApp Embedded Signup tokens for 60 days; the platform asks
+# for a new one this many days before the end.
+DEFAULT_META_TOKEN_REFRESH_DAYS: int = 15
 
 
 class IntegrationSettingsSection(TypedDict):
@@ -21,6 +29,7 @@ class IntegrationSettingsSection(TypedDict):
     meta_app_secret: PlatformSecret | None
     meta_verify_token: PlatformSecret | None
     meta_embedded_signup_config_id: MetaConfigurationId | None
+    meta_token_refresh_days: MetaTokenRefreshDays
     whatsapp_system_user_token: PlatformSecret | None
     whatsapp_notification_phone_number_id: MetaObjectId | None
     whatsapp_notification_template_name: WhatsAppTemplateName | None
@@ -53,6 +62,12 @@ def read_integration_settings(
             environment_variables,
             "META_EMBEDDED_SIGNUP_CONFIG_ID",
             MetaConfigurationId,
+        ),
+        meta_token_refresh_days=read_typed_integer(
+            environment_variables,
+            "META_TOKEN_REFRESH_DAYS",
+            DEFAULT_META_TOKEN_REFRESH_DAYS,
+            MetaTokenRefreshDays,
         ),
         whatsapp_system_user_token=secret("WHATSAPP_SYSTEM_USER_TOKEN"),
         whatsapp_notification_phone_number_id=optional_setting(

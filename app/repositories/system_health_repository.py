@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from typed_time_provider import Microseconds
 
+from app.contracts.channel_credentials import ChannelCredentialWatchRepoContract
 from app.contracts.document_store import DocumentCollectionAdapterContract
 from app.contracts.monitoring import SystemHealthRepoContract
 from app.repositories.document_queries import field_among, field_equals, time_range
@@ -48,13 +49,16 @@ MAX_WORKER_PULSES: DocumentQueryLimit = DocumentQueryLimit(50)
 MICROSECOND: int = 1
 
 
-class SystemHealthRepository(SystemHealthRepoContract):
+class SystemHealthRepository(
+    SystemHealthRepoContract, ChannelCredentialWatchRepoContract
+):
     """
     The admin system page's reads, platform-wide: queued jobs by the plain
     columns of migration 1093 (doc_status, doc_lane, doc_run_at), worker
     pulses by beat_at, channels by status and token expiry (and the active
-    Meta channels whose tokens the daily check asks about), and the
-    businesses of a few channels by key.
+    Meta channels whose tokens the daily check asks about, and those whose
+    tokens the renewal job looks at), and the businesses of a few channels
+    by key.
     """
 
     def __init__(
@@ -187,6 +191,39 @@ class SystemHealthRepository(SystemHealthRepoContract):
 
         return channels[: int(limit)]
 
+    def list_active_credentials_ending_before(
+        self,
+        kind: ChannelKind,
+        ending_before: Microseconds,
+        in_error_ending_from: Microseconds,
+        limit: DocumentQueryLimit,
+    ) -> list[ChannelDocument]:
+        # The token-expiry index selects; status and kind only narrow it. A
+        # connected channel counts however long ago its token ended (it has
+        # not been put in ERROR yet), one in ERROR only from
+        # `in_error_ending_from`. Each status brings its soonest, merged in
+        # end order.
+        starts: dict[ChannelStatus, Microseconds | None] = {
+            ChannelStatus.CONNECTED: None,
+            ChannelStatus.ERROR: in_error_ending_from,
+        }
+        ending: list[ChannelDocument] = []
+        for status, starting_at in starts.items():
+            ending += self._channels.list_by_range(
+                time_range(
+                    CREDENTIAL_EXPIRES_AT_FIELD,
+                    starting_at=starting_at,
+                    ending_before=ending_before,
+                ),
+                matches=[
+                    field_equals(STATUS_FIELD, status),
+                    field_equals(KIND_FIELD, kind),
+                ],
+                limit=limit,
+            )
+
+        return sorted(ending, key=credential_end)[: int(limit)]
+
     def get_businesses(
         self, business_ids: Sequence[BusinessId]
     ) -> list[BusinessDocument]:
@@ -196,6 +233,12 @@ class SystemHealthRepository(SystemHealthRepoContract):
         return self._businesses.get_many(
             [str(business_id) for business_id in business_ids]
         )
+
+
+def credential_end(channel: ChannelDocument) -> int:
+    """When the channel's token ends, as a sort key (a range always has one)."""
+
+    return int(channel.credential_expires_at or 0)
 
 
 def due_by(now: Microseconds) -> DocumentFieldRange:

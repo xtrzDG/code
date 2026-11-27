@@ -4,15 +4,13 @@ from dependency_injector.providers import DependenciesContainer, Dependency, Fac
 from app.containers.adapters.adapters_container import AdaptersContainer
 from app.containers.container_edges import composed_container_edge
 from app.containers.facilitators import FacilitatorsContainer
+from app.containers.owner_notice_factories import owner_account_email_facilitator
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.time_provider import TimeProviderContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.utilities import UtilitiesContainer
 from app.contracts.use_case_contract import UseCaseContract
-from app.facilitators.notifications.owner_account_email_facilitator import (
-    OwnerAccountEmailFacilitator,
-)
 from app.schemas.dto.deposits.deposit_report import DepositReport, DepositReportQuery
 from app.schemas.dto.deposits.deposit_settings import (
     AddPaymentLinkCommand,
@@ -34,9 +32,6 @@ from app.schemas.dto.deposits.payment_link_requests import (
     SendPaymentLinkCommand,
 )
 from app.schemas.dto.jobs import JobReport, JobTick
-from app.transformers.notifications.staff_notification_text_transformer import (
-    StaffNotificationTextTransformer,
-)
 from app.use_cases.deposits.add_payment_link_use_case import AddPaymentLinkUseCase
 from app.use_cases.deposits.deposit_hold_release import DepositHoldRelease
 from app.use_cases.deposits.deposit_issuing import DepositIssuing
@@ -106,17 +101,8 @@ class DepositUseCasesContainer(containers.DeclarativeContainer):
             staff_alerts=facilitators.staff_alert_facilitator,
             resolver=utilities.localized_text_resolver,
             # Each owner's account e-mail too (PAY-06).
-            owner_emails=Factory(
-                OwnerAccountEmailFacilitator,
-                user_repo=repositories.user_repo,
-                manager_notifier=facilitators.manager_notification_facilitator,
-                link_signer=facilitators.staff_link_signer,
-                text_transformer=Factory(
-                    StaffNotificationTextTransformer,
-                    text_resolver=utilities.localized_text_resolver,
-                ),
-                cabinet_base_url=cabinet_base_url,
-                wall_clock=wall_clock,
+            owner_emails=owner_account_email_facilitator(
+                repositories, facilitators, utilities, cabinet_base_url, wall_clock
             ),
         ),
     )

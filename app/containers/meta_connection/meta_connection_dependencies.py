@@ -4,20 +4,31 @@ from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.analytics import RecordProductEventFacilitatorContract
 from app.contracts.channel_clients import MetaGraphApiClientContract
+from app.contracts.channel_credentials import (
+    ChannelCredentialWatchRepoContract,
+    MetaTokenRefreshClientContract,
+)
 from app.contracts.channels import ChannelAdapterContract
 from app.contracts.jobs import JobQueueFacilitatorContract
+from app.contracts.live_events import EventPublisherFacilitatorContract
+from app.contracts.localization_utilities import LocalizedTextResolverContract
 from app.contracts.meta_connection import (
     MetaConnectionStateRepoContract,
     MetaOAuthClientContract,
     MetaPagesClientContract,
     WhatsAppOnboardingClientContract,
 )
+from app.contracts.notifications import StaffAlertFacilitatorContract
+from app.contracts.owner_emails import OwnerAccountEmailFacilitatorContract
 from app.contracts.privacy import SuppressionListContract
 from app.contracts.registries import RequestRateLimitRegistryContract
 from app.contracts.repositories.business_closure_repositories import (
     BusinessClosureRepoContract,
 )
-from app.contracts.repositories.business_repositories import ChannelRepoContract
+from app.contracts.repositories.business_repositories import (
+    BusinessRepoContract,
+    ChannelRepoContract,
+)
 from app.contracts.repositories.compliance_repositories import AuditLogRepoContract
 from app.contracts.repositories.conversation_repositories import ContactRepoContract
 from app.contracts.repositories.delivery_repositories import (
@@ -46,10 +57,12 @@ class MetaConnectionDependencies:
     step-up, the Facebook sign-ins' repository, Meta's clients, the channel
     it connects and its sealed tokens, the business's closure (a closing
     business connects nothing), the inbox and outbox the comment
-    replies go through, and the inbox's claim, finish and release of the
-    worker's job. The only place the dependency graph meets the typed root
-    (the provider in app/containers/use_cases/meta_connection_root_provider.py
-    fills it).
+    replies go through, the inbox's claim, finish and release of the
+    worker's job, and what the renewal of WhatsApp tokens needs (the
+    tokens running out, Meta's renewal behind its circuit breaker, the
+    owners' reminders and the channel's live event). The only place the
+    dependency graph meets the typed root (the provider in
+    app/containers/use_cases/meta_connection_root_provider.py fills it).
     """
 
     authorize_business_access: UseCaseContract[BusinessAccessRequest, BusinessDocument]
@@ -81,3 +94,14 @@ class MetaConnectionDependencies:
     # Whether a person sees platform details: a channel's last_error (the
     # provider's own words) only for platform admins (API-05).
     see_platform_details: UseCaseContract[UserId, IsPlatformAdmin]
+    # The `refresh_whatsapp_tokens` job: the WhatsApp tokens running out
+    # (stored by the hourly check), Meta's renewal behind its circuit
+    # breaker, the business, the owners' reminders (their devices, staff
+    # contacts and account e-mail, in their language) and `channel.error`.
+    credential_watch: ChannelCredentialWatchRepoContract
+    token_refresh_client: MetaTokenRefreshClientContract
+    business_repo: BusinessRepoContract
+    staff_alerts: StaffAlertFacilitatorContract
+    owner_emails: OwnerAccountEmailFacilitatorContract
+    localized_text_resolver: LocalizedTextResolverContract
+    live_events: EventPublisherFacilitatorContract

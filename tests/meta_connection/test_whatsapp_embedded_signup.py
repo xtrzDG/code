@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.schemas.constants.channels import ChannelKind, ChannelStatus
+from app.schemas.dto.channels.channel_settings import DisableChannelCommand
 from app.schemas.typings.channels.strings import ChannelExternalId
 from tests.channels.channels_payloads import HttpResponse
 from tests.meta_connection.meta_graph_scripts import (
@@ -18,12 +19,18 @@ from tests.meta_connection.meta_graph_scripts import (
 from tests.meta_connection.meta_world import MetaWorld
 
 CODE: str = "AQB-test-code-0000-0000"
+SECONDS_PER_DAY: int = 24 * 60 * 60
 
 
 def reasons(response: HttpResponse) -> list[str]:
     body: dict[str, Any] = response.json()
     entries: list[dict[str, Any]] = body.get("reasons") or []
     return [str(reason["code"]) for reason in entries]
+
+
+def signup(world: MetaWorld) -> None:
+    response = world.complete({"state": world.started_state("whatsapp"), "code": CODE})
+    assert response.status_code == 200, response.text
 
 
 class TestEmbeddedSignup:
@@ -71,6 +78,59 @@ class TestEmbeddedSignup:
         assert len(register.url.params["appsecret_proof"]) == 64
         assert world.graph.requests_to(f"/{WABA_ID}/subscribed_apps")
         assert world.testbed.audit_actions(world.business.id) == [("create", "channel")]
+
+    def test_the_tokens_end_is_kept_at_connect_and_dropped_on_reconnect(
+        self,
+    ) -> None:
+        world = MetaWorld()
+        script_whatsapp_signup(world.graph)
+        clock = world.testbed.clock
+        ends_in_seconds = clock.now_seconds() + 60 * SECONDS_PER_DAY
+        script_grants(world.graph, [WABA_ID], expires_at=ends_in_seconds)
+        signup(world)
+
+        connected = world.stored(ChannelKind.WHATSAPP)
+        assert connected.credential_expires_at == ends_in_seconds * 1_000_000
+        assert connected.credential_checked_at == clock.now_microseconds()
+
+        # Meanwhile the hourly check found the token refused; the owner
+        # connects the number again and Meta's new token has no end.
+        world.testbed.channel_repo.save(
+            connected.model_copy(
+                update={"credential_expires_at": clock.now_microseconds()}
+            )
+        )
+        script_grants(world.graph, [WABA_ID])
+        clock.advance(3600)
+        signup(world)
+
+        reconnected = world.stored(ChannelKind.WHATSAPP)
+        assert reconnected.credential_expires_at is None
+        assert reconnected.credential_checked_at == clock.now_microseconds()
+
+    def test_switching_the_number_off_forgets_its_tokens_end(self) -> None:
+        world = MetaWorld()
+        script_whatsapp_signup(world.graph)
+        script_grants(
+            world.graph,
+            [WABA_ID],
+            expires_at=world.testbed.clock.now_seconds() + SECONDS_PER_DAY,
+        )
+        signup(world)
+
+        world.testbed.disable_channel.run(
+            DisableChannelCommand(
+                user_id=world.owner_id,
+                business_id=world.business.id,
+                channel=ChannelKind.WHATSAPP,
+            )
+        )
+
+        switched_off = world.stored(ChannelKind.WHATSAPP)
+        assert switched_off.status is ChannelStatus.DISABLED
+        assert switched_off.encrypted_secret is None
+        assert switched_off.credential_expires_at is None
+        assert switched_off.credential_checked_at is None
 
     def test_account_and_number_come_from_the_grants_without_hints(self) -> None:
         world = MetaWorld()

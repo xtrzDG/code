@@ -42,6 +42,9 @@ from app.schemas.typings.messaging.constrained_strings import (
     TwilioMessagingServiceSid,
 )
 from app.schemas.typings.messaging.strings import SmtpUsername
+from app.schemas.typings.meta_connection.constrained_integers import (
+    MetaTokenRefreshDays,
+)
 from app.schemas.typings.meta_connection.constrained_strings import MetaConfigurationId
 from app.schemas.typings.mfa.constrained_integers import StepUpMaxAgeSeconds
 from app.schemas.typings.mfa.strings import TotpIssuerName
@@ -196,6 +199,9 @@ class AppSettings(AppSettingsSections):
     meta_app_secret: PlatformSecret | None = None
     meta_verify_token: PlatformSecret | None = None
     meta_embedded_signup_config_id: MetaConfigurationId | None = None
+    # Days before a WhatsApp Embedded Signup token ends that the platform
+    # asks Meta to renew it (META_TOKEN_REFRESH_DAYS, 1-60).
+    meta_token_refresh_days: MetaTokenRefreshDays = MetaTokenRefreshDays(15)
     whatsapp_system_user_token: PlatformSecret | None = None
     whatsapp_notification_phone_number_id: MetaObjectId | None = None
     whatsapp_notification_template_name: WhatsAppTemplateName | None = None

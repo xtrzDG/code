@@ -22,6 +22,7 @@ from app.clients.postgres.postgres_connection_pool_client import (
 from app.clients.postgres.postgres_connection_pools import PostgresConnectionPools
 from app.repositories.platform_activity_repository import PlatformActivityRepository
 from app.repositories.system_health_repository import SystemHealthRepository
+from app.schemas.constants.channels import ChannelKind
 from app.schemas.constants.jobs import JobLane
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -70,6 +71,8 @@ SEEDED: dict[str, LiteralString] = {
 }
 LAST_HOUR: ActivityWindow = ActivityWindow(since=at(-HOUR), until=at(1))
 LIMIT: DocumentQueryLimit = DocumentQueryLimit(20)
+# The WhatsApp tokens one run of the renewal job reads.
+RENEWALS: DocumentQueryLimit = DocumentQueryLimit(500)
 type Query = Callable[[SystemHealthRepository, PlatformActivityRepository], object]
 QUERIES: dict[str, tuple[Query, str]] = {
     "open jobs by state and lane": (lambda h, a: h.count_open_jobs(), "queued_jobs"),
@@ -89,6 +92,12 @@ QUERIES: dict[str, tuple[Query, str]] = {
     ),
     "expiring tokens": (
         lambda h, a: h.list_credentials_expiring_before(at(14 * DAY), LIMIT),
+        "channels",
+    ),
+    "whatsapp tokens ending soon": (
+        lambda h, a: h.list_active_credentials_ending_before(
+            ChannelKind.WHATSAPP, at(15 * DAY), at(-7 * DAY), RENEWALS
+        ),
         "channels",
     ),
     "handoffs of the last hour": (lambda h, a: a.count_handoffs(LAST_HOUR), "handoffs"),

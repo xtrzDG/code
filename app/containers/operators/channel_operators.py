@@ -24,7 +24,7 @@ from app.schemas.dto.channels.meta_connection import (
     MetaSignInOptionsView,
     StartMetaConnectionCommand,
 )
-from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 
 
 class ChannelOperatorsContainer(containers.DeclarativeContainer):
@@ -137,4 +137,11 @@ class ChannelOperatorsContainer(containers.DeclarativeContainer):
         OperatorContract[QueuedJobInput, JobReport]
     ] = Factory(
         MetaConnectionOperatorFactories.process_comment_trigger, meta_connection
+    )
+    # The `refresh_whatsapp_tokens` job: Embedded Signup's WhatsApp tokens
+    # of every business renewed before they end, platform-wide.
+    refresh_whatsapp_tokens_operator: Factory[OperatorContract[JobTick, JobReport]] = (
+        Factory(
+            MetaConnectionOperatorFactories.refresh_whatsapp_tokens, meta_connection
+        )
     )

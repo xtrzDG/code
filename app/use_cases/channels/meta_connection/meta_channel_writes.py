@@ -80,7 +80,10 @@ def save_connected_channel(
     Connect (or reconnect) the business's channel of a kind with the
     account, credential and public address of `connection`; `complete`
     sets what the kind keeps besides (WhatsApp's business account and
-    registration PIN). Errors of an earlier delivery are cleared.
+    registration PIN, and when its token ends). Errors of an earlier
+    delivery are cleared, and so is what the token check knew of the old
+    credential (when it ends, when it was asked): the next check asks
+    about the new one.
     """
 
     existing: ChannelDocument | None = find_business_channel(
@@ -100,6 +103,8 @@ def save_connected_channel(
     channel.last_error = None
     channel.last_error_at = None
     channel.last_error_reason = None
+    channel.credential_expires_at = None
+    channel.credential_checked_at = None
     complete(channel)
     channel.updated_at = now
     stores.channel_repo.save(channel)

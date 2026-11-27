@@ -6,10 +6,10 @@ from base_typed_string import BaseTypedString
 class MetaAccessToken(BaseTypedString):
     """
     A token Meta issued for a code the cabinet handed over: the business's
-    token of WhatsApp Embedded Signup, or the owner's own token of Facebook
-    Login (it lists the pages they manage). Never logged, never returned to
-    a browser; a business's token is stored only encrypted, as its channel
-    credential.
+    token of WhatsApp Embedded Signup (or the one Meta renewed it with), or
+    the owner's own token of Facebook Login (it lists the pages they
+    manage). Never logged, never returned to a browser; a business's token
+    is stored only encrypted, as its channel credential.
     """
 
 

@@ -2,6 +2,7 @@
 
 from base_pydantic_schemas import ImmutableDTO
 from pydantic import Field
+from typed_time_provider import Microseconds
 
 from app.schemas.typings.channels.constrained_strings import MetaObjectId
 from app.schemas.typings.channels.strings import MetaPageName
@@ -41,9 +42,13 @@ class MetaGrantedScope(ImmutableDTO):
 
 
 class MetaTokenGrants(ImmutableDTO):
-    """What `debug_token` says a token may do."""
+    """
+    What `debug_token` says a token may do, and when it ends (None: Meta
+    set no end, the token does not expire).
+    """
 
     scopes: list[MetaGrantedScope] = Field(default_factory=list[MetaGrantedScope])
+    expires_at: Microseconds | None = None
 
     def targets_of(self, permission: MetaPermissionName) -> list[MetaObjectId]:
         """The objects a granular permission was granted for (none: not granted)."""

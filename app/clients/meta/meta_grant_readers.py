@@ -1,6 +1,7 @@
 """Reading Facebook Login's answers: tokens, their permissions, pages."""
 
 from app.clients.meta.meta_graph_readers import (
+    earliest_end,
     read_instagram_username,
     read_object_id,
     read_page_username,
@@ -26,6 +27,7 @@ from app.schemas.typings.meta_connection.strings import (
 from app.utilities.channels.json_values import (
     JsonObject,
     read_flag,
+    read_integer,
     read_object,
     read_objects,
     read_strings,
@@ -46,7 +48,8 @@ def read_access_token(body: JsonObject) -> MetaAccessToken:
 def read_token_grants(body: JsonObject) -> MetaTokenGrants:
     """
     `debug_token`'s permissions, each with the objects its granular scope
-    names. A token Meta calls invalid is refused.
+    names, and the token's own end (`expires_at`; 0 or missing: it does not
+    expire). A token Meta calls invalid is refused.
     """
 
     data: JsonObject = read_object(body, "data") or {}
@@ -72,7 +75,8 @@ def read_token_grants(body: JsonObject) -> MetaTokenGrants:
             )
             for name in names
             if (permission := as_permission(name)) is not None
-        ]
+        ],
+        expires_at=earliest_end(read_integer(data, "expires_at")),
     )
 
 

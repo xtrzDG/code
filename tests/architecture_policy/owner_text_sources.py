@@ -53,6 +53,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.utilities.security.security_change_notice_texts",
     "app.utilities.integrations.webhook_disabled_texts",
     "app.utilities.calls.voice_fallback_texts",
+    "app.utilities.channels.whatsapp_token_notice_texts",
     "app.utilities.calendar_sync.booking_system_writes",
     "app.utilities.campaigns.campaign_review_texts",
     "app.utilities.setup.setup_texts",

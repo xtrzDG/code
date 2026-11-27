@@ -38,12 +38,15 @@ class CheckChannelCredentialsUseCase(UseCaseContract[JobTick, JobReport]):
     """
     The `check_channel_credentials` periodic job (hourly): asks Meta's
     `debug_token` about the token of every connected WhatsApp, Instagram
-    and Messenger channel not asked within 20 hours, and stores when it
-    runs out (`credential_expires_at`, None when it never does; now when
-    Meta says it no longer works) and when it was asked
-    (`credential_checked_at`). The admin system page lists the tokens that
-    run out within two weeks, so a person renews them before customers
-    stop getting answers.
+    and Messenger channel not asked within 20 hours (or whose stored end
+    passed since it was asked: the end is confirmed within the hour), and
+    stores when it runs out (`credential_expires_at`, None when it never
+    does; now when Meta says it no longer works, and that moment stays
+    while it keeps not working) and when it was asked
+    (`credential_checked_at`). The `refresh_whatsapp_tokens` job renews the
+    WhatsApp tokens of Embedded Signup before that end and tells their
+    owners when it cannot; the admin system page lists the tokens that run
+    out within two weeks.
 
     Without META_APP_ID and META_APP_SECRET there is nobody to ask: the
     run does nothing. A token Meta cannot be asked about now is tried again
@@ -119,15 +122,15 @@ class CheckChannelCredentialsUseCase(UseCaseContract[JobTick, JobReport]):
             )
             return False
 
-        expires_at: Microseconds | None = credential_end(facts, now)
-
         def record(stored: ChannelDocument) -> ChannelDocument | None:
             if stored.encrypted_secret != channel.encrypted_secret:
                 return None  # Reconnected meanwhile: another token.
 
             return stored.model_copy(
                 update={
-                    "credential_expires_at": expires_at,
+                    "credential_expires_at": credential_end(
+                        facts, now, stored.credential_expires_at
+                    ),
                     "credential_checked_at": now,
                 }
             )
@@ -137,17 +140,35 @@ class CheckChannelCredentialsUseCase(UseCaseContract[JobTick, JobReport]):
 
 
 def is_due(channel: ChannelDocument, now: Microseconds) -> bool:
-    """Never asked, or asked more than 20 hours ago."""
+    """
+    Never asked, asked more than 20 hours ago, or its stored end passed
+    since it was asked (whether it really ended is known within the hour).
+    """
 
     checked_at: Microseconds | None = channel.credential_checked_at
-    return checked_at is None or int(now) - int(checked_at) > RECHECK_AFTER_MICROSECONDS
+    if checked_at is None or int(now) - int(checked_at) > RECHECK_AFTER_MICROSECONDS:
+        return True
+
+    ends_at: Microseconds | None = channel.credential_expires_at
+    return ends_at is not None and int(checked_at) < int(ends_at) <= int(now)
 
 
-def credential_end(facts: MetaTokenFacts, now: Microseconds) -> Microseconds | None:
-    """When the token stops working: its end, or now if it already stopped."""
+def credential_end(
+    facts: MetaTokenFacts,
+    now: Microseconds,
+    stored_end: Microseconds | None,
+) -> Microseconds | None:
+    """
+    When the token stops working: its end, or when it already stopped. A
+    token that no longer works keeps the stored end once that has passed,
+    so the moment it ended stays the same at every check.
+    """
 
     if facts.is_valid:
         return facts.expires_at
+
+    if stored_end is not None and int(stored_end) <= int(now):
+        return stored_end
 
     if facts.expires_at is not None and int(facts.expires_at) < int(now):
         return facts.expires_at

@@ -1,4 +1,9 @@
-"""Reading the Graph API's answers: ids and usernames, invalid ones as None."""
+"""
+Reading the Graph API's answers: ids and usernames, invalid ones as None,
+and the end times of tokens.
+"""
+
+from typed_time_provider import Microseconds
 
 from app.schemas.typings.channels.constrained_strings import MetaObjectId
 from app.schemas.typings.channels.strings import ProviderMessageId
@@ -12,6 +17,8 @@ from app.utilities.channels.json_values import (
     read_objects,
     read_text,
 )
+
+MICROSECONDS_PER_SECOND: int = 1_000_000
 
 
 def read_object_id(source: JsonObject, key: str) -> MetaObjectId | None:
@@ -47,3 +54,10 @@ def read_whatsapp_message_id(body: JsonObject) -> ProviderMessageId | None:
     messages: list[JsonObject] = read_objects(body, "messages")
     message_id: str | None = read_identifier(messages[0], "id") if messages else None
     return None if message_id is None else ProviderMessageId(message_id)
+
+
+def earliest_end(*unix_seconds: int | None) -> Microseconds | None:
+    """The earliest of Meta's end times in seconds (0 or missing: no end)."""
+
+    ends: list[int] = [seconds for seconds in unix_seconds if seconds]
+    return Microseconds(min(ends) * MICROSECONDS_PER_SECOND) if ends else None

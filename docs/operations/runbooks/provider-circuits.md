@@ -10,7 +10,7 @@ models in [llm-outage](llm-outage.md)):
 
 | Circuit | Guards |
 | --- | --- |
-| `provider:meta` | WhatsApp, Messenger, Instagram replies; WhatsApp templates (staff and customers) |
+| `provider:meta` | WhatsApp, Messenger, Instagram replies; WhatsApp templates (staff and customers); the renewal of WhatsApp Embedded Signup tokens (`refresh_whatsapp_tokens`, on the batch worker: while open, a run renews nothing and the next one tries again) |
 | `provider:telegram` | the businesses' Telegram bots |
 | `provider:platform_bot` | the platform bot: staff notifications and platform alerts by Telegram |
 | `provider:twilio_sms` | staff SMS and missed-call text-backs |

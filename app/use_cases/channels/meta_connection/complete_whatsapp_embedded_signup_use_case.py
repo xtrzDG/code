@@ -29,7 +29,7 @@ from app.schemas.dto.channels.meta_connection import (
     CompleteWhatsAppSignupCommand,
     CompleteWhatsAppSignupRequest,
 )
-from app.schemas.dto.channels.meta_provider import MetaAppCredentials
+from app.schemas.dto.channels.meta_provider import MetaAppCredentials, MetaTokenGrants
 from app.schemas.dto.channels.provider_profiles import WhatsAppPhoneNumberProfile
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.exceptions.meta_connection_errors import WhatsAppPinMismatchError
@@ -81,10 +81,11 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
        number registered for the Cloud API with a two-step PIN (the one
        this channel registered the number with before, even while it was
        off, else a new random one).
-    5. The channel stores the account, the token and the PIN encrypted, and
-       the number as customers see it, so share links and the hosted page
-       get their WhatsApp button; the audit log and the product events note
-       the connection.
+    5. The channel stores the account, the token and the PIN encrypted, the
+       token's end as `debug_token` told it (the `refresh_whatsapp_tokens`
+       job renews it before then), and the number as customers see it, so
+       share links and the hosted page get their WhatsApp button; the audit
+       log and the product events note the connection.
 
     No second step-up: the state was made only after the owner confirmed
     their identity (`StartMetaConnectionUseCase`) and is bound to them,
@@ -153,9 +154,9 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
             now,
         )
         token: MetaAccessToken = self._oauth_client.exchange_code(request.code, app)
+        grants: MetaTokenGrants = self._oauth_client.read_grants(token, app)
         account_id: WhatsAppBusinessAccountId = choose_business_account(
-            self._oauth_client.read_grants(token, app),
-            request.whatsapp_business_account_id,
+            grants, request.whatsapp_business_account_id
         )
         number: WhatsAppPhoneNumberProfile = choose_phone_number(
             self._onboarding_client.list_phone_numbers(token, account_id, app),
@@ -181,6 +182,9 @@ class CompleteWhatsAppEmbeddedSignupUseCase(
                 external_id,
                 self._stores.secret_cipher.encrypt(ChannelSecret(str(pin))),
             )
+            # `debug_token` was just asked: the token's end is known now.
+            channel.credential_expires_at = grants.expires_at
+            channel.credential_checked_at = now
 
         channel: ChannelDocument = save_connected_channel(
             self._stores,
