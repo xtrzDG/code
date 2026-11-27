@@ -41,6 +41,10 @@ export const passkeysIt: Translation<typeof passkeysEn> = {
     description: "Conferma con la passkey di questo dispositivo o del tuo telefono.",
     useCode: "Usa invece un codice",
     usePasskey: "Usa invece una passkey",
+    unsupported:
+      "Questo browser non supporta le passkey e il tuo account non ha un codice da usare al loro posto. Apri il pannello in un browser che supporta le passkey.",
+    noWay:
+      "Non c'è modo di completare l'accesso qui: il tuo account non ha ora una passkey utilizzabile né codici di recupero rimasti. Chiedi aiuto al supporto della piattaforma per rientrare.",
   },
   enrollment: {
     description:

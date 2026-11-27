@@ -42,6 +42,10 @@ export const passkeysEn = {
     description: "Confirm with the passkey on this device or your phone.",
     useCode: "Use a code instead",
     usePasskey: "Use a passkey instead",
+    unsupported:
+      "This browser cannot use passkeys, and your account has no code to sign in with instead. Open the cabinet in a browser that supports passkeys.",
+    noWay:
+      "There is no way to finish signing in here: your account has no passkey that can sign in now and no recovery code left. Ask the platform's support to help you back in.",
   },
   enrollment: {
     description:

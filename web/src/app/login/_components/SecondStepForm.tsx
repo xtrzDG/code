@@ -15,6 +15,7 @@ import { useSecondStep } from "../_lib/useSecondStep";
 import {
   PasskeyEnrollmentChoice,
   PasskeySignInPanel,
+  StartOverPanel,
   StepHeading as Heading,
 } from "./PasskeyStepPanels";
 
@@ -23,6 +24,13 @@ import {
  * a passkey first when they have one, else the authenticator code or a
  * recovery code; an admin without a second factor adds a passkey (or
  * sets up the app) here and saves the recovery codes.
+ *
+ * The code form follows the step's methods: the app's code only where the
+ * step lists it, else a recovery code with no switch to the app (an admin
+ * held to passkeys, a passkey person); a step with neither code offers no
+ * code form, only the passkey. A step this browser cannot answer at all (no
+ * code, and a passkey it cannot use or none listed) says so and offers only
+ * to sign in again.
  */
 export function SecondStepForm({
   step,
@@ -80,14 +88,11 @@ export function SecondStepForm({
   if (flow.requiresEnrollment && !passkey.canUseApp) {
     // A platform admin held to passkeys, in a browser that cannot make one.
     return (
-      <div className="space-y-5">
-        <Heading title={t("mfa.enrollment.title")} description={t("passkeys.enrollment.passkeyOnly")} />
-        <div className="border-t border-line pt-4 text-center">
-          <Button variant="ghost" size="sm" onClick={onStartOver}>
-            {t("mfa.secondStep.startOver")}
-          </Button>
-        </div>
-      </div>
+      <StartOverPanel
+        title={t("mfa.enrollment.title")}
+        description={t("passkeys.enrollment.passkeyOnly")}
+        onStartOver={onStartOver}
+      />
     );
   }
 
@@ -128,7 +133,21 @@ export function SecondStepForm({
     );
   }
 
-  if (passkey.canSignIn && !useCode) {
+  // No code, and no passkey this browser can use: none listed (every one
+  // suspended, passkeys off here) or a browser without passkeys.
+  if (!passkey.hasCodes && (!passkey.listsPasskey || passkey.cannotUsePasskeys)) {
+    return (
+      <StartOverPanel
+        title={t("mfa.secondStep.title")}
+        description={t(passkey.listsPasskey ? "passkeys.signIn.unsupported" : "passkeys.signIn.noWay")}
+        onStartOver={onStartOver}
+      />
+    );
+  }
+
+  // Without a code to fall back to, the passkey is the way (also while it
+  // is not known yet whether this browser can use one).
+  if ((passkey.canSignIn || !passkey.hasCodes) && !useCode) {
     return (
       <PasskeySignInPanel
         isWorking={passkey.isWorking}
@@ -202,11 +221,13 @@ export function SecondStepForm({
             {t("passkeys.signIn.usePasskey")}
           </Button>
         ) : null}
-        <Button variant="ghost" size="sm" onClick={flow.toggleRecovery}>
-          {flow.useRecovery
-            ? t("mfa.secondStep.useApp")
-            : t("mfa.secondStep.useRecovery")}
-        </Button>
+        {flow.toggleRecovery ? (
+          <Button variant="ghost" size="sm" onClick={flow.toggleRecovery}>
+            {flow.useRecovery
+              ? t("mfa.secondStep.useApp")
+              : t("mfa.secondStep.useRecovery")}
+          </Button>
+        ) : null}
         <Button variant="ghost" size="sm" onClick={onStartOver}>
           {t("mfa.secondStep.startOver")}
         </Button>

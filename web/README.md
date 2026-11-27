@@ -2111,7 +2111,12 @@ Its motion and 3D hero: see [Motion](#motion).
 - Passkeys: "Account → Security" adds, renames and removes them
   (`PasskeysCard.tsx`); at sign-in a person with a passkey is offered it
   first ("Use a passkey", `PasskeyStepPanels.tsx`), and the "Confirm it is
-  you" dialog offers it too. The browser ceremony is
+  you" dialog offers it too. A code instead follows the sign-in step's
+  `methods`: the app's code only where the step lists it, else a recovery
+  code (a person without the app, a platform admin held to passkeys), and
+  no code form when the step lists neither. A step with no code and no
+  passkey this browser can use (a browser without passkeys, or none
+  listed) says why and offers only "Sign in again". The browser ceremony is
   `src/lib/security/passkeyCeremony.ts` (`navigator.credentials`, the
   options and answers converted by `webauthnCodec.ts`); the API checks
   everything (py_webauthn, `WEBAUTHN_RP_ID`). A passkey whose signature

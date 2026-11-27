@@ -2,9 +2,9 @@
 
 /**
  * The passkey parts of the sign-in's second step: answering with a
- * passkey (shown first when the person has one), and a platform admin's
+ * passkey (shown first when the person has one), a platform admin's
  * choice of a first second factor (a passkey first, the authenticator app
- * second).
+ * second), and a step this browser cannot finish.
  */
 
 import { Button } from "@/components/ui";
@@ -21,6 +21,29 @@ export function StepHeading({
     <div className="space-y-1.5">
       <h1 className="text-xl font-display tracking-tight text-ink">{title}</h1>
       <p className="text-sm text-ink-muted">{description}</p>
+    </div>
+  );
+}
+
+/** A step this browser cannot finish: why, and only "Sign in again" (nothing calls the API). */
+export function StartOverPanel({
+  title,
+  description,
+  onStartOver,
+}: {
+  title: string;
+  description: string;
+  onStartOver: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <div className="space-y-5">
+      <StepHeading title={title} description={description} />
+      <div className="border-t border-line pt-4 text-center">
+        <Button variant="ghost" size="sm" onClick={onStartOver}>
+          {t("mfa.secondStep.startOver")}
+        </Button>
+      </div>
     </div>
   );
 }

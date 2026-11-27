@@ -16,6 +16,7 @@ from app.schemas.typings.compliance.strings import ClientIpAddress
 from app.schemas.typings.passkeys.booleans import IsAdminPasskeyRequired
 from app.schemas.typings.users.booleans import IsNewUser
 from app.use_cases.shared.second_factors import has_second_factor, second_factor_methods
+from app.use_cases.users.mfa.admin_passkey_rule import is_app_code_refused
 from app.use_cases.users.mfa.mfa_challenges import issue_mfa_challenge
 
 
@@ -30,7 +31,10 @@ class SecondStepOffer:
 
     Where admins must use passkeys (`is_admin_passkey_required`,
     ADMIN_PASSKEY_REQUIRED), an admin sets up a passkey only, and an admin
-    who has one is not offered the app's code (admin_passkey_rule.py).
+    who has one is not offered the app's code, even while the passkey
+    cannot sign (suspended as a possible copy, or this server offers no
+    passkeys): the API would refuse that code (admin_passkey_rule.py), so
+    a recovery code is their way in.
     """
 
     def __init__(
@@ -87,7 +91,9 @@ class SecondStepOffer:
             user.id,
             are_passkeys_available,
         )
-        if held_to_passkeys and SecondFactorMethod.PASSKEY in methods:
+        if is_app_code_refused(
+            self._is_admin_passkey_required, self._passkey_repo, user
+        ):
             methods = [
                 method for method in methods if method is not SecondFactorMethod.TOTP
             ]

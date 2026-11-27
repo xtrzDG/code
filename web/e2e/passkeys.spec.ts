@@ -2,10 +2,12 @@
  * Passkeys as the second factor (R7 sign-in), with Chromium's virtual
  * authenticator playing the device (support/webauthn.ts): an owner adds a
  * passkey in Account → Security, signs in again with the login code and
- * the passkey, and a copy of the passkey with an older signature counter
- * (a cloned authenticator) is refused at the next sign-in. A passkey-only
- * owner confirms a sensitive action with the passkey (a recovery code is
- * the alternative, never a login code) and sees their recovery codes.
+ * the passkey (a code instead is a recovery code: this owner has no
+ * authenticator app), and a copy of the passkey with an older signature
+ * counter (a cloned authenticator) is refused at the next sign-in. A
+ * passkey-only owner confirms a sensitive action with the passkey (a
+ * recovery code is the alternative, never a login code) and sees their
+ * recovery codes.
  */
 
 import type { Locator, Page } from "@playwright/test";
@@ -59,10 +61,17 @@ test("an owner adds a passkey, signs in with it, and a cloned copy is refused", 
   const [credential] = await authenticator.credentials();
   expect(credential?.rpId).toBe("localhost");
 
-  // The next sign-in offers the passkey first; the device answers at once.
+  // The next sign-in offers the passkey first. The code instead is a
+  // recovery code (no authenticator app here), with no switch to the app's.
   await signInAgain(page, owner.email, signedInAt);
   const codeAt = Date.now();
-  await page.getByRole("button", { name: en.passkeys.signIn.use }).click();
+  await page.getByRole("button", { name: en.passkeys.signIn.useCode }).click();
+  await expect(page.getByLabel(en.mfa.secondStep.recoveryCode, { exact: true })).toBeFocused();
+  await expect(page.getByLabel(en.mfa.secondStep.code, { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: en.mfa.secondStep.useApp })).toHaveCount(0);
+  await page.getByRole("button", { name: en.passkeys.signIn.usePasskey }).click();
+  // The device answers at once.
+  await page.getByRole("button", { name: en.passkeys.signIn.use, exact: true }).click();
   await expect(page).toHaveURL(/\/account\/security$/);
   await expect(page.getByRole("main").getByText(en.security.session.twoFactor)).toBeVisible();
 

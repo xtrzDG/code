@@ -32,7 +32,8 @@ export function usePasskeyStep(
   const challengeId = step.mfa_challenge.mfa_challenge_id;
   const methods = step.mfa_challenge.methods ?? [];
   const enrollmentMethods = step.mfa_challenge.enrollment_methods ?? [];
-  const isSupported = usePasskeySupport() === true;
+  const support = usePasskeySupport();
+  const isSupported = support === true;
   const [isWorking, setWorking] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -77,6 +78,10 @@ export function usePasskeyStep(
   return {
     /** The person has a passkey and this browser can use it: offered first. */
     canSignIn: isSupported && methods.includes("passkey"),
+    /** The step takes a passkey, whether or not this browser can use one. */
+    listsPasskey: methods.includes("passkey"),
+    /** This browser cannot use passkeys (false while that is not known yet). */
+    cannotUsePasskeys: support === false,
     /** A platform admin may add a passkey as the first second factor. */
     canEnroll: isSupported && enrollmentMethods.includes("passkey"),
     /**
@@ -84,8 +89,12 @@ export function usePasskeyStep(
      * whose step lists the passkey alone).
      */
     canUseApp: enrollmentMethods.length === 0 || enrollmentMethods.includes("totp"),
-    /** The person also has a code (authenticator app or recovery codes). */
-    hasCodes: methods.some((method) => method !== "passkey"),
+    /**
+     * The step also takes a code (the authenticator app's or a recovery
+     * code); without one, no code form is offered: the passkey is the way,
+     * where this browser can use one.
+     */
+    hasCodes: methods.includes("totp") || methods.includes("recovery_code"),
     isWorking,
     problem,
     signIn: () => void signIn(),
