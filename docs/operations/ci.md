@@ -261,7 +261,11 @@ in the background while uv and npm install, and the pages are only looked
 at. On failure it keeps the expected, actual and diff PNG of every
 differing screen with the HTML report (`visual-report`). A failed `e2e`
 shard or `visual` run prints the failed tests' page snapshots and the
-API log's end into its own log (`.github/scripts/show-e2e-failures.sh`).
+API log's end into its own log (`.github/scripts/show-e2e-failures.sh`);
+a `visual` run also prints where each differing screen differs (boxes of
+the changed pixels, a small region drawn in text from the baseline and
+from the run: `scripts/screenshot_diff_regions.py`), since a test's page
+snapshot is its last page, not the one that differed.
 
 ## End-to-end shards
 
