@@ -11,6 +11,28 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-28 — Stripe: a new card is saved through Checkout; a charge Stripe declined is paid, not given a new card
+
+Spec: `f032dddfd1c4ff12`
+
+No request, path or field changes; one description changed. What an
+owner whose business pays through Stripe (the EU, the US, Israel) gets
+from two existing answers changes:
+
+- **Changed** `POST /v1/businesses/{business_id}/billing/payment-method`
+  ("Save card" / "Update card"): for Stripe the `url` of
+  `CardSetupSessionView` is always a Checkout page that charges nothing
+  now, for a first card and for a new one alike. It was Stripe's billing
+  portal once a card was saved. The earlier automatic charges stop when
+  Stripe confirms the new card. The page takes cards only (Apple Pay and
+  Google Pay included).
+- **Changed** `PaymentMethodView.can_save_card`
+  (`GET /v1/businesses/{business_id}/billing/payment-method`) is false
+  while a charge Stripe declined is being retried (`retry` is present),
+  and the POST above answers 409 then. The owner pays the declined bill
+  (`POST …/billing/checkout`), whose page saves the card paid with. For
+  Flitt nothing changes: a card saved then is the card the retries charge.
+
 ## 2026-11-27 — why SMS cannot be sent (a Twilio account without a sender, business texts in the US), US call forwarding by carrier
 
 Spec: `629fa36e8812554e`

@@ -1,8 +1,8 @@
 """
-A card saved in the trial through Stripe Checkout (subscription mode, no
-Stripe customer yet): the first invoice at the trial's end activates the
-subscription, a done-for-you trial pays its setup fee on the page, and the
-page names the charges in the owner's language.
+A card saved in the trial through Stripe Checkout (subscription mode): the
+first invoice at the trial's end activates the subscription, a
+done-for-you trial pays its setup fee on the page, and the page names the
+charges in the owner's language.
 """
 
 from app.schemas.constants.billing import (
@@ -19,26 +19,19 @@ from app.schemas.constants.payments import (
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing_ledger import InvoiceDescriptionInput
 from app.schemas.dto.payment_methods import StartCardSetupCommand, StartCardSetupRequest
-from app.schemas.typings.billing.prefixed_id import PaymentOrderId
 from app.schemas.typings.billing.strings import PaymentProviderReference
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.utilities.billing.billing_periods import add_billing_period
 from tests.billing.billing_settings import ITALY
 from tests.billing.paid_world import PaidWorld, build_trial
-from tests.billing.stripe_sandbox import STRIPE_PORTAL_URL
 from tests.payments.payment_world import (
     MICROSECONDS_PER_SECOND,
     deliver_stripe,
     payment_method,
     reload,
-    save_card,
     setup_order,
     stripe_invoice,
     stripe_session,
-)
-from tests.payments.test_stripe_renewals import (
-    build_stripe_subscription,
-    decline_renewal,
 )
 
 RECURRING_NAME: str = "line_items[0][price_data][product_data][name]"
@@ -161,22 +154,3 @@ def test_the_checkout_page_names_the_charges_in_the_owners_language() -> None:
     assert params[RECURRING_NAME] == str(expected)
     assert params["locale"] == "ru"
     assert "Card for automatic payments" not in params.values()
-
-
-def test_a_stripe_card_is_replaced_in_the_portal_while_a_charge_is_retried() -> None:
-    world, order = build_stripe_subscription()
-    decline_renewal(world, order)
-    assert world.testbed.subscription(world.business.id).status is (
-        SubscriptionStatus.PAST_DUE
-    )
-
-    session = save_card(world)
-
-    assert str(session.url) == STRIPE_PORTAL_URL
-    assert world.testbed.stripe.portal_sessions[-1]["customer"] == "cus_test_0001"
-    assert session.payment_order_id is not None
-    setup = world.testbed.payment_order_repo.get(
-        PaymentOrderId(session.payment_order_id)
-    )
-    assert setup is not None
-    assert setup.purpose is PaymentOrderPurpose.CARD_SETUP

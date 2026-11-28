@@ -64,6 +64,8 @@ def test_a_card_setup_charges_nothing_now() -> None:
     assert isinstance(line_items, list)
     assert len(line_items) == 1
     assert form["locale"] == "de"
+    # Cards only: another method saved here would count as no card on file.
+    assert form["payment_method_types"] == ["card"]
     assert form["subscription_data"] == {
         "metadata": {"payment_order_id": form["client_reference_id"]},
         "trial_end": NOW_SECONDS + 30 * DAY_SECONDS,

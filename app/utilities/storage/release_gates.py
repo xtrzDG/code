@@ -151,8 +151,8 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
     ),
     # Open from this release (R17-PAYMENTS-REGIONAL, migration 1214): owners in
     # the EU, the US and Israel pay through Stripe whenever STRIPE_SECRET_KEY and
-    # its webhook secret are set. Deploy only once the account can charge, its
-    # portal is saved and 2026-11-22 has come (docs/LAUNCH.md, 4.7.2).
+    # its webhook secret are set. Deploy only once the account can charge and
+    # 2026-11-22 has come (docs/LAUNCH.md, 4.7.2).
     *(
         ReleaseGate(
             name=STRIPE_PAYMENTS_GATE,

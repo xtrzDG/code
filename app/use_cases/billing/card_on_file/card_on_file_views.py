@@ -52,10 +52,13 @@ def can_save_card(
 ) -> bool:
     """
     A card is saved or replaced in a trial (its page pays a setup fee the
-    trial owes), in a paid subscription without unpaid bills, and while a
-    declined automatic charge is retried (past due with the charges still
-    running: the retries and the next charges use the new card). Another
-    unpaid bill is paid instead (its checkout saves the card too).
+    trial owes), in a paid subscription without unpaid bills, and while
+    Flitt retries a declined automatic charge (past due with the charges
+    still running: the retries and the next charges use the new card).
+    Another unpaid bill is paid instead (its checkout saves the card
+    too), and so is a charge Stripe declined: the retries pay the invoice
+    of the Stripe subscription that runs, with its card, and a new card
+    starts a new subscription, which that invoice is not part of.
     """
 
     if subscription is None:
@@ -70,7 +73,10 @@ def can_save_card(
         case SubscriptionStatus.ACTIVE:
             return open_invoices == []
         case SubscriptionStatus.PAST_DUE:
-            return subscription.provider_reference is not None
+            return (
+                subscription.provider_reference is not None
+                and subscription.payment_provider is not PaymentProvider.STRIPE
+            )
         case _:
             return False
 

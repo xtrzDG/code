@@ -8356,7 +8356,7 @@
       },
       "CardSetupSessionView": {
         "additionalProperties": false,
-        "description": "The provider's page that saves the card: Flitt's verification page or\nStripe's checkout (a first card) or billing portal (a new one).\n`payment_order_id` names the order a saved card reports back to.",
+        "description": "The provider's page that saves the card: Flitt's verification page or\nStripe's checkout (for a first card and for a new one alike).\n`payment_order_id` names the order a saved card reports back to.",
         "properties": {
           "payment_order_id": {
             "anyOf": [

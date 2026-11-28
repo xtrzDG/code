@@ -641,10 +641,12 @@ deploy:
   (docs/operations/capacity.md).
 - **Stripe.** Owners in the EU, the US and Israel pay through Stripe
   whenever `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are set. Merge
-  and deploy this release only once Stripe reports `charges_enabled`, the
-  Customer portal configuration is saved, Smart Retries are off and the
-  test-key check of docs/LAUNCH.md 4.7.2 passed, and not before
-  2026-11-22, the day the published DPA names for Stripe. Once it runs,
+  and deploy this release only once Stripe reports `charges_enabled`,
+  Smart Retries are off and the payment check of docs/LAUNCH.md 4.7.2
+  passed (on test keys, which needs a separate stand) or is set for the
+  first minutes after the deploy (with a live card), and not before
+  2026-11-22, the day the published DPA names for Stripe. Stripe's
+  Customer portal is not used and needs no configuration. Once it runs,
   the only switch is unsetting `STRIPE_SECRET_KEY` (Stripe's webhooks then
   answer 403).
 - **The seasonal pause** changes nothing until `SUBSCRIPTION_PAUSE_ENABLED`

@@ -1,8 +1,8 @@
 """
-The parameters of Stripe's hosted pages: a Checkout Session in subscription
+The parameters of Stripe's hosted page: a Checkout Session in subscription
 mode (the open bills charged now as a one-time line, the plan price as the
-recurring line from the paid period's end) and the billing portal page
-that replaces a saved card.
+recurring line from the paid period's end). A card setup, a first card or
+one that replaces another, is the same page with nothing charged now.
 """
 
 from app.clients.stripe.stripe_protocol import FormValue
@@ -25,6 +25,13 @@ STRIPE_CHECKOUT_LANGUAGES: frozenset[str] = frozenset(
     }
 )  # fmt: skip
 AUTO_LANGUAGE: str = "auto"
+# Cards only (Apple Pay and Google Pay are cards too). Left out, Checkout
+# offers every method the Stripe account has switched on (Link, Revolut Pay,
+# SEPA debits), and the platform reads the saved card of the subscription:
+# another method counts as no card on file (trial caps, no number rental),
+# and a debit that settles days later has no place in the charge schedule.
+# Valid for the pinned Stripe-Version; check it when that version changes.
+CHECKOUT_PAYMENT_METHOD_TYPES: tuple[str, ...] = ("card",)
 
 
 def build_checkout_parameters(
@@ -70,6 +77,7 @@ def build_checkout_parameters(
         "success_url": return_url,
         "cancel_url": return_url,
         "locale": select_checkout_language(str(request.language)),
+        "payment_method_types": list(CHECKOUT_PAYMENT_METHOD_TYPES),
         "payment_method_collection": "always",
         "metadata": {"payment_order_id": order_id},
         "line_items": line_items,
@@ -80,16 +88,6 @@ def build_checkout_parameters(
                 now_unix_seconds,
             ),
         },
-    }
-
-
-def build_portal_parameters(customer: str, return_url: str) -> dict[str, FormValue]:
-    """The billing portal page that replaces the card of the subscription."""
-
-    return {
-        "customer": customer,
-        "return_url": return_url,
-        "flow_data": {"type": "payment_method_update"},
     }
 
 

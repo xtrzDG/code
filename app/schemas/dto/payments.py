@@ -53,8 +53,7 @@ class PaymentCheckoutRequest(ImmutableDTO):
     Ask `provider` for a hosted payment page: charge `amount` now, then
     `recurring_charge` automatically from its start date. A CARD_SETUP
     page charges nothing now and only saves the card for the automatic
-    charges; with the `customer_reference` of a card already saved at
-    Stripe, its billing portal replaces that card instead.
+    charges (a first card, or one that replaces another).
     """
 
     provider: PaymentProvider
@@ -65,7 +64,6 @@ class PaymentCheckoutRequest(ImmutableDTO):
     language: LanguageTag
     return_url: PaymentReturnUrl | None = None
     purpose: PaymentOrderPurpose = PaymentOrderPurpose.CHECKOUT
-    customer_reference: PaymentProviderReference | None = None
 
 
 class PaymentCheckoutSession(ImmutableDTO):
