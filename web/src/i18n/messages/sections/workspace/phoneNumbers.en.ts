@@ -16,6 +16,8 @@ export const phoneNumbersEn = {
     waitsForPublish: "Not answering yet: publish your assistant with phone calls on, and it answers on this number.",
     releasing: "Being given back",
     giveBackHint: "To give the number back, disconnect the phone channel. It stops being billed and returns to the carrier.",
+    /** A rented number has no inbox for texts (the platform sets no SMS address on it). */
+    callsOnly: "Calls only: text messages sent to this number are not read.",
     requestTitle: "Number requested",
     requestText: "A {type} number in {country}. Our team arranges it and writes to you; it can take a few working days.",
     requestTextCity: "A {type} number in {country}, near {city}. Our team arranges it and writes to you; it can take a few working days.",
@@ -64,6 +66,7 @@ export const phoneNumbersEn = {
     price: "It costs {price} a month, billed with your plan from today.",
     channel: "It becomes your phone channel and answers with your assistant.",
     giveBack: "You can give it back any time by disconnecting the phone channel.",
+    callsOnly: "It takes calls only: text messages sent to it are not read.",
     take: "Take the number",
     back: "Back to the list",
     done: "{number} is yours",

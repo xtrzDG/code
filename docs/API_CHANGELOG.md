@@ -11,6 +11,63 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-27 — why SMS cannot be sent (a Twilio account without a sender, business texts in the US), US call forwarding by carrier
+
+Spec: `629fa36e8812554e`
+
+Everything below is additive within `/v1`: new optional response fields
+and new enums in responses only; no request, path or required field
+changes. A platform may now run with a Twilio account that has no SMS
+sender yet (`TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` without
+`TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`): it rents numbers
+and takes calls, and sends no SMS until a sender is set.
+
+- **Added** `CallSettingsView.sms_unavailable_reason`
+  (`GET`/`PUT /v1/businesses/{business_id}/call-settings`;
+  `SmsUnavailableReason` or null): why a text-back cannot go by SMS while
+  `is_sms_available` is false. `business_registration_required`: the
+  carriers of the business's country accept business texts only from a
+  sender registered for that business, which the platform does not offer
+  yet (the US); it comes first, since no sender of the platform ends it.
+  Else `no_sender`: the platform's SMS number waits for the phone carriers'
+  approval; `not_configured`: no SMS provider. Null exactly when
+  `is_sms_available` is true.
+- **Changed** `CallSettingsView.is_sms_available` is false for a business in
+  the US whatever SMS the platform sends (reason
+  `business_registration_required`, also while the platform has no sender
+  or no SMS provider): none of its text-backs goes by SMS,
+  whatever the country of the caller's number, and no business's text-back
+  goes by SMS to a US number. `is_sms_fallback_enabled` is not reset: it
+  keeps the owner's stored choice while SMS is unavailable (a `PUT` stores
+  it as sent) and applies again once SMS can be sent.
+- **Added** `NotificationContactView.sms_unavailable_reason`
+  (`GET /v1/businesses/{business_id}/notification-contacts`;
+  `SmsUnavailableReason` or null): for an SMS contact while the platform
+  sends no SMS (`provider_ready` false), `no_sender` or `not_configured`;
+  null for every other channel and while SMS is sent.
+- **Added** `CountryProfile.sms_sender_registration`
+  (`GET /v1/catalog/countries/{country_code}`, its `profile`;
+  `SmsSenderRegistration`, default `not_required`): `per_business` where
+  carriers accept a business's texts only from a sender registered for that
+  business (the US).
+- **Added** `CarrierForwardingInstructions.star_codes` (list of
+  `CallForwardingStarCode` `{condition, dial_code, description}` with a
+  `StarCodeCondition` of `no_answer_or_busy` or `cancel_all`; empty for a
+  carrier without star codes) and
+  `CallForwardingInstructions.is_carrier_choice_needed` (default false) in
+  `GET /v1/businesses/{business_id}/call-forwarding-instructions`.
+- **Changed** For a business in the United States that endpoint answers
+  `is_carrier_choice_needed` true and lists the carriers Verizon (no GSM
+  `codes`; `star_codes` `*71` with the 10 digits, as `*712125550123`, and
+  `*73`), T-Mobile (`**61*12125550123#`, `**67*…#`, `**62*…#`, `##004#`) and
+  AT&T (`**61*2125550123#`, `**67*…#`, `**62*…#`, `##002#`), each noting
+  that its codes are not yet confirmed with the carrier. Its top-level
+  `codes`, now the standard codes for carriers not listed, carry the number
+  as 1 and 10 digits (`**61*12125550123#`) instead of E.164
+  (`**61*+12125550123#`), and its `steps` and `notes` are the US ones. No
+  code forwards every call. The answers for other countries are unchanged
+  apart from the new fields at their defaults.
+
 ## 2026-11-21 — the release gates open: deposits held, Stripe, comment replies, the seasonal pause, rented numbers, callback requests, stored tool calls, the ops lane, payments on the status page
 
 Spec: `799dec293bc66e18`

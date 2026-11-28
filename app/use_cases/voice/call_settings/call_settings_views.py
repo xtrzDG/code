@@ -8,6 +8,7 @@ from app.contracts.repositories.business_repositories import (
     ChannelRepoContract,
 )
 from app.schemas.constants.channels import ChannelKind
+from app.schemas.constants.messaging import SmsUnavailableReason
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.call_settings import CallSettingsDocument
 from app.schemas.domain.channels import ChannelDocument
@@ -19,6 +20,9 @@ from app.schemas.dto.calls.call_settings import (
 )
 from app.schemas.typings.conversations.strings import MessageText
 from app.schemas.typings.localization.constrained_strings import LanguageTag
+from app.use_cases.voice.call_settings.text_back_sms_availability import (
+    TextBackSmsAvailability,
+)
 from app.utilities.calls.call_follow_up_keys import call_settings_id_of
 from app.utilities.calls.text_back_texts import TEXT_BACK_MESSAGE_TEXT, template_body
 from app.utilities.channels.channel_health import is_channel_active
@@ -32,13 +36,13 @@ class CallSettingsSources:
     """
     What the view reads besides the settings: the WhatsApp channel, the
     profile's staff number, the texts callers get, and whether the
-    platform can send SMS.
+    business's text-backs can go by SMS.
     """
 
     channel_repo: ChannelRepoContract
     business_profile_repo: BusinessProfileRepoContract
     text_resolver: LocalizedTextResolverContract
-    is_sms_available: bool
+    sms_availability: TextBackSmsAvailability
 
 
 def stored_or_default(
@@ -66,13 +70,17 @@ def build_call_settings_view(
     whatsapp: ChannelDocument | None = find_business_channel(
         sources.channel_repo, business.id, ChannelKind.WHATSAPP
     )
+    sms_unavailable_reason: SmsUnavailableReason | None = (
+        sources.sms_availability.reason_for(business)
+    )
     return CallSettingsView(
         is_summary_enabled=settings.is_summary_enabled,
         is_text_back_enabled=settings.is_text_back_enabled,
         text_back_template_name=settings.text_back_template_name,
         is_sms_fallback_enabled=settings.is_sms_fallback_enabled,
         is_whatsapp_connected=whatsapp is not None and is_channel_active(whatsapp),
-        is_sms_available=sources.is_sms_available,
+        is_sms_available=sms_unavailable_reason is None,
+        sms_unavailable_reason=sms_unavailable_reason,
         template_previews=[
             build_template_preview(business, language, sources.text_resolver)
             for language in preview_languages(business)

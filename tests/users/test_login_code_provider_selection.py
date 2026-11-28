@@ -37,6 +37,12 @@ from tests.users.login_code_fakes import (
     settings,
 )
 
+# The Twilio account without a sender: it rents numbers, sends no SMS.
+TWILIO_ACCOUNT: dict[str, str] = {
+    name: TWILIO_ENVIRONMENT[name]
+    for name in ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN")
+}
+
 
 class TestProviderSelection:
     def build(
@@ -123,6 +129,24 @@ class TestProviderSelection:
         assert build_whatsapp_authentication_client(configured) is not None
         assert build_smtp_email_client(configured) is not None
 
+    @pytest.mark.parametrize("environment", ["development", "production"])
+    def test_the_twilio_account_without_a_sender_starts_and_sends_no_sms(
+        self, environment: str
+    ) -> None:
+        app_settings = settings(APP_ENV=environment, **TWILIO_ACCOUNT)
+
+        assert app_settings.twilio_account_sid == TWILIO_ACCOUNT["TWILIO_ACCOUNT_SID"]
+        assert app_settings.twilio_sender is None
+        assert app_settings.twilio_messaging_service_sid is None
+        assert build_twilio_messaging_client(app_settings) is None
+
+    def test_a_messaging_service_is_a_sender_too(self) -> None:
+        app_settings = settings(
+            **TWILIO_ACCOUNT, TWILIO_MESSAGING_SERVICE_SID="MG" + "0" * 32
+        )
+
+        assert build_twilio_messaging_client(app_settings) is not None
+
 
 class TestLoginCodeSettings:
     def test_complete_providers_are_read(self) -> None:
@@ -155,10 +179,25 @@ class TestLoginCodeSettings:
     @pytest.mark.parametrize(
         ("environment", "expected"),
         [
-            ({"TWILIO_ACCOUNT_SID": "AC" + "1f" * 16}, "TWILIO_AUTH_TOKEN"),
             (
-                {"TWILIO_ACCOUNT_SID": "AC" + "1f" * 16, "TWILIO_AUTH_TOKEN": "t"},
-                "TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID",
+                {"TWILIO_ACCOUNT_SID": "AC" + "1f" * 16},
+                "needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN together",
+            ),
+            (
+                {"TWILIO_AUTH_TOKEN": "t"},
+                "needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN together",
+            ),
+            (
+                {"TWILIO_FROM_NUMBER": "Workshop"},
+                "sender .* needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN",
+            ),
+            (
+                {"TWILIO_MESSAGING_SERVICE_SID": "MG" + "0" * 32},
+                "sender .* needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN",
+            ),
+            (
+                {"TWILIO_AUTH_TOKEN": "t", "TWILIO_FROM_NUMBER": "Workshop"},
+                "needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN together",
             ),
             (
                 {**TWILIO_ENVIRONMENT, "TWILIO_ACCOUNT_SID": "SK123"},
@@ -217,3 +256,23 @@ class TestStartupReport:
 
         assert record.levelno == logging.INFO
         assert record.getMessage() == "Login codes can be sent by: email, sms"
+
+    def test_sms_is_never_a_channel_of_the_account_without_a_sender(
+        self, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        # The deploy smoke test expects "sms" in the sign-in options only
+        # where a sender exists (scripts/smoke.sh).
+        app_settings = settings(
+            APP_ENV="production", **SMTP_ENVIRONMENT, **TWILIO_ACCOUNT
+        )
+        container = AppContainer()
+        replace_provider(container.config.app_settings, app_settings)
+
+        [record] = self.report(app_settings, caplog)
+
+        assert (
+            container.facilitators.otp_delivery_facilitator().available_channels()
+            == {OtpDeliveryChannel.EMAIL}
+        )
+        assert record.levelno == logging.INFO
+        assert record.getMessage() == "Login codes can be sent by: email"

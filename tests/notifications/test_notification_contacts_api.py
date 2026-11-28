@@ -1,5 +1,7 @@
 """Settings → Notifications over HTTP: staff contacts, their checks and links."""
 
+import pytest
+
 from app.schemas.constants.notifications import StaffLinkTarget
 from app.schemas.dto.notifications.staff_links import StaffLinkClaims
 from app.schemas.typings.businesses.prefixed_id import BusinessId
@@ -14,6 +16,11 @@ from tests.notifications.notification_api_world import (
     open_restaurant_with_contacts,
     start_notifications_workshop,
 )
+
+TWILIO_ACCOUNT: dict[str, str] = {
+    "TWILIO_ACCOUNT_SID": "AC" + "0" * 32,
+    "TWILIO_AUTH_TOKEN": "test-token-0000",
+}
 
 
 def check(restaurant: Restaurant, key: str) -> tuple[int, dict[str, object]]:
@@ -71,6 +78,46 @@ def test_the_owner_sees_each_contact_and_checks_it() -> None:
         assert after["Nino"]["delivery"]["status"] == "delivered"
         assert after["Levan"]["delivery"]["status"] == "dead"
         assert after["Gio"]["delivery"] is None
+
+
+def sms_reasons(restaurant: Restaurant) -> dict[str, object]:
+    return {
+        name: item["sms_unavailable_reason"]
+        for name, item in contacts_by_name(restaurant).items()
+    }
+
+
+def test_only_the_sms_contact_says_why_no_sms_is_sent() -> None:
+    workshop = start_notifications_workshop(push=None)
+    with workshop.client:
+        restaurant = open_restaurant_with_contacts(workshop)
+
+        assert sms_reasons(restaurant) == {
+            "Nino": None,
+            "Anna": None,
+            "Gio": "not_configured",
+            "Levan": None,
+        }
+
+
+@pytest.mark.parametrize(
+    ("environment", "reason"),
+    [
+        # The Twilio account alone rents numbers but has no SMS sender yet.
+        (TWILIO_ACCOUNT, "no_sender"),
+        ({**TWILIO_ACCOUNT, "TWILIO_FROM_NUMBER": "Workshop"}, None),
+    ],
+)
+def test_an_sms_contact_says_why_while_no_sms_is_sent(
+    environment: dict[str, str], reason: str | None
+) -> None:
+    workshop = start_notifications_workshop(push=None, environment=environment)
+    with workshop.client:
+        contacts = contacts_by_name(open_restaurant_with_contacts(workshop))
+
+        assert contacts["Gio"]["sms_unavailable_reason"] == reason
+        assert contacts["Gio"]["provider_ready"] is (reason is None)
+        assert contacts["Levan"]["sms_unavailable_reason"] is None
 
 
 def test_checks_are_limited_per_contact_and_unknown_contacts_are_not_found() -> None:

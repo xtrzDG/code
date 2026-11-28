@@ -44,11 +44,21 @@ class RouteCallFallbackUseCase(
     comes from that very phone, was forwarded from it or that phone is the
     line itself, which would ring in a loop), or no line to present, the
     call ends and is a missed call of the line (NOT_STARTED) with its
-    text-back. A business that is gone: the call ends. So does a call
-    from a number staff blocked (`is_blocked_caller`), which the voice
-    agent refused: it reaches nobody and is no missed call. A signed
-    copy of a request already handled (Twilio's signature has no time)
-    changes nothing: no phone rings, no missed call, no notice.
+    text-back. A call from the line itself, with a staff phone on duty, is
+    the call put through to that phone coming back: the phone forwarded it
+    to the line, and not every carrier says so (Twilio's ForwardedFrom).
+    It is rejected unanswered, as busy, and is no missed call (no person
+    presents the platform's own line): the phone's forwarding fails, so
+    the caller's own call to it ends unanswered and is their missed call
+    (`ReadFallbackDialUseCase`). Answering it, even to hang up, would
+    complete the call put through and lose the caller, so this comes
+    before the blocked check: a contact holding the line's own number
+    (say, a spoofed call staff blocked) is no person. A business that is
+    gone: the call ends. So does a call from a number staff blocked
+    (`is_blocked_caller`), which the voice agent refused: it reaches
+    nobody and is no missed call. A signed copy of a request already
+    handled (Twilio's signature has no time) changes nothing: no phone
+    rings, no missed call, no notice.
     """
 
     def __init__(
@@ -99,11 +109,29 @@ class RouteCallFallbackUseCase(
                 business_id=input_data.business_id,
             )
 
-        if is_blocked_caller(
-            self._contact_repo,
-            business,
-            self._parse(business, report.caller_number),
-        ):
+        caller: E164PhoneNumber | None = self._parse(business, report.caller_number)
+        transfer: E164PhoneNumber | None = find_transfer_phone_number(
+            business, self._business_profile_repo.get_by_business(business.id)
+        )
+        # The staff phone sees the platform's line, never the caller's number.
+        line: E164PhoneNumber | None = self._parse(business, report.assistant_number)
+        # Before the blocked check: a block on a contact holding the line's
+        # number (a spoofed call staff blocked) is about no person, and ending
+        # the call would answer it and lose the caller put through.
+        if transfer is not None and _is_same_number(caller, line):
+            logger.info(
+                "Fallback call %s comes from the line itself (the staff phone "
+                "forwarded it back); it was rejected.",
+                report.provider_call_id,
+            )
+            return CallFallbackPlan(
+                reply=self._call_fallback_adapter.reject_call(),
+                called_at=now,
+                business_id=business.id,
+                looping_phone_number=transfer,
+            )
+
+        if is_blocked_caller(self._contact_repo, business, caller):
             logger.info(
                 "Fallback call %s comes from a blocked number; it was ended.",
                 report.provider_call_id,
@@ -115,14 +143,9 @@ class RouteCallFallbackUseCase(
                 is_caller_blocked=True,
             )
 
-        transfer: E164PhoneNumber | None = find_transfer_phone_number(
-            business, self._business_profile_repo.get_by_business(business.id)
-        )
         is_loop: bool = transfer is not None and self._loops_back(
-            business, report, transfer
+            business, report, transfer, caller, line
         )
-        # The staff phone sees the platform's line, never the caller's number.
-        line: E164PhoneNumber | None = self._parse(business, report.assistant_number)
         if transfer is not None and not is_loop and line is not None:
             return CallFallbackPlan(
                 reply=self._call_fallback_adapter.transfer(business.id, transfer, line),
@@ -152,6 +175,8 @@ class RouteCallFallbackUseCase(
         business: BusinessDocument,
         report: CallFallbackReport,
         transfer: E164PhoneNumber,
+        caller: E164PhoneNumber | None,
+        line: E164PhoneNumber | None,
     ) -> bool:
         """
         Whether the call comes from the staff mobile, was forwarded by it, or
@@ -159,16 +184,13 @@ class RouteCallFallbackUseCase(
         into this fallback again).
         """
 
-        for raw_number in (
-            report.caller_number,
-            report.forwarded_from,
-            report.assistant_number,
-        ):
-            number: E164PhoneNumber | None = self._parse(business, raw_number)
-            if number is not None and str(number) == str(transfer):
-                return True
-
-        return False
+        forwarded_from: E164PhoneNumber | None = self._parse(
+            business, report.forwarded_from
+        )
+        return any(
+            _is_same_number(number, transfer)
+            for number in (caller, forwarded_from, line)
+        )
 
     def _parse(
         self, business: BusinessDocument, raw_number: RawPhoneNumberInput | None
@@ -181,3 +203,11 @@ class RouteCallFallbackUseCase(
         return parse_messaging_phone_number(
             self._phone_number_parser, str(raw_number), business.country_code
         )
+
+
+def _is_same_number(
+    number: E164PhoneNumber | None, other: E164PhoneNumber | None
+) -> bool:
+    """Whether both numbers are known and are the same line."""
+
+    return number is not None and other is not None and str(number) == str(other)

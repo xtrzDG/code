@@ -241,7 +241,7 @@ def report_login_code_channels(app_container: AppContainer) -> None:
     LOGGER.log(
         log_level,
         "No login code provider is configured, so nobody can sign in. Set "
-        "TWILIO_* (SMS), TELEGRAM_GATEWAY_API_TOKEN, WHATSAPP_OTP_* or SMTP_* "
+        "a Twilio SMS sender, TELEGRAM_GATEWAY_API_TOKEN, WHATSAPP_OTP_* or SMTP_* "
         '(see .env.example, "Login codes").',
     )
 

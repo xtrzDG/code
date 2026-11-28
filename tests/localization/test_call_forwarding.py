@@ -85,10 +85,12 @@ def test_italian_owner_gets_codes_and_carriers_in_italian() -> None:
         "WindTre",
         "Iliad",
     ]
+    assert instructions.is_carrier_choice_needed is False
     for carrier in instructions.carriers:
         assert [code.dial_code for code in carrier.codes] == [
             code.dial_code for code in instructions.codes
         ]
+        assert carrier.star_codes == []
         # Not confirmed with the carriers yet: the note says so, in Italian.
         assert carrier.note is not None
         assert "non ancora confermati" in str(carrier.note)
@@ -142,15 +144,17 @@ def test_platform_support_without_an_open_look_is_refused() -> None:
 def test_other_countries_get_standard_gsm_codes_without_carriers() -> None:
     world = build_cabinet_world()
     owner_id = UserId()
-    business = build_business(owner_id, "US", "en")
+    business = build_business(owner_id, "CA", "en")
     world.business_repo.save(business)
-    add_phone_channel(world, business, "+12125550123")
+    add_phone_channel(world, business, "+14165550123")
 
     instructions = request_instructions(world, business, owner_id)
 
+    # Canada keeps the standard codes until its carriers are researched.
     assert instructions.carriers == []
-    assert instructions.codes[0].dial_code == "**61*+12125550123#"
-    assert instructions.assistant_phone_number_display == "+1 212-555-0123"
+    assert instructions.is_carrier_choice_needed is False
+    assert instructions.codes[0].dial_code == "**61*+14165550123#"
+    assert instructions.assistant_phone_number_display == "+1 416-555-0123"
     assert any("other codes" in note for note in instructions.notes)
 
 

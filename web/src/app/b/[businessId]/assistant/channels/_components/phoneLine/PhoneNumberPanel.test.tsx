@@ -108,6 +108,8 @@ describe("the phone card's number from us", () => {
     const dialog = await screen.findByRole("dialog");
     await user.click(within(dialog).getByText(t("phoneNumbers.dialog.search")));
     await user.click(await within(dialog).findByRole("button", { name: t("phoneNumbers.offers.takeLabel", { number: "+1 512-555-0142" }) }));
+    // The confirmation says the number takes calls only (no text sent to it is read).
+    expect(within(dialog).getByText(t("phoneNumbers.confirm.callsOnly"))).toBeTruthy();
     await user.click(within(dialog).getByRole("button", { name: t("phoneNumbers.confirm.take") }));
 
     const [path, init] = vi.mocked(api.POST).mock.calls[0]! as [string, { body: unknown }];
@@ -187,6 +189,7 @@ describe("the phone card's number from us", () => {
     expect(await screen.findByText("+1 512-555-0142")).toBeTruthy();
     expect(screen.getByText(t("phoneNumbers.panel.answering"))).toBeTruthy();
     expect(screen.getByText(/a month/)).toBeTruthy();
+    expect(screen.getByText(t("phoneNumbers.panel.callsOnly"))).toBeTruthy();
     expect(screen.queryByRole("button", { name: t("phoneNumbers.panel.getNumber") })).toBeNull();
   });
 

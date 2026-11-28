@@ -33,11 +33,16 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
       whatsapp: "Chi chiama riceve il tuo modello WhatsApp.",
       sms: "Chi chiama riceve un SMS.",
       none: "Non si può ancora inviare nulla: collega WhatsApp e indica il nome del modello, oppure consenti gli SMS.",
+      noneWithoutSms: "Non si può ancora inviare nulla: collega WhatsApp e indica il nome del modello approvato.",
       off: "I messaggi dopo le chiamate perse sono disattivati.",
     },
     whatsappMissing: "WhatsApp non è collegato.",
     connectWhatsapp: "Collega WhatsApp",
     smsMissing: "Gli SMS non sono disponibili al momento. Contatta l'assistenza.",
+    smsNoSender:
+      "Gli SMS non possono essere inviati finché il numero SMS della piattaforma è in attesa dell'approvazione degli operatori telefonici. Fino ad allora scriviamo a chi ha chiamato solo su WhatsApp.",
+    smsNeedsRegistration:
+      "Gli SMS a chi ti chiama non sono disponibili: nel tuo paese gli operatori accettano messaggi aziendali solo da un mittente registrato a nome della tua attività, che non offriamo ancora. Scriviamo a chi ha chiamato su WhatsApp.",
   },
   recording: {
     title: "Registrazione delle chiamate",
@@ -57,12 +62,15 @@ export const callSettingsIt: Translation<typeof callSettingsEn> = {
   transfers: {
     title: "Trasferimenti al personale",
     description:
+      "Durante l'orario di apertura, chi chiede di parlare con una persona viene passato al numero del tuo personale. Dopo il trasferimento la piattaforma vocale può continuare a trattare la chiamata, perciò informa prima il personale che risponde a queste chiamate. Della parte della chiamata con il personale non conserviamo nulla: né trascrizione, né riepilogo, né registrazione.",
+    descriptionItaly:
       "Durante l'orario di apertura, chi chiede di parlare con una persona viene passato al numero del tuo personale. Dopo il trasferimento la piattaforma vocale può continuare a trattare la chiamata, perciò il diritto del lavoro italiano (art. 4 dello Statuto dei lavoratori) chiede che il personale che risponde a queste chiamate ne sia informato prima. Della parte della chiamata con il personale non conserviamo nulla: né trascrizione, né riepilogo, né registrazione.",
     confirm: "Il personale che risponde alle chiamate trasferite è stato informato",
     confirmHint: "Senza questa conferma nessuno viene trasferito: l'assistente prende un messaggio e un collega richiama.",
     confirmedOn: "Confermato il {date}",
     number: "Numero del personale per i trasferimenti",
-    numberRule: "Solo un cellulare o un fisso del tuo paese o di un altro paese dell'UE, mai un numero a tariffa maggiorata, a costo condiviso o satellitare.",
+    numberRule: "Solo un cellulare o un fisso del tuo paese o di un paese dell'UE, mai un numero a tariffa maggiorata, a costo condiviso o satellitare.",
+    numberRuleEu: "Solo un cellulare o un fisso del tuo paese o di un altro paese dell'UE, mai un numero a tariffa maggiorata, a costo condiviso o satellitare.",
     openContacts: "Numeri del personale",
     noticeTemplate: "Modello di informativa per il personale",
     turnedOff: "I trasferimenti al personale sono disattivati",

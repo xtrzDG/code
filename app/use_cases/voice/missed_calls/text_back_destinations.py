@@ -11,11 +11,19 @@ satellite and international networks, the ranges of
 OTP_DENIED_PHONE_PREFIXES), never to a line that cannot receive a text (a
 landline, a toll-free number), never to a country where sign-up is
 restricted, and only to numbers of the business's own country or of an
-EU member state, where a local business's callers are. A caller with
-another number still gets the WhatsApp text-back, which costs nothing
-when it cannot be delivered. The rule is checked when the missed call is
-stored and again right before the SMS goes (also after WhatsApp refused
-the message).
+EU member state, where a local business's callers are.
+
+A text-back is sent on the business's behalf, and the platform registers
+no sender per business yet. So where carriers accept a business's texts
+only from a sender registered for that business (a PER_BUSINESS country
+of `SmsSenderRegistration`: the US, A2P 10DLC), no SMS goes: a business
+of such a country texts none of its callers by SMS, whatever the country
+of their number, as Settings → Calls tells its owner
+(`TextBackSmsAvailability`), and no business texts a number of such a
+country by SMS. A caller with another number still gets the WhatsApp
+text-back, which costs nothing when it cannot be delivered. The rule is
+checked when the missed call is stored and again right before the SMS
+goes (also after WhatsApp refused the message).
 """
 
 from app.contracts.localization_utilities import PhoneNumberParserContract
@@ -24,11 +32,15 @@ from app.contracts.registries import CountryRegistryContract
 from app.schemas.constants.localization import (
     CountryOnboardingStatus,
     PhoneNumberKind,
+    SmsSenderRegistration,
 )
 from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.dto.localization import PhoneNumberDetails
 from app.schemas.exceptions.application_errors import InvalidPhoneNumberError
-from app.schemas.typings.localization.constrained_strings import E164PhoneNumber
+from app.schemas.typings.localization.constrained_strings import (
+    CountryCode,
+    E164PhoneNumber,
+)
 from app.schemas.typings.localization.strings import RawPhoneNumberInput
 from app.utilities.channels.transfer_destinations import EU_COUNTRY_CODES
 
@@ -54,6 +66,9 @@ class TextBackSmsDestinations:
         self._phone_number_parser: PhoneNumberParserContract = phone_number_parser
 
     def allows(self, business: BusinessDocument, caller: E164PhoneNumber) -> bool:
+        if self._needs_sender_of_business(business.country_code):
+            return False
+
         if self._high_cost_registry.is_high_cost(caller):
             return False
 
@@ -76,4 +91,16 @@ class TextBackSmsDestinations:
         return (
             self._country_registry.get(details.country_code).onboarding_status
             is not CountryOnboardingStatus.RESTRICTED
+            and not self._needs_sender_of_business(details.country_code)
+        )
+
+    def _needs_sender_of_business(self, country_code: CountryCode) -> bool:
+        """
+        Whether the carriers of this country accept a business's texts only
+        from a sender registered for that business (none is, yet).
+        """
+
+        return (
+            self._country_registry.get(country_code).sms_sender_registration
+            is SmsSenderRegistration.PER_BUSINESS
         )

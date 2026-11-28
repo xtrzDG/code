@@ -172,7 +172,8 @@ class AppSettings(AppSettingsSections):
     dpa_document_version: DpaDocumentVersion
     platform_admin_emails: list[EmailAddress]
     platform_admin_phone_numbers: list[E164PhoneNumber]
-    # Login codes: one provider per channel, else not offered (.env.example).
+    # Twilio: the account (numbers, voice fallback; SMS only with a sender) and
+    # the login code providers, one per channel, else not offered (.env.example).
     twilio_account_sid: TwilioAccountSid | None = None
     twilio_auth_token: PlatformSecret | None = None
     twilio_sender: SmsSenderId | None = None

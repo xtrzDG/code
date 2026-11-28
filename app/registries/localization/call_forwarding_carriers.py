@@ -22,32 +22,22 @@ public sources and wants the same check before it is marked REVIEWED:
 - Ukraine: Vodafone also cancels each condition alone (##61#, ##67#,
   ##62#); Kyivstar's ##002# cancels all; forwarded calls are billed as
   outgoing calls under the tariff.
+
+The United States lists its carriers with codes of their own and has its
+own top-level codes, steps and notes (`call_forwarding_us`).
 """
 
-from app.registries.localization.call_forwarding_texts import GSM_CODE_TEMPLATES
+from app.registries.localization.call_forwarding_texts import carrier
+from app.registries.localization.call_forwarding_us import (
+    US_CARRIERS,
+    US_FORWARDING_TEXTS,
+)
 from app.schemas.constants.localization import TextReviewStatus
-from app.schemas.dto.catalog.call_forwarding import CarrierForwardingGuide
+from app.schemas.dto.catalog.call_forwarding import (
+    CarrierForwardingGuide,
+    CountryForwardingTexts,
+)
 from app.schemas.typings.localization.constrained_strings import CountryCode
-from app.schemas.typings.localization.strings import CarrierName
-from app.utilities.localization.owner_texts import has_owner_text, owner_text
-
-
-def carrier(
-    country: str,
-    slug: str,
-    name: str,
-    review_status: TextReviewStatus = TextReviewStatus.NEEDS_REVIEW,
-) -> CarrierForwardingGuide:
-    """A carrier with the GSM codes and its catalog note, when it has one."""
-
-    note_key: str = f"forwarding.carriers.{country}.{slug}.note"
-    return CarrierForwardingGuide(
-        carrier_name=CarrierName(name),
-        code_templates=list(GSM_CODE_TEMPLATES),
-        notes=owner_text(note_key) if has_owner_text(note_key) else None,
-        review_status=review_status,
-    )
-
 
 CARRIER_GUIDES_BY_COUNTRY: dict[CountryCode, tuple[CarrierForwardingGuide, ...]] = {
     CountryCode("GE"): (
@@ -92,4 +82,10 @@ CARRIER_GUIDES_BY_COUNTRY: dict[CountryCode, tuple[CarrierForwardingGuide, ...]]
         carrier("il", "pelephone", "Pelephone"),
         carrier("il", "hot_mobile", "HOT Mobile"),
     ),
+    CountryCode("US"): US_CARRIERS,
+}
+# Countries whose carriers take different codes: their own top-level codes,
+# steps and notes; every other country reads the standard GSM ones.
+COUNTRY_FORWARDING_TEXTS: dict[CountryCode, CountryForwardingTexts] = {
+    CountryCode("US"): US_FORWARDING_TEXTS,
 }

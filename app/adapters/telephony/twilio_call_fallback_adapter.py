@@ -27,6 +27,7 @@ from app.utilities.calls.twilio_voice_webhooks import (
     build_empty_twiml,
     build_fallback_dial_path,
     build_hangup_twiml,
+    build_reject_twiml,
     build_voice_fallback_path,
     describe_request_claim,
     first_values,
@@ -51,7 +52,9 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
     dial's action adds `DialCallStatus`. A call put through to staff
     presents the line as its caller id (`build_dial_twiml`). A missed call
     of the fallback is the line's (source PBX) of the business, keyed by
-    Twilio's call SID.
+    Twilio's call SID. Twilio answers a call on any TwiML but <Reject>, so
+    a call that must stay unanswered (the one put through to staff,
+    forwarded back to the line) is rejected (`reject_call`).
 
     Twilio's signature carries no time, so once a request's signature
     checks out its address, call and status are claimed for a day
@@ -131,6 +134,9 @@ class TwilioCallFallbackAdapter(CallFallbackAdapterContract):
 
     def end_call(self) -> CallFallbackReply:
         return CallFallbackReply(twiml=TwimlDocument(build_hangup_twiml()))
+
+    def reject_call(self) -> CallFallbackReply:
+        return CallFallbackReply(twiml=TwimlDocument(build_reject_twiml()))
 
     def ignore_request(self) -> CallFallbackReply:
         return CallFallbackReply(twiml=TwimlDocument(build_empty_twiml()))

@@ -2,9 +2,11 @@
 A text-back SMS goes only where a missed call's caller id cannot be turned
 into SMS pumping: never to premium, satellite, landline or toll-free
 numbers, only to the business's own country and the EU, never to a
-restricted country (the destination rules of the login codes). WhatsApp
-still carries a text-back to any number; when WhatsApp refuses it, no
-SMS follows to a refused number.
+restricted country (the destination rules of the login codes), and never
+where carriers want a sender registered for the business (the US: a US
+business texts no caller by SMS, and no business texts a US number).
+WhatsApp still carries a text-back to any number; when WhatsApp refuses
+it, no SMS follows to a refused number.
 """
 
 from typing import Any
@@ -50,8 +52,11 @@ from tests.calls.call_steps import (
     save_call_settings,
     whatsapp_templates,
 )
+from tests.channels.channels_settings import UNITED_STATES, CountrySetup
 from tests.channels.voice_setup import CALLER, VoiceSetup, build_voice_setup
 
+CANADA = CountrySetup("CA", "America/Toronto", "CAD", ("en",))
+CANADIAN_MOBILE: str = "+14165550123"
 GEORGIAN_LANDLINE: str = "+995322123456"
 GEORGIAN_TOLL_FREE: str = "+995800123456"
 ITALIAN_MOBILE: str = "+393471234567"
@@ -227,3 +232,66 @@ class TestMissedCalls:
         assert stored.status is TextBackStatus.SKIPPED
         assert stored.skip_reason is TextBackSkipReason.NO_CHANNEL
         assert setup.testbed.sms_client.sent == []
+
+
+class TestSenderRegisteredPerBusiness:
+    """
+    US carriers accept a business's texts only from a sender registered for
+    that business (A2P 10DLC), which the platform does not offer yet: a US
+    business texts none of its callers by SMS, whatever their number, as
+    Settings → Calls tells its owner, and no text-back SMS goes to a US
+    number, whoever the business.
+    """
+
+    @pytest.fixture
+    def us_setup(self) -> VoiceSetup:
+        voice_setup = build_voice_setup(country=UNITED_STATES)
+        save_call_settings(voice_setup, template_name=None)
+        return voice_setup
+
+    @pytest.mark.parametrize("caller", [US_NUMBER, ITALIAN_MOBILE, CYPRIOT_MOBILE])
+    def test_no_caller_of_a_us_business_gets_one(
+        self, us_setup: VoiceSetup, caller: str
+    ) -> None:
+        # A mobile of an EU country neither: the business sends no SMS.
+        assert not destinations(us_setup).allows(
+            us_setup.business, E164PhoneNumber(caller)
+        )
+
+    def test_a_canadian_business_texts_the_same_kind_of_number(self) -> None:
+        setup = build_voice_setup(country=CANADA)
+
+        assert destinations(setup).allows(
+            setup.business, E164PhoneNumber(CANADIAN_MOBILE)
+        )
+
+    @pytest.mark.parametrize("caller", [US_NUMBER, ITALIAN_MOBILE])
+    def test_the_missed_call_is_not_texted_by_sms(
+        self, us_setup: VoiceSetup, caller: str
+    ) -> None:
+        report_missed_call(us_setup, caller=caller)
+        us_setup.testbed.run_worker()
+
+        missed = only_missed_call(us_setup)
+        assert missed.status is TextBackStatus.SKIPPED
+        assert missed.skip_reason is TextBackSkipReason.NO_CHANNEL
+        assert us_setup.testbed.sms_client.sent == []
+
+    @pytest.mark.parametrize("caller", [US_NUMBER, ITALIAN_MOBILE])
+    def test_the_sender_refuses_it_right_before_sending(
+        self, us_setup: VoiceSetup, caller: str
+    ) -> None:
+        report_missed_call(us_setup, caller=caller)
+        sms = TextBackSms(
+            us_setup.testbed.sms_client,
+            us_setup.testbed.text_resolver,
+            destinations(us_setup),
+        )
+
+        with pytest.raises(ValidationFailedError):
+            sms.send(
+                us_setup.business,
+                only_missed_call(us_setup),
+                E164PhoneNumber(caller),
+            )
+        assert us_setup.testbed.sms_client.sent == []

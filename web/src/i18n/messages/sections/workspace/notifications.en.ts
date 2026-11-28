@@ -83,6 +83,10 @@ export const notificationsEn = {
     retrying: "The last attempt did not get through; it is tried again.",
     providerMissing: "Not available right now",
     providerMissingHint: "Nothing is sent by {channel} for now. Contact support if you need it.",
+    /** An SMS contact while the platform's SMS number waits for the carriers' approval (`no_sender`). */
+    smsNotYet: "Waiting for carrier approval",
+    smsNoSenderHint:
+      "Nothing is sent by SMS until the platform's SMS number is approved by the phone carriers. For notifications, add an e-mail, WhatsApp or Telegram contact or turn them on for this device; this number can still take transferred calls.",
     testUnavailable: "A test cannot be sent: {channel} is not available right now.",
     status: {
       delivered: "Delivered",

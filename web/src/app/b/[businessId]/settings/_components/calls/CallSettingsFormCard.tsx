@@ -18,10 +18,11 @@ import {
   callSettingsBody,
   callSettingsForm,
   isSameCallSettings,
-  READINESS_TEXTS,
   READINESS_TONES,
+  smsSwitchState,
   templateNameError,
   textBackReadiness,
+  textBackReadinessText,
   transferReadiness,
   turnedOffText,
   type CallSettingsBody,
@@ -35,10 +36,10 @@ import { TransferCard } from "./TransferCard";
 /**
  * The owner's choices: a summary after every call, the message to a
  * caller who did not get through (which template, whether an SMS may
- * follow) with what such a caller would get right now, the recording of
- * calls with what callers hear about it, and the staff notice transfers
- * need. Every change saves itself; switching something off offers Undo
- * for a few seconds.
+ * follow, and why SMS is no choice while it is unavailable) with what such
+ * a caller would get right now, the recording of calls with what callers
+ * hear about it, and the staff notice transfers need. Every change saves
+ * itself; switching something off offers Undo for a few seconds.
  */
 export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsView; state: CallSettingsState }) {
   const { t } = useI18n();
@@ -62,6 +63,7 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
   const { values } = form;
   const nameError = templateNameError(values);
   const readiness = textBackReadiness(values, form.stored);
+  const sms = smsSwitchState(values, form.stored);
   const pill = (field: keyof CallSettingsForm) => <SavePill state={form.fieldState(field)} onRetry={form.retry} />;
 
   return (
@@ -95,7 +97,7 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
             onChange={(isTextBackEnabled) => form.update("isTextBackEnabled", isTextBackEnabled)}
           />
           <Alert tone={READINESS_TONES[readiness]}>
-            <p>{t(READINESS_TEXTS[readiness])}</p>
+            <p>{t(textBackReadinessText(readiness, form.stored))}</p>
             {readiness !== "off" && !form.stored.is_whatsapp_connected ? (
               <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <span>{t("callSettings.textBack.whatsappMissing")}</span>
@@ -106,9 +108,6 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
                   {t("callSettings.textBack.connectWhatsapp")}
                 </Link>
               </p>
-            ) : null}
-            {readiness !== "off" && !form.stored.is_sms_available ? (
-              <p className="mt-1">{t("callSettings.textBack.smsMissing")}</p>
             ) : null}
           </Alert>
           <Field
@@ -130,12 +129,12 @@ export function CallSettingsFormCard({ stored, state }: { stored: CallSettingsVi
               />
             )}
           </Field>
-          {/* The SMS only follows a text-back message: with messages off it is not a choice. */}
+          {/* The SMS only follows a text-back message, and only while SMS can be sent: else no choice, and why. */}
           <SwitchRow
             label={t("callSettings.textBack.sms")}
-            hint={values.isTextBackEnabled ? t("callSettings.textBack.smsHint") : t("callSettings.textBack.smsNeedsTextBack")}
-            checked={values.isTextBackEnabled && values.isSmsFallbackEnabled}
-            disabled={!values.isTextBackEnabled}
+            hint={t(sms.hint)}
+            checked={sms.isChecked}
+            disabled={sms.isDisabled}
             status={form.fieldState("isSmsFallbackEnabled")}
             onRetry={form.retry}
             onChange={(isSmsFallbackEnabled) => form.update("isSmsFallbackEnabled", isSmsFallbackEnabled)}

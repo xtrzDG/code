@@ -60,11 +60,10 @@ from tests.phone_numbers.provisioner_fakes import (
 from tests.resilience.test_circuit_breaker import Ticks
 
 ACCOUNT = TwilioAccountSid("AC" + "0" * 32)
-# The Twilio account of login codes, which rents the numbers too.
-SMS_LOGIN: dict[str, str] = {
+# The Twilio account alone, without an SMS sender: it rents the numbers.
+TWILIO_ACCOUNT_KEYS: dict[str, str] = {
     "TWILIO_ACCOUNT_SID": str(ACCOUNT),
     "TWILIO_AUTH_TOKEN": "test-token-0000",
-    "TWILIO_FROM_NUMBER": "+15005550006",
 }
 BREAKER = CircuitBreakerFacilitator(Ticks().clock())
 QUERY = PhoneNumberSearchQuery(
@@ -182,7 +181,7 @@ def settings(**variables: str) -> AppSettings:
             ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "ELEVENLABS_API_KEY"],
         ),
         (
-            {"PHONE_NUMBER_PROVIDER": "Twilio", **SMS_LOGIN},
+            {"PHONE_NUMBER_PROVIDER": "Twilio", **TWILIO_ACCOUNT_KEYS},
             ["ELEVENLABS_API_KEY"],
         ),
     ],
@@ -200,14 +199,14 @@ def test_twilio_with_every_key_rents_numbers() -> None:
     configured = settings(
         PHONE_NUMBER_PROVIDER="twilio",
         ELEVENLABS_API_KEY="test-key-0000",
-        **SMS_LOGIN,
+        **TWILIO_ACCOUNT_KEYS,
         PHONE_NUMBER_PRICE_MARKUP_PERCENT="45",
     )
+    provisioner = build_phone_number_provisioner(configured, BREAKER)
 
-    assert isinstance(
-        build_phone_number_provisioner(configured, BREAKER),
-        TwilioPhoneNumberProvisionerAdapter,
-    )
+    assert isinstance(provisioner, TwilioPhoneNumberProvisionerAdapter)
+    assert provisioner.list_missing_settings() == []
+    assert configured.twilio_sender is None
     assert configured.phone_numbers == PhoneNumberSettings(
         provider=PhoneNumberProvider.TWILIO,
         price_markup_percent=PhoneNumberPriceMarkupPercent(45),

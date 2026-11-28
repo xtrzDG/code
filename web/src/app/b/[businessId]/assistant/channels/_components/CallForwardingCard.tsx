@@ -9,21 +9,21 @@ import { IconChevronDown, IconInfo, IconPhone } from "@/components/icons";
 import { Card, ErrorState, LoadingRegion, SkeletonText } from "@/components/ui";
 import { CopyButton } from "@/components/workspace/CopyButton";
 import { useI18n } from "@/i18n/client";
-import type { MessageKey } from "@/i18n/translate";
 
-import { dialHref, sortForwardingCodes, type CallForwardingCondition } from "../_lib/channels";
+import { forwardingCodeRows } from "../_lib/forwardingCodes";
 import { usePhoneLine } from "../_lib/usePhoneLine";
+import { ForwardingCodeList } from "./ForwardingCodeList";
 
-const CONDITION_LABELS: Record<CallForwardingCondition, MessageKey> = {
-  no_answer: "channels.forwarding.condition.no_answer",
-  busy: "channels.forwarding.condition.busy",
-  unreachable: "channels.forwarding.condition.unreachable",
-  cancel_all: "channels.forwarding.condition.cancel_all",
-};
+type CarrierInstructions = Schema<"CarrierForwardingInstructions">;
 
 /**
  * Forwarding of missed, busy and unreachable calls to the assistant's number:
- * steps and GSM codes (per operator where known) in the interface language.
+ * steps and codes in the interface language. Usually the standard GSM codes
+ * come first and the codes of named operators after them. Where carriers take
+ * codes of their own (`is_carrier_choice_needed`: the United States), the
+ * owner opens their carrier first (its GSM codes and star codes, such as
+ * Verizon's *71) and the standard codes follow for carriers not listed, as
+ * the steps say.
  */
 export function CallForwardingCard() {
   const { t, locale } = useI18n();
@@ -80,34 +80,17 @@ export function CallForwardingCard() {
             </ol>
           </section>
 
-          <section aria-labelledby="forwarding-codes" className="space-y-2">
-            <h3 id="forwarding-codes" className="text-sm font-semibold text-ink">
-              {t("channels.forwarding.codesTitle")}
-            </h3>
-            <ForwardingCodes codes={data.codes} />
-          </section>
-
-          {data.carriers && data.carriers.length > 0 ? (
-            <section aria-labelledby="forwarding-carriers" className="space-y-2">
-              <h3 id="forwarding-carriers" className="text-sm font-semibold text-ink">
-                {t("channels.forwarding.carriersTitle")}
-              </h3>
-              <div className="divide-y divide-line rounded-xl border border-line">
-                {data.carriers.map((carrier) => (
-                  <details key={carrier.carrier_name} className="group">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink hover:bg-surface-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
-                      {carrier.carrier_name}
-                      <IconChevronDown className="size-4 text-ink-subtle transition-transform group-open:rotate-180" aria-hidden />
-                    </summary>
-                    <div className="space-y-3 px-4 pb-4">
-                      {carrier.note ? <p className="text-sm text-ink-muted">{carrier.note}</p> : null}
-                      <ForwardingCodes codes={carrier.codes} />
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          ) : null}
+          {data.is_carrier_choice_needed ? (
+            <>
+              <CarrierCodes title={t("channels.forwarding.chooseCarrierTitle")} carriers={data.carriers ?? []} />
+              <StandardCodes title={t("channels.forwarding.otherCarriersTitle")} codes={data.codes} />
+            </>
+          ) : (
+            <>
+              <StandardCodes title={t("channels.forwarding.codesTitle")} codes={data.codes} />
+              <CarrierCodes title={t("channels.forwarding.carriersTitle")} carriers={data.carriers ?? []} />
+            </>
+          )}
 
           {data.notes && data.notes.length > 0 ? (
             <section aria-labelledby="forwarding-notes" className="rounded-xl bg-info-soft/70 p-4">
@@ -128,31 +111,45 @@ export function CallForwardingCard() {
   );
 }
 
-function ForwardingCodes({ codes }: { codes: readonly Schema<"CallForwardingCode">[] }) {
-  const { t } = useI18n();
+/** The top-level codes: the standard ones, or (with a carrier to choose) those for carriers not listed. */
+function StandardCodes({ title, codes }: { title: string; codes: readonly Schema<"CallForwardingCode">[] }) {
   return (
-    <ul className="divide-y divide-line rounded-xl border border-line">
-      {sortForwardingCodes(codes).map((code) => (
-        <li key={code.condition} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-          <div className="min-w-0 flex-1 basis-48">
-            <p className="text-sm font-medium text-ink">{t(CONDITION_LABELS[code.condition])}</p>
-            <p className="text-xs text-ink-muted">{code.description}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <code dir="ltr" className="rounded-md bg-surface-muted px-2 py-1 font-mono text-sm text-ink">
-              {code.dial_code}
-            </code>
-            <CopyButton value={code.dial_code} iconOnly label={`${t("workspace.copy")} ${code.dial_code}`} />
-            <a
-              href={dialHref(code.dial_code)}
-              className="rounded-lg px-2 py-1 text-sm font-medium text-accent hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-focus sm:hidden"
-              aria-label={t("channels.forwarding.dialLabel", { code: code.dial_code })}
-            >
-              {t("channels.forwarding.dial")}
-            </a>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby="forwarding-codes" className="space-y-2">
+      <h3 id="forwarding-codes" className="text-sm font-semibold text-ink">
+        {title}
+      </h3>
+      <ForwardingCodeList rows={forwardingCodeRows(codes)} />
+    </section>
+  );
+}
+
+/** Each named carrier, folded: what is known of it, then its GSM codes and star codes (either may be none). */
+function CarrierCodes({ title, carriers }: { title: string; carriers: readonly CarrierInstructions[] }) {
+  if (carriers.length === 0) {
+    return null;
+  }
+  return (
+    <section aria-labelledby="forwarding-carriers" className="space-y-2">
+      <h3 id="forwarding-carriers" className="text-sm font-semibold text-ink">
+        {title}
+      </h3>
+      <div className="divide-y divide-line rounded-xl border border-line">
+        {carriers.map((carrier) => {
+          const rows = forwardingCodeRows(carrier.codes, carrier.star_codes);
+          return (
+            <details key={carrier.carrier_name} className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink hover:bg-surface-muted/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden">
+                {carrier.carrier_name}
+                <IconChevronDown className="size-4 text-ink-subtle transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <div className="space-y-3 px-4 pb-4">
+                {carrier.note ? <p className="text-sm text-ink-muted">{carrier.note}</p> : null}
+                {rows.length > 0 ? <ForwardingCodeList rows={rows} /> : null}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </section>
   );
 }

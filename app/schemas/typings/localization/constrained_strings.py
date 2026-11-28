@@ -88,6 +88,22 @@ class EmergencyNumber(BaseConstrainedTypedString):
     pattern = r"^[0-9]{2,6}$"
 
 
+class ForwardingTargetNumber(BaseConstrainedTypedString):
+    """
+    The assistant's number as a forwarding code carries it: in E.164, as
+    the national digits or as the digits with the country code, whichever
+    the carrier asks for.
+
+    Example:
+        verizon_target = ForwardingTargetNumber("2125550123")
+        t_mobile_target = ForwardingTargetNumber("12125550123")
+    """
+
+    min_length = 4
+    max_length = 16
+    pattern = r"^\+?[0-9]{4,15}$"
+
+
 class LanguageTag(BaseConstrainedTypedString):
     """
     BCP 47 language tag limited to language, optional script and region.
@@ -155,6 +171,34 @@ class TimezoneName(BaseConstrainedTypedString):
     min_length = 2
     max_length = 64
     pattern = r"^[A-Za-z][A-Za-z0-9_+\-]*(/[A-Za-z0-9_+\-]+){0,2}$"
+
+
+class VerticalServiceDialCode(BaseConstrainedTypedString):
+    """
+    North American star code a person dials to set or cancel forwarding:
+    "*", two digits and, for a code that takes one, the 10-digit number.
+
+    Example:
+        no_answer_or_busy = VerticalServiceDialCode("*712125550123")
+        cancel_all = VerticalServiceDialCode("*73")
+    """
+
+    min_length = 3
+    max_length = 13
+    pattern = r"^\*[0-9]{2}([0-9]{10})?$"
+
+
+class VerticalServiceDialCodeTemplate(BaseConstrainedTypedString):
+    """
+    Star code with an optional "{number}" placeholder for the target number.
+
+    Example:
+        no_answer_or_busy = VerticalServiceDialCodeTemplate("*71{number}")
+    """
+
+    min_length = 3
+    max_length = 11
+    pattern = r"^\*[0-9]{2}(\{number\})?$"
 
 
 # Keep abc order for all non example types, if possible.

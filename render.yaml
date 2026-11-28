@@ -188,7 +188,9 @@ services:
       # knowledge search by meaning (OpenAI EU embeddings); empty: by words
       - key: EMBEDDINGS_API_KEY
         sync: false
-      # login codes by SMS
+      # Twilio account: phone numbers and calls; SMS (login codes, staff
+      # notifications, text-backs) only with a sender, TWILIO_FROM_NUMBER or
+      # TWILIO_MESSAGING_SERVICE_SID (docs/LAUNCH.md 4.3 and 4.6)
       - key: TWILIO_ACCOUNT_SID
         sync: false
       - key: TWILIO_AUTH_TOKEN
@@ -247,7 +249,9 @@ services:
         sync: false
       - key: ZADARMA_API_SECRET
         sync: false
-      # numbers owners take in the cabinet: twilio, or empty (docs/LAUNCH.md 4.6)
+      # numbers owners take in the cabinet: twilio, or empty (docs/LAUNCH.md
+      # 4.6); twilio needs the Twilio account and ELEVENLABS_API_KEY, or
+      # production refuses to start
       - key: PHONE_NUMBER_PROVIDER
         sync: false
       # call recordings, customer files and export archives: encrypted in an

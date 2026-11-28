@@ -1,6 +1,6 @@
 """
 Country policies: emergency numbers, login channels, consent, restrictions, currency
-dates.
+dates, SMS senders registered per business.
 """
 
 import pytest
@@ -12,6 +12,7 @@ from app.schemas.constants.localization import (
     LocalNumberProvisioning,
     OtpDeliveryChannel,
     RecordingConsentRule,
+    SmsSenderRegistration,
 )
 from app.schemas.typings.localization.constrained_strings import CountryCode
 from tests.localization.builders import (
@@ -19,7 +20,7 @@ from tests.localization.builders import (
     build_wall_clock,
     get_language_registry,
 )
-from tests.localization.country_registry_helpers import get_profile
+from tests.localization.country_registry_helpers import REGISTRY, get_profile
 
 
 @pytest.mark.parametrize(
@@ -88,6 +89,19 @@ def test_recording_consent_and_local_numbers() -> None:
         get_profile("AM").local_number_provisioning
         is LocalNumberProvisioning.REQUIRES_DOCUMENTS
     )
+
+
+def test_only_us_carriers_want_an_sms_sender_registered_per_business() -> None:
+    """A2P 10DLC: a business's texts to US numbers need its own registration."""
+
+    registrations: dict[str, SmsSenderRegistration] = {
+        str(profile.country_code): profile.sms_sender_registration
+        for profile in REGISTRY.list_all()
+    }
+
+    assert registrations.pop("US") is SmsSenderRegistration.PER_BUSINESS
+    assert set(registrations.values()) == {SmsSenderRegistration.NOT_REQUIRED}
+    assert "CA" in registrations and "IT" in registrations
 
 
 def test_restricted_countries_cannot_onboard_or_buy_numbers() -> None:

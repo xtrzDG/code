@@ -65,7 +65,8 @@ here, and nothing else is. A new variable goes to its settings section,
 | `OTP_DENIED_PHONE_PREFIXES` | only the built-in denial: premium-rate, shared-cost, personal and satellite numbers never get a code |
 | `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | the bot check (Cloudflare Turnstile) is off; both or neither. `production` refuses to start without them or with Cloudflare's test keys (`1x0000…`, `2x0000…`, `3x0000…`) |
 | `OTP_LOG_CODES` | on outside `production`: channels without a provider write the code to the log; cannot be turned on in `production` |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` | no login codes by SMS |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | no Twilio account: no rented numbers (`PHONE_NUMBER_PROVIDER`), no call fallback and no SMS. Both or neither: one alone fails the start everywhere. The account alone rents numbers and signs their call fallback but sends no SMS; ElevenLabs keeps the token of every number it imported, so a new token means re-importing them (`docs/operations/runbooks/secret-rotation.md`) |
+| `TWILIO_FROM_NUMBER`, `TWILIO_MESSAGING_SERVICE_SID` | no SMS at all, even with the account: no login codes by SMS, staff SMS not sent (stored as not delivered with the reason in `production`, logged elsewhere), no text-back by SMS; the start-up log says so once and the cabinet tells owners why (Settings → Calls and Notifications). A sender needs both account variables, otherwise the start fails. Set it only once the carriers approved it: for US numbers an A2P 10DLC campaign or a verified toll-free number, and only after the platform reads Twilio's delivery reports (a StatusCallback, not built yet), because Twilio blocks and bills an unregistered sender's texts (errors 30034, 30035, 30032) while the platform counts them as sent |
 | `TELEGRAM_GATEWAY_API_TOKEN` | no login codes in Telegram |
 | `WHATSAPP_OTP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_ACCESS_TOKEN`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANGUAGES` | no login codes in WhatsApp; the token defaults to `WHATSAPP_SYSTEM_USER_TOKEN`, the template language to `en` |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` | no sign-in by e-mail; the port defaults to 587 (`starttls`), 465 (`ssl`), 25 (`none`; `production` refuses it). Without any code provider sign-in works only outside `production` (codes in the log); `production` refuses to start without one |
@@ -107,14 +108,14 @@ here, and nothing else is. A new variable goes to its settings section,
 | `ELEVENLABS_ALLOW_NON_EU_REGION` | `false`: in `production` an ElevenLabs address outside the EU stops the start |
 | `ELEVENLABS_AGENT_LLM`, `ELEVENLABS_AGENT_TEMPERATURE`, `ELEVENLABS_TURN_TIMEOUT_SECONDS` | `gemini-2.5-flash`, 0.2 (0–1) and 8 seconds (1–30): the language model every voice agent runs on (by ElevenLabs' name), how freely it words its answers, and how long it waits for a silent caller before it speaks again. Written into an agent when it is set up; agents already live take a change at the next publish |
 | `VOICE_CHECKS_ENABLED` | `true`: the autotests of a version with voice (with `ELEVENLABS_API_KEY` and `APP_BASE_URL` set) include a simulated call in each tested language (ElevenLabs agent testing), which must pass before the version can go live; `false`: versions with voice are tested in chat only |
-| `PHONE_NUMBER_PROVIDER`, `PHONE_NUMBER_PRICE_MARKUP_PERCENT` | the owner does not take a phone number by themselves: the phone card offers "Ask the team", and the request goes by e-mail to `PLATFORM_ADMIN_EMAILS`. `twilio` turns on searching and renting numbers (needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `ELEVENLABS_API_KEY`); the markup on the carrier's price is 30 % by default (0–300). Renting works as soon as `twilio` is set; the monthly invoice comes with the release gate `phone_number_rental`, open from the release after launch-2026-11-05 (before it, the platform paid for the number) |
+| `PHONE_NUMBER_PROVIDER`, `PHONE_NUMBER_PRICE_MARKUP_PERCENT` | the owner does not take a phone number by themselves: the phone card offers "Ask the team", and the request goes by e-mail to `PLATFORM_ADMIN_EMAILS`. `twilio` turns on searching and renting numbers (needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `ELEVENLABS_API_KEY`, no SMS sender; `production` refuses `twilio` unless all three are set, elsewhere the card then offers "Ask the team" too); a rented number takes calls only (no SMS address is set on it); the markup on the carrier's price is 30 % by default (0–300). Renting works as soon as `twilio` is set; the monthly invoice comes with the release gate `phone_number_rental`, open from the release after launch-2026-11-05 (before it, the platform paid for the number) |
 | `ZADARMA_API_KEY` | not used yet: the assistant's number is bought in Zadarma by hand and entered in the cabinet (the Phone channel) |
 | `ZADARMA_API_SECRET` | the Zadarma API secret that signs the PBX's call notifications (`POST /v1/telephony/zadarma/notifications`); without it the notifications are refused and missed calls on the line (busy, no answer, hang-up) are not found |
 | `META_APP_SECRET`, `META_VERIFY_TOKEN`, `WHATSAPP_SYSTEM_USER_TOKEN` | WhatsApp, Instagram and Messenger accept no webhooks; without `META_APP_SECRET` the cabinet connects none of them by hand (the owner reads that it cannot be connected right now, the log names the setting); WhatsApp neither connects nor sends. `production` refuses to start with `META_APP_ID`, `META_EMBEDDED_SIGNUP_CONFIG_ID` or `WHATSAPP_SYSTEM_USER_TOKEN` but without `META_APP_SECRET` and `META_VERIFY_TOKEN` |
 | `META_APP_ID` | the cabinet has no "Continue with Facebook" (WhatsApp, Instagram and Messenger connect only by hand), the expiry of Meta channel tokens is not checked (the hourly job `check_channel_credentials` asks `debug_token` with `META_APP_ID` and `META_APP_SECRET`), WhatsApp Embedded Signup tokens are not renewed (the job `refresh_whatsapp_tokens` logs that it skipped), and the System page does not show tokens about to expire. Both jobs run on the batch worker, which copies `META_APP_ID` and `META_APP_SECRET` from `workshop-api` |
 | `META_EMBEDDED_SIGNUP_CONFIG_ID` | WhatsApp connects only by hand (the number's ID and the platform's system user given access to the business account): there is no WhatsApp Embedded Signup, the "Facebook Login for Business" configuration the cabinet opens Meta's window with (docs/LAUNCH.md, 4.5) |
 | `META_TOKEN_REFRESH_DAYS` | 15: how many days before a WhatsApp Embedded Signup token ends (Meta issues it for 60 days) the job `refresh_whatsapp_tokens` (every 6 hours on the batch worker, which needs `META_APP_ID` and `META_APP_SECRET`) asks Meta for a new one (1–60). The old token keeps working until its own end. When Meta refuses, the owners are told to connect WhatsApp again before the token ends. `60` renews a token at the first run after it was issued: a quick check on a test business that Meta renews them (the business's audit log shows the change, the token's end moves). Set it back afterwards: with `60` every token is renewed at every run |
-| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | staff notifications in Telegram and WhatsApp do not go out (the contact shows why). E-mail and SMS to staff go through `SMTP_*` and `TWILIO_*` (like login codes); without them they are logged outside `production` |
+| `TELEGRAM_PLATFORM_BOT_TOKEN`, `WHATSAPP_NOTIFICATION_PHONE_NUMBER_ID`, `WHATSAPP_NOTIFICATION_TEMPLATE` | staff notifications in Telegram and WhatsApp do not go out (the contact shows why). E-mail and SMS to staff go through `SMTP_*` and the Twilio account with its sender (like login codes); without them they are logged outside `production` |
 | `WEB_PUSH_VAPID_PUBLIC_KEY`, `WEB_PUSH_VAPID_PRIVATE_KEY`, `WEB_PUSH_VAPID_SUBJECT` | no notifications to devices (Web Push): the "Turn on for this device" button is hidden; all three or none, and the key pair is checked at start-up |
 | `WHATSAPP_REMINDER_TEMPLATE` | a booking reminder in WhatsApp goes out only when the customer wrote there in the last 24 hours |
 | `WHATSAPP_BOOKING_CONFIRMATION_TEMPLATE` | the written booking confirmation with the link to its page goes to the guest in WhatsApp only when they wrote there in the last 24 hours (to the website chat and Telegram it always goes, to Messenger and Instagram also only within 24 hours) |
@@ -183,7 +184,8 @@ tests, CI, `docker-compose.yml` and the preview stand never ask. Refused:
   `OTEL_EXPORTER_OTLP_ENDPOINT`, `RECORDINGS_S3_ENDPOINT_URL` or
   `BACKUP_S3_ENDPOINT_URL` over plain http or on localhost;
 - no Turnstile keys or Cloudflare's test keys, `SMTP_SECURITY=none`, no
-  provider that carries login codes;
+  provider that carries login codes (the Twilio account carries none
+  without its SMS sender);
 - `LLM_PROVIDER=scripted`, no `OPENAI_API_KEY`, a configured model whose
   provider's key is missing, a scripted or unknown `LLM_FALLBACK_MODEL_ID`
   (a fallback model without its key is only skipped, with one warning);
@@ -192,14 +194,20 @@ tests, CI, `docker-compose.yml` and the preview stand never ask. Refused:
   feature without the secret that verifies its webhooks
   (`STRIPE_WEBHOOK_SECRET`, `META_APP_SECRET` and `META_VERIFY_TOKEN`,
   `ELEVENLABS_WEBHOOK_SECRET`);
+- `PHONE_NUMBER_PROVIDER=twilio` without `TWILIO_ACCOUNT_SID`,
+  `TWILIO_AUTH_TOKEN` or `ELEVENLABS_API_KEY` (one problem naming each
+  missing one); a Twilio account without an SMS sender is not refused (SMS
+  is off, one line in the start-up log);
 - `LOG_FORMAT=text`, no `PLATFORM_DAILY_SPEND_BUDGET_USD` above 0, the seller
   on the development defaults (`SELLER_LEGAL_NAME`, `SELLER_COUNTRY_CODE`,
   `SELLER_TIME_ZONE` unset, or the placeholder name "Assistant Workshop"
   written out) or without `SELLER_ADDRESS`, and a VAT-registered
   seller whose country has no known rate.
 
-Everywhere, also outside production: an unknown `APP_ENV`, `CORS_ALLOWED_ORIGINS=*`
-and a value outside its range (a timeout or a rate limit of 0 or below) fail
+Everywhere, also outside production: an unknown `APP_ENV`, `CORS_ALLOWED_ORIGINS=*`,
+a half-configured login code provider (also one of `TWILIO_ACCOUNT_SID` and
+`TWILIO_AUTH_TOKEN` without the other, or a Twilio sender without both) and
+a value outside its range (a timeout or a rate limit of 0 or below) fail
 the start with the variable's name, and a blank list variable means unset
 (`none` empties `RESTRICTED_COUNTRY_CODES` and `OTP_HIGH_RISK_COUNTRIES`).
 The owner's checklist is `docs/operations/go-live.md`, "Production refuses

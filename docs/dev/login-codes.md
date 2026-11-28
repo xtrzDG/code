@@ -21,7 +21,7 @@ is no way in.
 
 | Channel | Provider | Variables |
 | --- | --- | --- |
-| SMS | Twilio Programmable Messaging | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID` |
+| SMS | Twilio Programmable Messaging: the Twilio account and its sender (the account alone sends no SMS) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and the sender, `TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID` |
 | Telegram | Telegram Gateway API (`sendVerificationMessage`, paid per delivered code) | `TELEGRAM_GATEWAY_API_TOKEN` |
 | WhatsApp | an "authentication" template of the WhatsApp Cloud API (the code in the text and a copy button) | `WHATSAPP_OTP_PHONE_NUMBER_ID`, `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANGUAGES`, `WHATSAPP_OTP_ACCESS_TOKEN` (defaults to `WHATSAPP_SYSTEM_USER_TOKEN`) |
 | E-mail | any SMTP server (STARTTLS or TLS) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURITY`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM` |
@@ -31,7 +31,22 @@ Georgian, Ukrainian, Turkish, Hebrew, Arabic, German, French, Spanish;
 English otherwise), always name the service (Assistant Workshop), and an SMS
 fits one part. Telegram and WhatsApp write their messages themselves. A
 provider is configured completely or not at all: incomplete settings stop
-the start-up.
+the start-up. Twilio is the exception: `TWILIO_ACCOUNT_SID` and
+`TWILIO_AUTH_TOKEN` come together, and the sender is optional. The account
+alone is complete (it rents phone numbers and signs their call fallback)
+and sends no SMS: in `production` the SMS channel is not offered and the
+login options do not list it (in `development` and `test` its codes go to
+the log like any channel without a provider, see below), and the start-up
+log says once that SMS is off; a sender without the account stops the
+start-up (`check_twilio_account` in
+`app/utilities/config_helpers/app_settings/otp_provider_settings_section.py`;
+whether the platform sends SMS is decided in
+`app/utilities/config_helpers/sms_sender.py`). A sender that texts US
+numbers is set only once its A2P 10DLC campaign or toll-free verification
+is approved and the platform reads Twilio's delivery reports (a
+StatusCallback, not built yet): Twilio accepts an unregistered sender's
+text, then blocks it (errors 30034, 30035, 30032) and bills it, so the
+platform would count the code as sent and never try the next channel.
 
 Every code is a paid message, so sending is limited: the same number and
 channel again only after 30 seconds (switching channel, "no code? send it by
@@ -49,8 +64,9 @@ In `development` and `test`, channels without a provider write the code to
 the log (`OTP_LOG_CODES`, on by default): the newest line `Login code NNNNNN
 via <channel>` of the API log is the code to type. In `production` codes are
 never logged (`OTP_LOG_CODES=true` stops the start-up), a channel without a
-provider is not offered, and without any provider the API logs an error at
-start-up and sign-in answers 502 with an explanation.
+provider is not offered, and without any provider production refuses to
+start (`app/gateways/startup_checks.py`): the error names the variables of
+each provider, the SMS one as a Twilio sender with its account.
 
 ## Protection
 

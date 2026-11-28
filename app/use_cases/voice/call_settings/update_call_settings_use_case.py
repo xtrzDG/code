@@ -1,7 +1,6 @@
 from typed_time_provider import Microseconds, WallClock
 
 from app.contracts.localization_utilities import LocalizedTextResolverContract
-from app.contracts.messaging_clients import SmsMessagingClientContract
 from app.contracts.repositories.assistant_repositories import (
     AssistantVersionRepoContract,
 )
@@ -36,6 +35,9 @@ from app.use_cases.voice.call_settings.call_settings_views import (
     build_call_settings_view,
     stored_or_default,
 )
+from app.use_cases.voice.call_settings.text_back_sms_availability import (
+    TextBackSmsAvailability,
+)
 from app.use_cases.voice.call_settings.text_back_template_check import (
     TextBackTemplateCheck,
 )
@@ -50,10 +52,12 @@ class UpdateCallSettingsUseCase(
     The owner turns call summaries and text-backs on or off, names the
     approved WhatsApp template and allows the SMS fallback. A text-back
     can be on without a template or SMS: it then skips every caller with
-    "no channel", which the list of text-backs shows. The owner also turns
-    the recording of calls on or off and confirms (or withdraws) the
-    staff notice of transfers; the confirmation keeps who gave it and
-    when, and a request that leaves either out changes neither. Audited.
+    "no channel", which the list of text-backs shows. The SMS switch is
+    stored as the owner sets it, also while SMS is unavailable (the view
+    says why: `TextBackSmsAvailability`). The owner also turns the
+    recording of calls on or off and confirms (or withdraws) the staff
+    notice of transfers; the confirmation keeps who gave it and when, and
+    a request that leaves either out changes neither. Audited.
     A newly named template in Meta's MARKETING category is refused
     (`TextBackTemplateCheck`): a text-back is a service message.
 
@@ -74,7 +78,7 @@ class UpdateCallSettingsUseCase(
         business_profile_repo: BusinessProfileRepoContract,
         audit_log_repo: AuditLogRepoContract,
         text_resolver: LocalizedTextResolverContract,
-        sms_client: SmsMessagingClientContract | None,
+        sms_availability: TextBackSmsAvailability,
         wall_clock: WallClock[Microseconds],
         assistant_version_repo: AssistantVersionRepoContract,
         template_check: TextBackTemplateCheck,
@@ -89,7 +93,7 @@ class UpdateCallSettingsUseCase(
             channel_repo=channel_repo,
             business_profile_repo=business_profile_repo,
             text_resolver=text_resolver,
-            is_sms_available=sms_client is not None,
+            sms_availability=sms_availability,
         )
         self._wall_clock: WallClock[Microseconds] = wall_clock
         self._assistant_version_repo: AssistantVersionRepoContract = (

@@ -79,7 +79,8 @@ class TextBackSms:
         if not self.can_reach(business, caller):
             raise ValidationFailedError(
                 "Text-back SMS never go to this number (a premium, satellite, "
-                "landline or foreign range)."
+                "landline or foreign range, or a country whose carriers want a "
+                "sender registered for the business)."
             )
 
         text: str = str(

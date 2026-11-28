@@ -48,12 +48,12 @@ MOVED_BASE: str = "https://api2.workshop.test"
 BUSINESS_ID = BusinessId("business_fd43b272-3035-4a74-a29f-96b1631dd8b5")
 ACCOUNT = TwilioAccountSid("AC" + "0" * 32)
 TOKEN = PlatformSecret("test-token-0000")
+# The Twilio account alone (no SMS sender) rents numbers and sets their fallback.
 TWILIO_KEYS: dict[str, str] = {
     "PHONE_NUMBER_PROVIDER": "twilio",
     "ELEVENLABS_API_KEY": "test-key-0000",
     "TWILIO_ACCOUNT_SID": str(ACCOUNT),
     "TWILIO_AUTH_TOKEN": str(TOKEN),
-    "TWILIO_FROM_NUMBER": "+15005550006",
 }
 
 

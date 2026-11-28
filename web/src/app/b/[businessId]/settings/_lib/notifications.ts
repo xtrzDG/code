@@ -136,6 +136,29 @@ export function preferencesSummary(t: Translate, preferences: NotificationPrefer
   return [what, quiet].filter((part): part is string => part !== null).join(" · ");
 }
 
+/**
+ * Whether a contact's line says why its channel cannot send instead of its
+ * latest notification. While the platform's SMS number waits for the
+ * carriers' approval (`no_sender`) always: every SMS notification dies at
+ * once for that reason, and its stored reason reaches platform admins
+ * only. For a channel without a provider until a first notification.
+ */
+export function isChannelUnavailableShown(status: NotificationContact): boolean {
+  return !status.provider_ready && (!status.delivery || status.sms_unavailable_reason === "no_sender");
+}
+
+/**
+ * What a contact reads whose channel the platform cannot send by: an SMS
+ * contact while the platform's SMS number waits for the carriers' approval
+ * (`no_sender`: not yet, and what to do meanwhile), else not available
+ * right now (`providerMissingHint` names the channel).
+ */
+export function unavailableChannelTexts(status: NotificationContact): { badge: MessageKey; hint: MessageKey } {
+  return status.sms_unavailable_reason === "no_sender"
+    ? { badge: "notifications.contacts.smsNotYet", hint: "notifications.contacts.smsNoSenderHint" }
+    : { badge: "notifications.contacts.providerMissing", hint: "notifications.contacts.providerMissingHint" };
+}
+
 export type CheckOutcome = { tone: "success" | "error" | "info"; key: MessageKey };
 
 /** How a check of a contact turned out, as a toast. */

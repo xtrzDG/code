@@ -9112,6 +9112,9 @@ export interface components {
          *     venue's phone to the assistant's number (concept section 6).
          *
          *     Texts are in the display language when available, else in English.
+         *     `is_carrier_choice_needed`: the country's carriers take different codes
+         *     (the United States), so the owner opens their own carrier first and the
+         *     top-level `codes` are the standard codes for carriers not listed.
          */
         CallForwardingInstructions: {
             /** Assistant Phone Number */
@@ -9128,10 +9131,26 @@ export interface components {
             country_code: string;
             /** Display Language */
             display_language: string;
+            /**
+             * Is Carrier Choice Needed
+             * @default false
+             */
+            is_carrier_choice_needed: boolean;
             /** Notes */
             notes?: string[];
             /** Steps */
             steps: string[];
+        };
+        /**
+         * CallForwardingStarCode
+         * @description A ready-to-dial North American star code (Verizon's *71 and *73).
+         */
+        CallForwardingStarCode: {
+            condition: components["schemas"]["StarCodeCondition"];
+            /** Description */
+            description: string;
+            /** Dial Code */
+            dial_code: string;
         };
         /**
          * CallGuardVerdict
@@ -9154,11 +9173,20 @@ export interface components {
         /**
          * CallSettingsView
          * @description The settings with what they rely on: whether the business's WhatsApp
-         *     number is connected, whether the platform can send SMS, and the
-         *     text-back in each language of the business; whether calls are
+         *     number is connected, whether its text-backs can go by SMS
+         *     (`is_sms_available`, and else why not: `sms_unavailable_reason`), and
+         *     the text-back in each language of the business; whether calls are
          *     recorded, and the staff number transfers go to (None: no allowed staff
          *     number) with the owner's confirmation of the staff notice (who
-         *     confirmed it, when).
+         *     confirmed it, when). `is_sms_fallback_enabled` is the owner's stored
+         *     choice, kept as it is while SMS is unavailable.
+         *
+         *     `sms_unavailable_reason`: `business_registration_required` where
+         *     carriers accept the business's texts only from a sender registered for
+         *     it (the US), which the platform does not offer yet, whatever SMS the
+         *     platform sends; else `no_sender` while the platform's SMS number waits
+         *     for the phone carriers' approval, `not_configured` without an SMS
+         *     provider.
          */
         CallSettingsView: {
             /**
@@ -9181,6 +9209,7 @@ export interface components {
             is_text_back_enabled: boolean;
             /** Is Whatsapp Connected */
             is_whatsapp_connected: boolean;
+            sms_unavailable_reason?: components["schemas"]["SmsUnavailableReason"] | null;
             /** Staff Transfer Confirmed At */
             staff_transfer_confirmed_at?: number | null;
             /** Staff Transfer Confirmed By */
@@ -9456,7 +9485,8 @@ export interface components {
         };
         /**
          * CarrierForwardingInstructions
-         * @description Ready-to-dial codes of one named mobile carrier.
+         * @description Ready-to-dial codes of one named mobile carrier: GSM codes (`codes`)
+         *     and star codes (`star_codes`), either of them possibly empty.
          */
         CarrierForwardingInstructions: {
             /** Carrier Name */
@@ -9465,6 +9495,8 @@ export interface components {
             codes: components["schemas"]["CallForwardingCode"][];
             /** Note */
             note?: string | null;
+            /** Star Codes */
+            star_codes?: components["schemas"]["CallForwardingStarCode"][];
         };
         /**
          * ChannelCount
@@ -11189,7 +11221,8 @@ export interface components {
          * @description Everything that changes when a business is in another country.
          *
          *     Built for every country from phonenumbers and CLDR data, then refined by
-         *     curated overrides (emergency numbers, launch languages, recording rules).
+         *     curated overrides (emergency numbers, launch languages, recording rules,
+         *     whether carriers want an SMS sender registered per business).
          */
         CountryProfile: {
             /** Calling Code */
@@ -11217,6 +11250,8 @@ export interface components {
             otp_delivery_channels: components["schemas"]["OtpDeliveryChannel"][];
             /** @default notice */
             recording_consent_rule: components["schemas"]["RecordingConsentRule"];
+            /** @default not_required */
+            sms_sender_registration: components["schemas"]["SmsSenderRegistration"];
             /** Timezones */
             timezones: string[];
         };
@@ -15523,6 +15558,11 @@ export interface components {
          *     this server has no provider for its channel (then notifications fail
          *     in production and are only logged elsewhere); `delivery` is None until
          *     a first notification.
+         *
+         *     `sms_unavailable_reason`, for an SMS contact only (None for every
+         *     other channel, and while the platform sends SMS): why the platform
+         *     sends no SMS, `no_sender` while its SMS number waits for the phone
+         *     carriers' approval, else `not_configured`.
          */
         NotificationContactView: {
             /** Address */
@@ -15538,6 +15578,7 @@ export interface components {
             preferences: components["schemas"]["StaffNotificationPreferences"];
             /** Provider Ready */
             provider_ready: boolean;
+            sms_unavailable_reason?: components["schemas"]["SmsUnavailableReason"] | null;
             /** Telegram Username */
             telegram_username?: string | null;
         };
@@ -18642,6 +18683,24 @@ export interface components {
             timezone: string;
         };
         /**
+         * SmsSenderRegistration
+         * @description Whether the carriers of a country accept a business's text messages
+         *     only from a sender registered for that business (US A2P 10DLC: under
+         *     Twilio's ISV model a brand and a campaign per business). The platform
+         *     registers no sender per business yet, so a business of a PER_BUSINESS
+         *     country texts none of its callers by SMS, and no text-back goes by SMS
+         *     to a number of such a country. Country profiles only: never stored.
+         * @enum {string}
+         */
+        SmsSenderRegistration: "not_required" | "per_business";
+        /**
+         * SmsUnavailableReason
+         * @description Why a text cannot go by SMS, for the cabinet to say so. Views only:
+         *     never stored.
+         * @enum {string}
+         */
+        SmsUnavailableReason: "no_sender" | "not_configured" | "business_registration_required";
+        /**
          * SourceRowView
          * @description Owners from one acquisition source: sign-ups, live and paying today. A
          *     source whose links carried referral codes has a row per code
@@ -18826,6 +18885,16 @@ export interface components {
             /** Window Closes At */
             window_closes_at?: number | null;
         };
+        /**
+         * StarCodeCondition
+         * @description When a North American star code forwards a call to the assistant.
+         *
+         *     Verizon's *71 has one code for unanswered and busy calls; like the GSM
+         *     codes, star codes never forward every call. CANCEL_ALL switches
+         *     forwarding off.
+         * @enum {string}
+         */
+        StarCodeCondition: "no_answer_or_busy" | "cancel_all";
         /**
          * StarterAnswersApplied
          * @description What applying changed: the sections filled, the ones left as the owner

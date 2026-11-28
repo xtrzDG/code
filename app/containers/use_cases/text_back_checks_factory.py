@@ -8,6 +8,9 @@ from app.containers.config import ConfigContainer
 from app.containers.registries import RegistriesContainer
 from app.containers.repositories import RepositoriesContainer
 from app.containers.utilities import UtilitiesContainer
+from app.use_cases.voice.call_settings.text_back_sms_availability import (
+    TextBackSmsAvailability,
+)
 from app.use_cases.voice.call_settings.text_back_template_check import (
     TextBackTemplateCheck,
 )
@@ -26,6 +29,24 @@ def text_back_sms_destinations_factory(
         high_cost_registry=registries.high_cost_phone_number_registry,
         country_registry=registries.country_registry,
         phone_number_parser=utilities.phone_number_parser,
+    )
+
+
+def sms_availability_factory(
+    clients: ClientsContainer,
+    config: ConfigContainer,
+    registries: RegistriesContainer,
+) -> Factory[TextBackSmsAvailability]:
+    """
+    Whether a business's text-backs can go by SMS, and why not (Settings →
+    Calls): keyed on the same SMS client as the text-backs.
+    """
+
+    return Factory(
+        TextBackSmsAvailability,
+        sms_client=clients.twilio_messaging_client,
+        app_settings=config.app_settings,
+        country_registry=registries.country_registry,
     )
 
 
