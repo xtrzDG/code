@@ -39,8 +39,8 @@ test("the owner turns text-backs on and the settings stay", async ({ page, owner
   const switched = nextSave(page, "/call-settings");
   await page.getByRole("switch", { name: calls.textBack.toggle }).click();
   await switched;
-  // No WhatsApp number and no SMS sender on this platform: nothing can go yet.
-  await expect(page.getByText(calls.textBack.readiness.none)).toBeVisible();
+  // No WhatsApp number and no SMS provider on this platform: nothing can go yet, and SMS is no way out.
+  await expect(page.getByText(calls.textBack.readiness.noneWithoutSms)).toBeVisible();
   // A name Meta would refuse is not saved; the field says why.
   await page.getByLabel(calls.textBack.template).fill("Missed call");
   await expect(page.getByText(calls.textBack.templateInvalid)).toBeVisible();
@@ -58,7 +58,7 @@ test("the owner turns text-backs on and the settings stay", async ({ page, owner
   await expect(page.getByText(/You called us and we could not answer/).first()).toBeVisible();
 });
 
-test("the SMS fallback waits until messages to missed callers are on", async ({ page, owner }) => {
+test("the SMS fallback waits for messages to missed callers, then says why SMS cannot be sent", async ({ page, owner }) => {
   await page.goto(`/b/${owner.businessId}/settings/calls`);
   const sms = page.getByRole("switch", { name: calls.textBack.sms });
   await expect(page.getByRole("switch", { name: calls.textBack.toggle })).toHaveAttribute("aria-checked", "false");
@@ -66,8 +66,10 @@ test("the SMS fallback waits until messages to missed callers are on", async ({ 
   await expect(sms).toHaveAccessibleDescription(calls.textBack.smsNeedsTextBack);
 
   await page.getByRole("switch", { name: calls.textBack.toggle }).click();
-  await expect(sms).toBeEnabled();
-  await expect(sms).toHaveAccessibleDescription(calls.textBack.smsHint);
+  // This platform has no SMS provider (the suite blanks TWILIO_*): the switch stays off, with the reason.
+  await expect(sms).toBeDisabled();
+  await expect(sms).toHaveAttribute("aria-checked", "false");
+  await expect(sms).toHaveAccessibleDescription(calls.textBack.smsMissing);
 });
 
 test("switching text-backs off saves at once and offers Undo", async ({ page, owner }) => {

@@ -11,11 +11,13 @@ how the team speaks to every owner during an incident
 - **Components**: website chat (`chat`), WhatsApp/Instagram/Messenger
   (`meta`), Telegram, phone calls (`voice`), the cabinet with its
   sign-in (`cabinet`) and payments (`payments`: deposits, payment links
-  and subscriptions through Flitt and Stripe). Payments is shown from
-  this release; its day records and announcements naming it are written
-  once its release gate `status_payments` opens in the next release
-  (`app/utilities/storage/status_release_gates.py`), so until then its
-  history bars are grey and an announcement cannot name it yet.
+  and subscriptions through Flitt and Stripe). Its release gate
+  `status_payments` is open from the release after launch-2026-11-05
+  (`app/utilities/storage/status_release_gates.py`): payments days are
+  recorded from that deploy on (the bars before it stay grey) and an
+  announcement may name it. Its level comes from the alerts that affect
+  payments, so it reads operational even while no provider can take a
+  payment yet.
 - **Level now**: the worst of
   - the platform alerts that fire (`ops/alerts/*.yaml`, checked every five
     minutes by `platform_alerts`), mapped in

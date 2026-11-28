@@ -47,6 +47,9 @@ PLATFORM_WIDE_OPERATORS: dict[str, str] = {
     "channels.handle_platform_bot_update_operator": "staff bot: link codes",
     "channels.sweep_stale_inbound_events_operator": "inbox sweep over every business",
     "channels.process_platform_bot_update_operator": "staff bot job",
+    "channels.refresh_whatsapp_tokens_operator": (
+        "periodic job: WhatsApp tokens of every business renewed, owners told"
+    ),
     "compliance.purge_expired_recordings_operator": "retention over every business",
     "privacy.purge_business_exports_operator": "expired export archives, all",
     "webhooks.purge_webhook_deliveries_operator": "webhook log past 30 days, all",

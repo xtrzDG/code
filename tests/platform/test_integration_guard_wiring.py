@@ -108,7 +108,6 @@ def test_renting_numbers_stops_at_once_while_twilios_circuit_is_open() -> None:
                 "PHONE_NUMBER_PROVIDER": "twilio",
                 "TWILIO_ACCOUNT_SID": "AC" + "2e" * 16,
                 "TWILIO_AUTH_TOKEN": "test-token-0000",
-                "TWILIO_FROM_NUMBER": "+15005550006",
                 "ELEVENLABS_API_KEY": "test-key-0000",
             }
         ),

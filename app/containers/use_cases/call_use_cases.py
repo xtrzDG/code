@@ -12,6 +12,7 @@ from app.containers.time_provider import TimeProviderContainer
 from app.containers.transformers import TransformersContainer
 from app.containers.use_cases.account_use_cases import AccountUseCasesContainer
 from app.containers.use_cases.text_back_checks_factory import (
+    sms_availability_factory,
     text_back_sms_destinations_factory,
     text_back_template_check_factory,
 )
@@ -262,7 +263,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         channel_repo=repositories.channel_repo,
         business_profile_repo=repositories.business_profile_repo,
         text_resolver=utilities.localized_text_resolver,
-        sms_client=clients.twilio_messaging_client,
+        sms_availability=sms_availability_factory(clients, config, registries),
     )
     update_call_settings_use_case: Factory[
         UseCaseContract[UpdateCallSettingsCommand, CallSettingsView]
@@ -276,7 +277,7 @@ class CallUseCasesContainer(containers.DeclarativeContainer):
         business_profile_repo=repositories.business_profile_repo,
         audit_log_repo=repositories.audit_log_repo,
         text_resolver=utilities.localized_text_resolver,
-        sms_client=clients.twilio_messaging_client,
+        sms_availability=sms_availability_factory(clients, config, registries),
         wall_clock=time_provider.microsecond_wall_clock,
         assistant_version_repo=repositories.assistant_version_repo,
         template_check=text_back_template_check_factory(

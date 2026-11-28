@@ -62,7 +62,9 @@ def test_channel_health_changes_are_announced_and_unchanged_health_is_not() -> N
     mark_channel_working(channels, events, channel, NOW)
     mark_channel_failing(channels, events, channel, "401 Unauthorized", NOW)
     mark_channel_working(channels, events, channel, NOW)
-    channel.status = ChannelStatus.DISABLED
+    # The writers change the channel as stored: switched off there, it is
+    # left alone.
+    channels.save(channel.model_copy(update={"status": ChannelStatus.DISABLED}))
     mark_channel_failing(channels, events, channel, "401 Unauthorized", NOW)
 
     assert events.kinds() == [

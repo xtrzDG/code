@@ -12,7 +12,8 @@ What a verified Stripe event (API version 2024-06-20) tells the platform.
   an invoice tried before (attempt_count above 1) is a retry: the dunning
   job tells the owners about it itself.
 - customer.subscription.updated with a new default payment method: the
-  card replaced through the billing portal.
+  card replaced on the subscription at Stripe itself (in its Dashboard;
+  the cabinet replaces a card through a new Checkout).
 
 Every other event says nothing the platform acts on.
 """

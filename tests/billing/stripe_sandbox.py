@@ -11,10 +11,14 @@ import httpx
 from tests.billing.billing_settings import STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 
 STRIPE_CHECKOUT_URL: str = "https://checkout.stripe.com/c/pay/cs_test_0000"
-STRIPE_PORTAL_URL: str = "https://billing.stripe.com/p/session/test_0000"
 SAVED_CARD: dict[str, object] = {
     "id": "pm_test_0001",
     "card": {"brand": "visa", "last4": "4242", "exp_month": 9, "exp_year": 2030},
+}
+# The card of a second Checkout: the one that replaces SAVED_CARD.
+MASTERCARD: dict[str, object] = {
+    "id": "pm_test_0002",
+    "card": {"brand": "mastercard", "last4": "4444", "exp_month": 1, "exp_year": 2031},
 }
 
 
@@ -28,7 +32,6 @@ class StripeSandbox:
     checkout_sessions: list[dict[str, str]] = field(
         default_factory=list[dict[str, str]]
     )
-    portal_sessions: list[dict[str, str]] = field(default_factory=list[dict[str, str]])
     cancelled_subscriptions: list[str] = field(default_factory=list[str])
     paid_invoices: list[str] = field(default_factory=list[str])
     idempotency_keys: list[str] = field(default_factory=list[str])
@@ -52,12 +55,6 @@ class StripeSandbox:
             self.checkout_sessions.append(form)
             return httpx.Response(
                 200, json={"id": "cs_test_0000", "url": STRIPE_CHECKOUT_URL}
-            )
-
-        if path == "/v1/billing_portal/sessions":
-            self.portal_sessions.append(form)
-            return httpx.Response(
-                200, json={"id": "bps_0000", "url": STRIPE_PORTAL_URL}
             )
 
         if path.startswith("/v1/subscriptions/") and request.method == "DELETE":

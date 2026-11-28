@@ -21,7 +21,15 @@ queued in the last hour that settled died, with at least 20 settled.
    [telegram-outage](telegram-outage.md)) or our last deploy
    ([bad-deploy](bad-deploy.md)).
 3. Staff notifications by e-mail or SMS: `SMTP_*` / `TWILIO_*` errors in
-   the log (a revoked key, a full mailbox, Twilio geo permissions).
+   the log (a revoked key, a full mailbox, Twilio geo permissions). Staff
+   SMS that died at once with "SMS notifications are not available yet:
+   the platform's SMS number is waiting for the phone carriers' approval."
+   are no outage: the Twilio account has no sender yet, on purpose until
+   it is registered ([sms-outage](sms-outage.md)). Each counts as a dead
+   message here; the owner sees why on the contact (Settings →
+   Notifications says SMS waits for the carriers' approval, before and
+   after such a refusal; this stored text reaches platform admins only)
+   and can add an e-mail, WhatsApp or Telegram contact instead.
 
 ## Mitigate
 

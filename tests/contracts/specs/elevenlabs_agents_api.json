@@ -5184,6 +5184,17 @@
     "external_system": {
      "type": "string"
     },
+    "integration_trigger_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "last_processed_external_message_id": {
      "anyOf": [
       {
@@ -5199,6 +5210,20 @@
      "anyOf": [
       {
        "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "platform_metadata": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/AsyncConversationMetadataPlatformMetadata_PlainIntegration"
+      },
+      {
+       "$ref": "#/$defs/AsyncConversationMetadataPlatformMetadata_ZendeskIntegration"
       },
       {
        "type": "null"
@@ -5223,6 +5248,42 @@
     "delivery_timestamp",
     "external_system",
     "external_id"
+   ],
+   "type": "object"
+  },
+  "AsyncConversationMetadataPlatformMetadata_PlainIntegration": {
+   "properties": {
+    "conversation_initiation_source": {
+     "const": "plain_integration",
+     "default": "plain_integration",
+     "type": "string"
+    },
+    "thread_id": {
+     "type": "string"
+    },
+    "workspace_id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "thread_id",
+    "workspace_id"
+   ],
+   "type": "object"
+  },
+  "AsyncConversationMetadataPlatformMetadata_ZendeskIntegration": {
+   "properties": {
+    "conversation_initiation_source": {
+     "const": "zendesk_integration",
+     "default": "zendesk_integration",
+     "type": "string"
+    },
+    "ticket_id": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "ticket_id"
    ],
    "type": "object"
   },
@@ -7652,6 +7713,7 @@
         "api",
         "template",
         "architect",
+        "mcp",
         "unknown"
        ],
        "type": "string"
@@ -7672,6 +7734,7 @@
         "api",
         "template",
         "architect",
+        "mcp",
         "unknown"
        ],
        "type": "string"
@@ -8503,6 +8566,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_latency_secs": {
      "anyOf": [
       {
@@ -8570,6 +8644,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_latency_secs": {
      "type": "number"
     },
@@ -8616,6 +8701,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationTurnMetrics"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "created_at_unix_ms": {
+     "anyOf": [
+      {
+       "type": "integer"
       },
       {
        "type": "null"
@@ -8923,6 +9019,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationTurnMetrics"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "created_at_unix_ms": {
+     "anyOf": [
+      {
+       "type": "integer"
       },
       {
        "type": "null"
@@ -9297,6 +9404,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_latency_secs": {
      "anyOf": [
       {
@@ -9367,6 +9485,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/ConversationTurnMetrics"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "created_at_unix_ms": {
+     "anyOf": [
+      {
+       "type": "integer"
       },
       {
        "type": "null"
@@ -9824,6 +9953,17 @@
     },
     "tool_has_been_called": {
      "type": "boolean"
+    },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "tool_latency_secs": {
      "anyOf": [
@@ -11030,6 +11170,17 @@
     },
     "tool_has_been_called": {
      "type": "boolean"
+    },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "tool_latency_secs": {
      "anyOf": [
@@ -12812,6 +12963,17 @@
     "tool_has_been_called": {
      "type": "boolean"
     },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_latency_secs": {
      "anyOf": [
       {
@@ -12912,6 +13074,17 @@
     },
     "tool_has_been_called": {
      "type": "boolean"
+    },
+    "tool_id": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "tool_latency_secs": {
      "anyOf": [
@@ -13261,6 +13434,9 @@
        },
        {
         "$ref": "#/$defs/ConvAiSecretLocator"
+       },
+       {
+        "$ref": "#/$defs/ConvAiEnvVarLocator"
        }
       ]
      },
@@ -17343,6 +17519,17 @@
      ],
      "default": null
     },
+    "reasoning_effort": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "tool_ids": {
      "anyOf": [
       {
@@ -17529,6 +17716,27 @@
       {
        "type": "string"
       },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "reasoning_effort": {
+     "anyOf": [
+      {
+       "enum": [
+        "none",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+       ],
+       "type": "string"
+      },
+      {},
       {
        "type": "null"
       }
@@ -17724,6 +17932,27 @@
       {
        "type": "string"
       },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "reasoning_effort": {
+     "anyOf": [
+      {
+       "enum": [
+        "none",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+       ],
+       "type": "string"
+      },
+      {},
       {
        "type": "null"
       }
@@ -20310,6 +20539,17 @@
   },
   "SupportedVoice": {
    "properties": {
+    "clone_strength": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "description": {
      "anyOf": [
       {
@@ -24017,6 +24257,39 @@
   },
   "TriggeredGuardrailCommonModel": {
    "properties": {
+    "execution_mode": {
+     "anyOf": [
+      {
+       "enum": [
+        "streaming",
+        "blocking"
+       ],
+       "type": "string"
+      },
+      {},
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "guardrail_details": {
+     "anyOf": [
+      {
+       "$ref": "#/$defs/TriggeredGuardrailCommonModelGuardrailDetails_Llm"
+      },
+      {
+       "$ref": "#/$defs/TriggeredGuardrailCommonModelGuardrailDetails_Classifier"
+      },
+      {
+       "$ref": "#/$defs/TriggeredGuardrailCommonModelGuardrailDetails_Unknown"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "guardrail_name": {
      "anyOf": [
       {
@@ -24061,6 +24334,52 @@
    ],
    "type": "object"
   },
+  "TriggeredGuardrailCommonModelGuardrailDetails_Classifier": {
+   "properties": {
+    "score": {
+     "type": "number"
+    },
+    "threshold": {
+     "type": "number"
+    },
+    "type": {
+     "const": "classifier",
+     "default": "classifier",
+     "type": "string"
+    }
+   },
+   "required": [
+    "score",
+    "threshold"
+   ],
+   "type": "object"
+  },
+  "TriggeredGuardrailCommonModelGuardrailDetails_Llm": {
+   "properties": {
+    "rationale": {
+     "type": "string"
+    },
+    "type": {
+     "const": "llm",
+     "default": "llm",
+     "type": "string"
+    }
+   },
+   "required": [
+    "rationale"
+   ],
+   "type": "object"
+  },
+  "TriggeredGuardrailCommonModelGuardrailDetails_Unknown": {
+   "properties": {
+    "type": {
+     "const": "unknown",
+     "default": "unknown",
+     "type": "string"
+    }
+   },
+   "type": "object"
+  },
   "TtsConversationalConfigOutput": {
    "properties": {
     "agent_output_audio_format": {
@@ -24088,6 +24407,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/EffectsSpecOutput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "clone_strength": {
+     "anyOf": [
+      {
+       "type": "number"
       },
       {
        "type": "null"
@@ -24257,6 +24587,17 @@
   },
   "TtsConversationalConfigOverride": {
    "properties": {
+    "clone_strength": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "model_id": {
      "anyOf": [
       {
@@ -24356,6 +24697,17 @@
   },
   "TtsConversationalConfigOverrideConfig": {
    "properties": {
+    "clone_strength": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
     "model_id": {
      "anyOf": [
       {
@@ -24463,6 +24815,17 @@
      "anyOf": [
       {
        "$ref": "#/$defs/EffectsSpecInput"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
+    },
+    "clone_strength": {
+     "anyOf": [
+      {
+       "type": "number"
       },
       {
        "type": "null"
@@ -25253,6 +25616,20 @@
     },
     "test_run_id": {
      "type": "string"
+    },
+    "triggered_guardrails": {
+     "anyOf": [
+      {
+       "items": {
+        "$ref": "#/$defs/TriggeredGuardrailCommonModel"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null
     },
     "version_id": {
      "anyOf": [
@@ -30124,6 +30501,6 @@
   "refresh": "uv run python -m scripts.refresh_vendor_specs --only elevenlabs",
   "source": "https://github.com/elevenlabs/elevenlabs-python",
   "title": "ElevenLabs Agents Platform (types of the Fern-generated Python SDK)",
-  "version": "elevenlabs 2.77.0"
+  "version": "elevenlabs 2.78.0"
  }
 }

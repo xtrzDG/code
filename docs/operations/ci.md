@@ -261,7 +261,11 @@ in the background while uv and npm install, and the pages are only looked
 at. On failure it keeps the expected, actual and diff PNG of every
 differing screen with the HTML report (`visual-report`). A failed `e2e`
 shard or `visual` run prints the failed tests' page snapshots and the
-API log's end into its own log (`.github/scripts/show-e2e-failures.sh`).
+API log's end into its own log (`.github/scripts/show-e2e-failures.sh`);
+a `visual` run also prints where each differing screen differs (boxes of
+the changed pixels, a small region drawn in text from the baseline and
+from the run: `scripts/screenshot_diff_regions.py`), since a test's page
+snapshot is its last page, not the one that differed.
 
 ## End-to-end shards
 
@@ -286,7 +290,11 @@ shard's timeout. On a hit, dpkg installs the cached packages without apt
 (no `apt-get update`): they are what an earlier run of this workflow
 fetched and apt checked against the signed index, and only this
 repository's own runs write the cache. On a miss, apt fetches them with
-timeouts and retries and the cache keeps what it downloaded.
+timeouts and retries and the cache keeps what it downloaded. dpkg installs
+with `--auto-deconfigure`, and apt includes Ubuntu's phased updates: on
+27 November 2026 the cache held `libasound2t64` and `libasound2-data`
+1.2.11-1ubuntu0.5 from a runner the phase had reached, the other runners'
+images had 0.3, and every shard failed this step.
 
 `web/e2e/support/shards.test.ts` (part of `npm test`) fails while a spec
 has no duration, an entry names a spec that is gone, or a shard of the plan

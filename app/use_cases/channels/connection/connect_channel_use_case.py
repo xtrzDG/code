@@ -192,6 +192,9 @@ class ConnectChannelUseCase(UseCaseContract[ConnectChannelCommand, ChannelView])
         channel.last_error = None
         channel.last_error_at = None
         channel.last_error_reason = None
+        # What the token check knew of the old credential (the next asks anew).
+        channel.credential_expires_at = None
+        channel.credential_checked_at = None
         if input_data.channel is ChannelKind.WEB_CHAT:
             channel.web_chat_appearance = merge_web_chat_appearance(
                 channel.web_chat_appearance, input_data.request

@@ -191,7 +191,6 @@ def test_every_question_counts_against_the_budget_whatever_its_answer(
     assert len(reader.asked) == 2
 
 
-@pytest.mark.usefixtures("stripe_gate_open")
 def test_a_stripe_subscription_s_order_is_asked_for_one_interval_more() -> None:
     world = ReconciliationWorld()
 

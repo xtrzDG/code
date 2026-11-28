@@ -7,8 +7,12 @@ A channel in ERROR still receives and answers messages (the refusal may be
 temporary, and a working delivery is what clears it); the cabinet shows the
 reason so the owner can reconnect: the platform's words (`last_error`)
 and what they mean in the cabinet's terms (`last_error_reason`, the
-outbox's failure reason). Every change is announced on the cabinet's live
-stream (`channel.error` when a channel fails, `channel.changed` otherwise).
+outbox's failure reason). A change is written to the channel as stored,
+in one step with the check that it still has the account and credential
+the outcome was about (`ChannelRepoContract.modify`), so a token renewed
+or a channel reconnected meanwhile is never undone, and only the health
+fields change. Every change is announced on the cabinet's live stream
+(`channel.error` when a channel fails, `channel.changed` otherwise).
 """
 
 from typed_time_provider import Microseconds
@@ -57,14 +61,19 @@ def reload_same_connection(
     """
 
     current: ChannelDocument | None = channel_repo.get(sent_with.id)
-    if (
-        current is None
-        or current.encrypted_secret != sent_with.encrypted_secret
-        or current.external_id != sent_with.external_id
-    ):
+    if current is None or not has_same_connection(current, sent_with):
         return None
 
     return current
+
+
+def has_same_connection(current: ChannelDocument, read: ChannelDocument) -> bool:
+    """The channel still has the account and the credential (as sealed) of `read`."""
+
+    return (
+        current.encrypted_secret == read.encrypted_secret
+        and current.external_id == read.external_id
+    )
 
 
 def mark_channel_failing(
@@ -75,18 +84,28 @@ def mark_channel_failing(
     now: Microseconds,
     failure: DeliveryFailureReason | None = None,
 ) -> None:
-    """Put an active channel in ERROR with the platform's reason."""
+    """
+    Put an active channel in ERROR with the platform's reason. Like every
+    writer here it changes the channel as stored now, and only while it
+    still has the connection of `channel` (a token renewed or replaced
+    meanwhile is never undone); the live event follows a write only.
+    """
 
-    if not is_channel_active(channel):
-        return
+    def fail(stored: ChannelDocument) -> ChannelDocument | None:
+        if not is_channel_active(stored) or not has_same_connection(stored, channel):
+            return None
 
-    channel.status = ChannelStatus.ERROR
-    channel.last_error = summarize_channel_error(reason)
-    channel.last_error_at = now
-    channel.last_error_reason = failure
-    channel.updated_at = now
-    channel_repo.save(channel)
-    live_events.publish(channel.business_id, LiveEventKind.CHANNEL_ERROR, (channel.id,))
+        stored.status = ChannelStatus.ERROR
+        stored.last_error = summarize_channel_error(reason)
+        stored.last_error_at = now
+        stored.last_error_reason = failure
+        stored.updated_at = now
+        return stored
+
+    if channel_repo.modify(channel.business_id, channel.id, fail) is not None:
+        live_events.publish(
+            channel.business_id, LiveEventKind.CHANNEL_ERROR, (channel.id,)
+        )
 
 
 def note_channel_refusal(
@@ -102,17 +121,20 @@ def note_channel_refusal(
     24-hour window): the owner sees the reason, the channel keeps working.
     """
 
-    if not is_channel_active(channel):
-        return
+    def note(stored: ChannelDocument) -> ChannelDocument | None:
+        if not is_channel_active(stored) or not has_same_connection(stored, channel):
+            return None
 
-    channel.last_error = summarize_channel_error(reason)
-    channel.last_error_at = now
-    channel.last_error_reason = failure
-    channel.updated_at = now
-    channel_repo.save(channel)
-    live_events.publish(
-        channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
-    )
+        stored.last_error = summarize_channel_error(reason)
+        stored.last_error_at = now
+        stored.last_error_reason = failure
+        stored.updated_at = now
+        return stored
+
+    if channel_repo.modify(channel.business_id, channel.id, note) is not None:
+        live_events.publish(
+            channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
+        )
 
 
 def mark_channel_working(
@@ -126,25 +148,22 @@ def mark_channel_working(
     older refusal is no longer shown.
     """
 
-    if channel.status is not ChannelStatus.ERROR:
-        if channel.status is ChannelStatus.CONNECTED and channel.last_error is not None:
-            channel.last_error = None
-            channel.last_error_at = None
-            channel.last_error_reason = None
-            channel.updated_at = now
-            channel_repo.save(channel)
-            live_events.publish(
-                channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
-            )
+    def heal(stored: ChannelDocument) -> ChannelDocument | None:
+        if not has_same_connection(stored, channel):
+            return None
 
-        return
+        if stored.status is ChannelStatus.ERROR:
+            stored.status = ChannelStatus.CONNECTED
+        elif stored.status is not ChannelStatus.CONNECTED or stored.last_error is None:
+            return None
 
-    channel.status = ChannelStatus.CONNECTED
-    channel.last_error = None
-    channel.last_error_at = None
-    channel.last_error_reason = None
-    channel.updated_at = now
-    channel_repo.save(channel)
-    live_events.publish(
-        channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
-    )
+        stored.last_error = None
+        stored.last_error_at = None
+        stored.last_error_reason = None
+        stored.updated_at = now
+        return stored
+
+    if channel_repo.modify(channel.business_id, channel.id, heal) is not None:
+        live_events.publish(
+            channel.business_id, LiveEventKind.CHANNEL_CHANGED, (channel.id,)
+        )

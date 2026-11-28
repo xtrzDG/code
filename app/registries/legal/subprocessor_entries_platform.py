@@ -16,9 +16,11 @@ from app.schemas.typings.legal.constrained_strings import SubprocessorChangeDate
 
 # Stripe charging owners in the EU, the US and Israel is a new
 # sub-processor: announced to owners on this day (the
-# send_subprocessor_notices job), in force 30 days later. Until then the
-# `stripe_payments` release gate stays closed and those owners pay through
-# Flitt (docs/LAUNCH.md 4.7.2).
+# send_subprocessor_notices job), in force 30 days later. The
+# `stripe_payments` release gate is open from the release after
+# launch-2026-11-05, so that release is deployed only from STRIPE_FROM on,
+# once the Stripe account can charge (docs/LAUNCH.md 4.7.2); until then
+# those owners are routed to Flitt.
 STRIPE_ANNOUNCED_ON: SubprocessorChangeDate = SubprocessorChangeDate("2026-10-23")
 STRIPE_FROM: SubprocessorChangeDate = SubprocessorChangeDate("2026-11-22")
 

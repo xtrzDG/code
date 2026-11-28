@@ -16,6 +16,7 @@ from app.schemas.dto.channels.meta_connection import (
     StartMetaConnectionCommand,
 )
 from app.schemas.dto.deliveries import InboundAnswer, InboundEventClaim, InboxIntake
+from app.schemas.dto.jobs import JobReport, JobTick
 from app.use_cases.channels.comment_replies import (
     accept_instagram_comments_use_case as accept_comments,
 )
@@ -38,7 +39,16 @@ from app.use_cases.channels.meta_connection import (
     list_meta_pages_use_case as list_pages,
 )
 from app.use_cases.channels.meta_connection import (
+    refresh_whatsapp_tokens_use_case as refresh_tokens,
+)
+from app.use_cases.channels.meta_connection import (
     start_meta_connection_use_case as start_connection,
+)
+from app.use_cases.channels.meta_connection.whatsapp_token_notices import (
+    WhatsAppTokenNotices,
+)
+from app.use_cases.channels.meta_connection.whatsapp_token_refresh import (
+    WhatsAppTokenRefresh,
 )
 
 
@@ -46,8 +56,9 @@ class MetaConnectionUseCaseFactories:
     """
     One typed factory per use case of Meta's self-serve connection: the
     Facebook sign-ins of the Channels page (WhatsApp Embedded Signup, the
-    page picker of Messenger and Instagram) and Instagram comment-to-DM (its
-    settings, the comments webhook's intake and the worker's private reply).
+    page picker of Messenger and Instagram), Instagram comment-to-DM (its
+    settings, the comments webhook's intake and the worker's private reply)
+    and the renewal of Embedded Signup's WhatsApp tokens (a periodic job).
     Each call builds a fresh, stateless use case.
     """
 
@@ -163,4 +174,29 @@ class MetaConnectionUseCaseFactories:
             rate_limit_registry=deps.rate_limit_registry,
             wall_clock=deps.wall_clock,
             unit_of_work=deps.unit_of_work,
+        )
+
+    def refresh_whatsapp_tokens(self) -> UseCaseContract[JobTick, JobReport]:
+        """The `refresh_whatsapp_tokens` job: renewals and reminders."""
+
+        deps = self._dependencies
+        return refresh_tokens.RefreshWhatsAppTokensUseCase(
+            credential_watch=deps.credential_watch,
+            business_repo=deps.business_repo,
+            channel_repo=deps.channel_repo,
+            live_events=deps.live_events,
+            token_refresh=WhatsAppTokenRefresh(
+                channel_repo=deps.channel_repo,
+                secret_cipher=deps.secret_cipher,
+                refresh_client=deps.token_refresh_client,
+                oauth_client=deps.oauth_client,
+                audit_log_repo=deps.audit_log_repo,
+            ),
+            notices=WhatsAppTokenNotices(
+                staff_alerts=deps.staff_alerts,
+                owner_emails=deps.owner_emails,
+                resolver=deps.localized_text_resolver,
+            ),
+            app_settings=deps.app_settings,
+            wall_clock=deps.wall_clock,
         )

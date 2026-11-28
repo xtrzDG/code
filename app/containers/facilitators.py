@@ -170,8 +170,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
     )
     # Signed, expiring links of notifications (key from ENCRYPTION_KEY).
     staff_link_signer: Singleton[StaffLinkSigner] = Singleton(
-        build_staff_link_signer,
-        settings=config.app_settings,
+        build_staff_link_signer, settings=config.app_settings
     )
     # Handoffs, requests, bookings to each contact and device (quiet hours).
     staff_alert_facilitator: Singleton[StaffAlertFacilitator] = Singleton(
@@ -212,6 +211,7 @@ class FacilitatorsContainer(containers.DeclarativeContainer):
         app_settings=config.app_settings,
         wall_clock=time_provider.microsecond_wall_clock,
         ip_countries=adapters.ip_country_lookup,
+        storage_scope=utilities.storage_scope,
     )
     # A download of a full export: every owner's devices and e-mail or SMS.
     export_download_notice_facilitator: Singleton[ExportDownloadNoticeFacilitator] = (

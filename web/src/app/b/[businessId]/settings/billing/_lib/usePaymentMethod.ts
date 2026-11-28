@@ -18,7 +18,7 @@ import { cardReturnUrl, type CardSetupSession } from "./paymentMethod";
  * The card on file of the current business (owners): the saved card, who
  * charges it, the trial's "Save card" prompt and the retries of a declined
  * charge; "Save card" / "Update card" opens the provider's page (Flitt's
- * verification of 0, Stripe's checkout or billing portal), which charges
+ * verification of 0, Stripe's checkout), which charges
  * nothing now and sends the owner back to this page.
  */
 export function usePaymentMethod({ enabled }: { enabled: boolean }) {

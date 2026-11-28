@@ -28,7 +28,6 @@ def events(world: CommentWorld) -> list[InboundEventDocument]:
     return world.testbed.inbound_event_collection.list_all()
 
 
-@pytest.mark.usefixtures("next_release")
 class TestCommentToDm:
     def test_a_keyword_comment_gets_one_private_reply(self) -> None:
         world = CommentWorld()
@@ -169,11 +168,12 @@ class TestCommentToDm:
         assert events(world) == []
 
 
-def test_this_release_reads_comments_and_stores_nothing() -> None:
+def test_this_release_stores_a_keyword_comment() -> None:
     world = CommentWorld()
 
     outcome = world.post(comments_webhook([comment("913", "menu")]))
 
-    assert is_gate_open(COMMENT_REPLIES_GATE) is False
-    assert int(outcome.received) == 0
-    assert events(world) == []
+    assert is_gate_open(COMMENT_REPLIES_GATE) is True
+    assert int(outcome.received) == 1
+    [event] = events(world)
+    assert event.kind is InboundEventKind.COMMENT_TRIGGER

@@ -95,7 +95,7 @@ class StartCardSetupCommand(ImmutableDTO):
 class CardSetupSessionView(ImmutableDTO):
     """
     The provider's page that saves the card: Flitt's verification page or
-    Stripe's checkout (a first card) or billing portal (a new one).
+    Stripe's checkout (for a first card and for a new one alike).
     `payment_order_id` names the order a saved card reports back to.
     """
 

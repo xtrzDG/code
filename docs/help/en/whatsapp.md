@@ -26,3 +26,9 @@ WhatsApp lets a business write freely only within 24 hours after the customer's 
 2. On the WhatsApp card enter its name and language under **Replies after 24 hours**.
 
 The assistant itself always answers within the 24 hours, because it answers at once.
+
+## Keeping WhatsApp connected
+
+When you connect your number with **Continue with Facebook**, Meta gives the assistant access to it for 60 days. We renew that access for you about two weeks before it ends, so usually there is nothing to do.
+
+If Meta does not renew it, we tell you the date it ends: on your devices with notifications on, at the e-mail address you sign in with, and through your team's notification contacts. Connect the number again before that date in **Assistant → [Channels](cabinet:assistant/channels) → WhatsApp → Update details → Continue with Facebook**. If the access has already ended, the WhatsApp card says so and offers **Connect again**: until you do, customers who write on WhatsApp get no replies.

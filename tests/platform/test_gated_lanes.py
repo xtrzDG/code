@@ -1,9 +1,10 @@
 """
-A worker lane behind a closed release gate (`ops` until `ops_lane` opens)
-is named by no worker setting this release ships: the release before
-refuses an unknown lane in WORKER_LANES and WORKER_LANE_CONCURRENCY at
-startup, and a Render rollback keeps the service's environment, so naming
-it would leave a rolled-back worker unable to start.
+A worker lane behind a closed release gate is named by no worker setting
+the release ships: the release before refuses an unknown lane in
+WORKER_LANES and WORKER_LANE_CONCURRENCY at startup, and a Render rollback
+keeps the service's environment, so naming it would leave a rolled-back
+worker unable to start. `ops` was such a lane until its gate `ops_lane`
+opened in this release (launch-2026-11-05 reads it).
 """
 
 import pytest
@@ -18,18 +19,18 @@ from tests.platform.gated_lanes import lane_values, named_lanes
 LANE_VARIABLES: tuple[str, ...] = ("WORKER_LANES", "WORKER_LANE_CONCURRENCY")
 
 
-def test_the_ops_lane_is_closed_until_its_gate_opens() -> None:
-    opened = [
-        gate.model_copy(update={"is_open": True})
+def test_the_ops_lane_is_live_now_its_gate_is_open() -> None:
+    closed = [
+        gate.model_copy(update={"is_open": False})
         if gate.name == OPS_LANE_GATE
         else gate
         for gate in RELEASE_GATES
     ]
 
-    assert closed_lanes() == frozenset({JobLane.OPS})
-    assert JobLane.OPS not in live_lanes()
-    assert closed_lanes(opened) == frozenset()
-    assert live_lanes(opened) == tuple(JobLane)
+    assert closed_lanes() == frozenset()
+    assert live_lanes() == tuple(JobLane)
+    assert closed_lanes(closed) == frozenset({JobLane.OPS})
+    assert JobLane.OPS not in live_lanes(closed)
 
 
 @pytest.mark.parametrize("blueprint_path", ["render.yaml", "render.staging.yaml"])

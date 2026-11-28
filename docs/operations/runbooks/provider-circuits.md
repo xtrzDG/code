@@ -10,7 +10,7 @@ models in [llm-outage](llm-outage.md)):
 
 | Circuit | Guards |
 | --- | --- |
-| `provider:meta` | WhatsApp, Messenger, Instagram replies; WhatsApp templates (staff and customers) |
+| `provider:meta` | WhatsApp, Messenger, Instagram replies; WhatsApp templates (staff and customers); the renewal of WhatsApp Embedded Signup tokens (`refresh_whatsapp_tokens`, on the batch worker: while open, a run renews nothing and the next one tries again) |
 | `provider:telegram` | the businesses' Telegram bots |
 | `provider:platform_bot` | the platform bot: staff notifications and platform alerts by Telegram |
 | `provider:twilio_sms` | staff SMS and missed-call text-backs |
@@ -64,9 +64,11 @@ notifications and calls no Zadarma API (numbers are bought by hand). Login codes
   providers' sends keep going on the other two.
 - **Platform alerts** run in their own `ops` lane (1 thread per worker),
   so the alert about an outage never waits behind the sends it holds up.
-  The lane is behind the release gate `ops_lane`: until the release after
-  this one opens it, alerts use the `outbound` lane and rely on the
-  bulkheads.
+  Its release gate `ops_lane` is open from the release after
+  launch-2026-11-05; a worker that does not name `ops` in `WORKER_LANES`
+  serves none of them (production's `workshop-worker` does, set by hand
+  on the live service: docs/operations/deploys.md). Before that release,
+  alerts used the `outbound` lane and relied on the bulkheads.
 
 Each worker reports its circuits with every pulse; the card sums them up
 over the live workers (stale pulses left out): the worst state, in how many

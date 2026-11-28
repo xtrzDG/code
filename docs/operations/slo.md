@@ -209,8 +209,16 @@ scheduled, running and dead jobs with the oldest wait, the dead letters by
 job (retry or discard them there), channels in ERROR and Meta tokens that
 run out within two weeks (the hourly `check_channel_credentials` job asks
 Meta about each token once a day; it needs `META_APP_ID` and
-`META_APP_SECRET`), the database size per table, and the last backup and
-restore drill. Every figure is an indexed count or the system catalog.
+`META_APP_SECRET`). WhatsApp tokens of Embedded Signup are renewed before
+that by the `refresh_whatsapp_tokens` job (every 6 hours, from
+`META_TOKEN_REFRESH_DAYS` days before the end, 15 by default), so a
+WhatsApp token that stays on the list is one whose renewal failed. Meta
+refused it: its owners are told at once. Meta could not be asked (an
+outage, a rate limit): every run tries again, and its owners hear only
+when 3 days or less remain. A token that ended puts its channel in ERROR,
+and its owners hear urgently (`runbooks/meta-outage.md`). Then come the
+database size per table and the last backup and restore drill. Every
+figure is an indexed count or the system catalog.
 
 **What the job cannot see.** When no worker runs, no check runs. Three
 watchers outside the workers cover that:

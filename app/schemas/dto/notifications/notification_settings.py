@@ -8,6 +8,7 @@ from typed_time_provider import Microseconds
 
 from app.schemas.constants.deliveries import OutboundMessageStatus
 from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.constants.messaging import SmsUnavailableReason
 from app.schemas.constants.notifications import StaffAlertEvent
 from app.schemas.domain.notification_preferences import (
     QuietHours,
@@ -58,6 +59,11 @@ class NotificationContactView(ImmutableDTO):
     this server has no provider for its channel (then notifications fail
     in production and are only logged elsewhere); `delivery` is None until
     a first notification.
+
+    `sms_unavailable_reason`, for an SMS contact only (None for every
+    other channel, and while the platform sends SMS): why the platform
+    sends no SMS, `no_sender` while its SMS number waits for the phone
+    carriers' approval, else `not_configured`.
     """
 
     key: NotificationContactKey
@@ -68,6 +74,7 @@ class NotificationContactView(ImmutableDTO):
     language: LanguageTag
     preferences: StaffNotificationPreferences
     provider_ready: IsProviderReady
+    sms_unavailable_reason: SmsUnavailableReason | None = None
     delivery: StaffDeliveryView | None = None
 
 

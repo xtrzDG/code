@@ -31,7 +31,10 @@ from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.utilities.channels.message_chunks import split_message_text
 from app.utilities.notifications.staff_email import StaffEmail, build_staff_email
-from app.utilities.notifications.staff_providers import report_missing_provider
+from app.utilities.notifications.staff_providers import (
+    report_missing_provider,
+    sms_unavailable_reason_for,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -62,7 +65,9 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
     - SMS: Twilio (the account of login codes), the text as it is.
     - Without the provider of a contact's channel the notification is
       logged (without its text) and counts as delivered outside
-      production; in production it cannot be delivered.
+      production; in production it cannot be delivered, with the reason
+      the queue would have stored (SMS: the sender is still pending, or
+      there is no SMS provider at all).
 
     Errors are raised for the outbox to classify (retry or give up).
     """
@@ -209,7 +214,12 @@ class StaffNotificationSenderFacilitator(StaffNotificationSenderContract):
         masked_address: str = mask_address(str(contact.address))
         if self._app_settings.environment is DeploymentEnvironment.PRODUCTION:
             raise DeliveryNotConfiguredError(
-                str(report_missing_provider(contact.channel))
+                str(
+                    report_missing_provider(
+                        contact.channel,
+                        sms_unavailable_reason_for(self._app_settings, contact.channel),
+                    )
+                )
             )
 
         logger.info(

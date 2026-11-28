@@ -127,9 +127,22 @@ def build_dial_twiml(number: str, action_url: str, caller_id: str) -> str:
 
 
 def build_hangup_twiml() -> str:
-    """End the call."""
+    """End the call (Twilio answers it first, as any TwiML but <Reject>)."""
 
     return '<?xml version="1.0" encoding="UTF-8"?><Response><Hangup/></Response>'
+
+
+def build_reject_twiml() -> str:
+    """
+    Refuse the call without answering it, as busy: the only TwiML that
+    leaves a call unanswered, so a call forwarded here fails back to the
+    line that forwarded it.
+    """
+
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<Response><Reject reason="busy"/></Response>'
+    )
 
 
 def build_empty_twiml() -> str:

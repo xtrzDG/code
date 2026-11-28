@@ -11,6 +11,7 @@ from app.schemas.constants.calls import (
     TextBackSkipReason,
     TextBackStatus,
 )
+from app.schemas.constants.messaging import SmsUnavailableReason
 from app.schemas.dto.paging import PageRequest
 from app.schemas.typings.businesses.prefixed_id import BusinessId
 from app.schemas.typings.calls.booleans import (
@@ -83,11 +84,20 @@ class TextBackTemplatePreview(ImmutableDTO):
 class CallSettingsView(ImmutableDTO):
     """
     The settings with what they rely on: whether the business's WhatsApp
-    number is connected, whether the platform can send SMS, and the
-    text-back in each language of the business; whether calls are
+    number is connected, whether its text-backs can go by SMS
+    (`is_sms_available`, and else why not: `sms_unavailable_reason`), and
+    the text-back in each language of the business; whether calls are
     recorded, and the staff number transfers go to (None: no allowed staff
     number) with the owner's confirmation of the staff notice (who
-    confirmed it, when).
+    confirmed it, when). `is_sms_fallback_enabled` is the owner's stored
+    choice, kept as it is while SMS is unavailable.
+
+    `sms_unavailable_reason`: `business_registration_required` where
+    carriers accept the business's texts only from a sender registered for
+    it (the US), which the platform does not offer yet, whatever SMS the
+    platform sends; else `no_sender` while the platform's SMS number waits
+    for the phone carriers' approval, `not_configured` without an SMS
+    provider.
     """
 
     is_summary_enabled: IsCallSummaryEnabled
@@ -96,6 +106,7 @@ class CallSettingsView(ImmutableDTO):
     is_sms_fallback_enabled: IsSmsFallbackEnabled
     is_whatsapp_connected: IsChannelConnected
     is_sms_available: IsProviderReady
+    sms_unavailable_reason: SmsUnavailableReason | None = None
     template_previews: list[TextBackTemplatePreview] = Field(
         default_factory=list[TextBackTemplatePreview]
     )

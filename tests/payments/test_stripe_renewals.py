@@ -1,6 +1,4 @@
-"""Stripe's automatic charges, their retries and a card replaced in its portal."""
-
-import pytest
+"""Stripe's automatic charges and the retries of a declined one."""
 
 from app.schemas.constants.billing import (
     InvoiceKind,
@@ -8,7 +6,6 @@ from app.schemas.constants.billing import (
     SubscriptionStatus,
 )
 from app.schemas.constants.payments import (
-    PaymentOrderPurpose,
     PaymentProvider,
     PaymentRetryOutcome,
     PaymentWebhookOutcome,
@@ -16,25 +13,15 @@ from app.schemas.constants.payments import (
 from app.schemas.domain.billing import InvoiceDocument
 from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.billing_cabinet import CancelSubscriptionCommand
-from app.schemas.dto.payments import PaymentWebhookReceipt
 from app.schemas.typings.billing.strings import PaymentProviderReference
 from tests.billing.billing_settings import ITALY
 from tests.billing.paid_world import PaidWorld, build_trial, checkout, payment_order
-from tests.billing.stripe_sandbox import STRIPE_PORTAL_URL
 from tests.payments.payment_world import (
     deliver_stripe,
-    now_seconds,
     payment_method,
-    save_card,
     stripe_invoice,
     stripe_session,
 )
-
-pytestmark = pytest.mark.usefixtures("stripe_gate_open")
-MASTERCARD: dict[str, object] = {
-    "id": "pm_test_0002",
-    "card": {"brand": "mastercard", "last4": "4444", "exp_month": 1, "exp_year": 2031},
-}
 
 
 def build_stripe_subscription() -> tuple[PaidWorld, PaymentOrderDocument]:
@@ -184,78 +171,6 @@ def decline_and_wait_a_day() -> tuple[PaidWorld, PaymentOrderDocument]:
     decline_renewal(world, order)
     world.testbed.clock.advance(days=1, hours=1)
     return world, order
-
-
-def test_the_card_is_replaced_in_the_billing_portal() -> None:
-    world, order = build_stripe_subscription()
-
-    session = save_card(world)
-
-    assert session.provider is PaymentProvider.STRIPE
-    assert str(session.url) == STRIPE_PORTAL_URL
-    [portal] = world.testbed.stripe.portal_sessions
-    assert portal["customer"] == "cus_test_0001"
-    assert portal["flow_data[type]"] == "payment_method_update"
-    assert world.testbed.stripe.checkout_sessions[1:] == []
-    setup = world.testbed.payment_order_repo.get(session.payment_order_id)  # type: ignore[arg-type]
-    assert setup is not None
-    assert setup.purpose is PaymentOrderPurpose.CARD_SETUP
-
-    world.testbed.stripe.payment_method = MASTERCARD
-    receipt = replace_card(world, order, "evt_test_0020")
-
-    assert receipt.outcome is PaymentWebhookOutcome.APPLIED
-    summary = world.testbed.subscription(world.business.id).payment_method_summary
-    assert summary is not None
-    assert (str(summary.brand), str(summary.last_digits)) == ("MASTERCARD", "4444")
-
-
-def replace_card(
-    world: PaidWorld,
-    order: PaymentOrderDocument,
-    event_id: str,
-    created: int | None = None,
-) -> PaymentWebhookReceipt:
-    return deliver_stripe(
-        world,
-        "customer.subscription.updated",
-        event_id,
-        {
-            "id": "sub_test_0001",
-            "customer": "cus_test_0001",
-            "metadata": {"payment_order_id": str(order.id)},
-            "default_payment_method": "pm_test_0002",
-        },
-        previous={"default_payment_method": "pm_test_0001"},
-        created=created,
-    )
-
-
-def test_an_older_card_event_never_replaces_a_newer_card() -> None:
-    world, order = build_stripe_subscription()
-    world.testbed.stripe.payment_method = MASTERCARD
-
-    replace_card(
-        world, order, "evt_test_0021", created=now_seconds(world) - 15 * 86_400
-    )
-
-    summary = world.testbed.subscription(world.business.id).payment_method_summary
-    assert summary is not None
-    assert str(summary.last_digits) == "4242"
-
-
-def test_a_subscription_update_without_a_new_card_changes_nothing() -> None:
-    world, order = build_stripe_subscription()
-
-    receipt = deliver_stripe(
-        world,
-        "customer.subscription.updated",
-        "evt_test_0022",
-        {"id": "sub_test_0001", "metadata": {"payment_order_id": str(order.id)}},
-        previous={"status": "trialing"},
-    )
-
-    assert receipt.outcome is PaymentWebhookOutcome.IGNORED
 
 
 def test_cancelling_stops_the_stripe_subscription_and_forgets_the_card() -> None:

@@ -11,6 +11,7 @@ export type ChannelKind = Schema<"ChannelKind">;
 type ChannelStatus = Schema<"ChannelStatus">;
 export type ChannelView = Schema<"ChannelView">;
 export type CallForwardingCondition = Schema<"CallForwardingCondition">;
+export type StarCodeCondition = Schema<"StarCodeCondition">;
 
 /** Channels an owner can connect now, in the order the page shows them. */
 export const CONNECTABLE_CHANNELS = ["web_chat", "telegram", "whatsapp", "instagram", "messenger", "phone"] as const;
@@ -95,15 +96,25 @@ export function accountLabel(kind: ChannelKind, accountId: string | null | undef
 /** Order of the forwarding codes: the three conditions, then "switch off". */
 const FORWARDING_CONDITIONS: readonly CallForwardingCondition[] = ["no_answer", "busy", "unreachable", "cancel_all"];
 
+/** Order of a carrier's star codes (Verizon's *71, then *73): forwarding, then "switch off". */
+const STAR_CODE_CONDITIONS: readonly StarCodeCondition[] = ["no_answer_or_busy", "cancel_all"];
+
+function sortByCondition<C extends string, T extends { condition: C }>(codes: readonly T[], order: readonly C[]): T[] {
+  return [...codes].sort((left, right) => order.indexOf(left.condition) - order.indexOf(right.condition));
+}
+
 export function sortForwardingCodes<T extends { condition: CallForwardingCondition }>(codes: readonly T[]): T[] {
-  return [...codes].sort(
-    (left, right) => FORWARDING_CONDITIONS.indexOf(left.condition) - FORWARDING_CONDITIONS.indexOf(right.condition),
-  );
+  return sortByCondition(codes, FORWARDING_CONDITIONS);
+}
+
+export function sortStarCodes<T extends { condition: StarCodeCondition }>(codes: readonly T[]): T[] {
+  return sortByCondition(codes, STAR_CODE_CONDITIONS);
 }
 
 /**
- * A link that opens the phone's dialer with a GSM code: "#" must be
- * escaped in tel: URIs ("**61*+995…#" -> "tel:**61*+995…%23").
+ * A link that opens the phone's dialer with a forwarding code: "#" must be
+ * escaped in tel: URIs ("**61*+995…#" -> "tel:**61*+995…%23"); a star code
+ * has none ("*712125550123" -> "tel:*712125550123").
  */
 export function dialHref(dialCode: string): string {
   return `tel:${dialCode.replace(/#/g, "%23")}`;

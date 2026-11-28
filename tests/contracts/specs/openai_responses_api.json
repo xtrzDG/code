@@ -806,9 +806,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "code_interpreter"
-     ],
+     "const": "code_interpreter",
      "type": "string"
     }
    },
@@ -867,10 +865,8 @@
      "type": "string"
     },
     "type": {
+     "const": "code_interpreter_call",
      "default": "code_interpreter_call",
-     "enum": [
-      "code_interpreter_call"
-     ],
      "type": "string"
     }
    },
@@ -1873,9 +1869,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "custom_tool_call"
-     ],
+     "const": "custom_tool_call",
      "type": "string"
     }
    },
@@ -1919,9 +1913,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "custom_tool_call_output"
-     ],
+     "const": "custom_tool_call_output",
      "type": "string"
     }
    },
@@ -2160,9 +2152,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "message"
-     ],
+     "const": "message",
      "type": "string"
     }
    },
@@ -2229,9 +2219,7 @@
      "type": "integer"
     },
     "type": {
-     "enum": [
-      "file_path"
-     ],
+     "const": "file_path",
      "type": "string"
     }
    },
@@ -2333,9 +2321,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "file_search_call"
-     ],
+     "const": "file_search_call",
      "type": "string"
     }
    },
@@ -3583,9 +3569,7 @@
      "$ref": "#/$defs/SvgParam"
     },
     "type": {
-     "enum": [
-      "image_generation"
-     ],
+     "const": "image_generation",
      "type": "string"
     }
    },
@@ -4522,9 +4506,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "local_shell_call"
-     ],
+     "const": "local_shell_call",
      "type": "string"
     }
    },
@@ -4561,9 +4543,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "local_shell_call_output"
-     ],
+     "const": "local_shell_call_output",
      "type": "string"
     }
    },
@@ -5171,7 +5151,11 @@
       "gpt-6-cyber",
       "gpt-rosalind-research",
       "gpt-6-rosalind",
-      "gpt-6.2-astra-law"
+      "gpt-6.2-astra-law",
+      "gpt-6-astra-healthcare",
+      "gpt-6.1-sol-healthcare",
+      "gpt-6.2-astra-healthcare",
+      "gpt-6.2-sol-healthcare"
      ],
      "type": "string"
     }
@@ -6367,9 +6351,7 @@
      "type": "array"
     },
     "type": {
-     "enum": [
-      "reasoning"
-     ],
+     "const": "reasoning",
      "type": "string"
     }
    },
@@ -7310,9 +7292,7 @@
      ]
     },
     "type": {
-     "enum": [
-      "json_schema"
-     ],
+     "const": "json_schema",
      "type": "string"
     }
    },
@@ -7412,9 +7392,7 @@
      "type": "array"
     },
     "type": {
-     "enum": [
-      "allowed_tools"
-     ],
+     "const": "allowed_tools",
      "type": "string"
     }
    },
@@ -7431,9 +7409,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "custom"
-     ],
+     "const": "custom",
      "type": "string"
     }
    },
@@ -7449,9 +7425,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "function"
-     ],
+     "const": "function",
      "type": "string"
     }
    },
@@ -7477,9 +7451,7 @@
      "type": "string"
     },
     "type": {
-     "enum": [
-      "mcp"
-     ],
+     "const": "mcp",
      "type": "string"
     }
    },

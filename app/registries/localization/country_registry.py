@@ -24,6 +24,7 @@ from app.registries.localization.curated_country_telephony import (
     CURATED_EMERGENCY_NUMBERS,
     DEFAULT_EMERGENCY_NUMBER,
     LOCAL_NUMBER_AVAILABLE_COUNTRIES,
+    PER_BUSINESS_SMS_REGISTRATION_COUNTRIES,
     PILOT_COUNTRIES,
 )
 from app.registries.localization.territory_languages import (
@@ -35,6 +36,7 @@ from app.schemas.constants.localization import (
     DataRegion,
     LocalNumberProvisioning,
     RecordingConsentRule,
+    SmsSenderRegistration,
 )
 from app.schemas.dto.localization import CountryProfile
 from app.schemas.exceptions.application_errors import UnknownCountryError
@@ -61,8 +63,9 @@ class CountryRegistry(CountryRegistryContract):
     not map) and CLDR via Babel (names, legal tender, time zones, languages),
     then refined by curated tables: launch languages, default time zones of
     multi-zone countries, emergency numbers, login code channels, local
-    numbers and recording consent. The pilot country (Georgia) follows the
-    concept exactly. Profiles are built once, on first use, with the
+    numbers, recording consent and the carriers that accept a business's
+    SMS only from a sender registered for it. The pilot country (Georgia)
+    follows the concept exactly. Profiles are built once, on first use, with the
     currency in force on that day; callers receive independent copies.
     """
 
@@ -172,6 +175,11 @@ class CountryRegistry(CountryRegistryContract):
                 RecordingConsentRule.ALL_PARTY_CONSENT
                 if country_code in ALL_PARTY_CONSENT_COUNTRIES
                 else RecordingConsentRule.NOTICE
+            ),
+            sms_sender_registration=(
+                SmsSenderRegistration.PER_BUSINESS
+                if country_code in PER_BUSINESS_SMS_REGISTRATION_COUNTRIES
+                else SmsSenderRegistration.NOT_REQUIRED
             ),
         )
 

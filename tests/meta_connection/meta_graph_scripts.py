@@ -35,7 +35,10 @@ def script_grants(
         "whatsapp_business_management",
         "whatsapp_business_messaging",
     ),
+    expires_at: int = 0,
 ) -> None:
+    """`debug_token` of a business token (`expires_at` in seconds; 0: no end)."""
+
     graph.respond(
         "GET",
         r"/debug_token$",
@@ -44,7 +47,7 @@ def script_grants(
                 "app_id": META_APP_ID,
                 "type": "SYSTEM_USER",
                 "is_valid": True,
-                "expires_at": 0,
+                "expires_at": expires_at,
                 "scopes": list(scopes),
                 "granular_scopes": [
                     {"scope": scope, "target_ids": accounts} for scope in scopes

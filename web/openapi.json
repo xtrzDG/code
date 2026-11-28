@@ -4805,7 +4805,7 @@
         "type": "object"
       },
       "BookingStatus": {
-        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
+        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19; written since the release gate\n`booking_deposits` opened, before that such a booking was PENDING with\na deposit that waits).",
         "enum": [
           "pending",
           "pending_deposit",
@@ -7420,7 +7420,7 @@
       },
       "CallForwardingInstructions": {
         "additionalProperties": false,
-        "description": "Step-by-step forwarding of \"no answer / busy / unreachable\" calls from the\nvenue's phone to the assistant's number (concept section 6).\n\nTexts are in the display language when available, else in English.",
+        "description": "Step-by-step forwarding of \"no answer / busy / unreachable\" calls from the\nvenue's phone to the assistant's number (concept section 6).\n\nTexts are in the display language when available, else in English.\n`is_carrier_choice_needed`: the country's carriers take different codes\n(the United States), so the owner opens their own carrier first and the\ntop-level `codes` are the standard codes for carriers not listed.",
         "properties": {
           "assistant_phone_number": {
             "maxLength": 16,
@@ -7465,6 +7465,11 @@
             "title": "Display Language",
             "type": "string"
           },
+          "is_carrier_choice_needed": {
+            "default": false,
+            "title": "Is Carrier Choice Needed",
+            "type": "boolean"
+          },
           "notes": {
             "items": {
               "type": "string"
@@ -7492,6 +7497,33 @@
         "title": "CallForwardingInstructions",
         "type": "object"
       },
+      "CallForwardingStarCode": {
+        "additionalProperties": false,
+        "description": "A ready-to-dial North American star code (Verizon's *71 and *73).",
+        "properties": {
+          "condition": {
+            "$ref": "#/components/schemas/StarCodeCondition"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "dial_code": {
+            "maxLength": 13,
+            "minLength": 3,
+            "pattern": "^\\*[0-9]{2}([0-9]{10})?$",
+            "title": "Dial Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition",
+          "dial_code",
+          "description"
+        ],
+        "title": "CallForwardingStarCode",
+        "type": "object"
+      },
       "CallGuardVerdict": {
         "description": "Result of the invented-numbers audit of what the phone assistant said\nduring a call (checked after the call, when it can no longer be\nrewritten).\n\nFLAGGED: values missing from the business data, in a call that made no\nbooking or lead; HANDED_OFF: the same in a call that made one, so staff\ngot a low-urgency handoff to check it.",
         "enum": [
@@ -7517,7 +7549,7 @@
       },
       "CallSettingsView": {
         "additionalProperties": false,
-        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether the platform can send SMS, and the\ntext-back in each language of the business; whether calls are\nrecorded, and the staff number transfers go to (None: no allowed staff\nnumber) with the owner's confirmation of the staff notice (who\nconfirmed it, when).",
+        "description": "The settings with what they rely on: whether the business's WhatsApp\nnumber is connected, whether its text-backs can go by SMS\n(`is_sms_available`, and else why not: `sms_unavailable_reason`), and\nthe text-back in each language of the business; whether calls are\nrecorded, and the staff number transfers go to (None: no allowed staff\nnumber) with the owner's confirmation of the staff notice (who\nconfirmed it, when). `is_sms_fallback_enabled` is the owner's stored\nchoice, kept as it is while SMS is unavailable.\n\n`sms_unavailable_reason`: `business_registration_required` where\ncarriers accept the business's texts only from a sender registered for\nit (the US), which the platform does not offer yet, whatever SMS the\nplatform sends; else `no_sender` while the platform's SMS number waits\nfor the phone carriers' approval, `not_configured` without an SMS\nprovider.",
         "properties": {
           "is_recording_enabled": {
             "default": false,
@@ -7548,6 +7580,16 @@
           "is_whatsapp_connected": {
             "title": "Is Whatsapp Connected",
             "type": "boolean"
+          },
+          "sms_unavailable_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmsUnavailableReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "staff_transfer_confirmed_at": {
             "anyOf": [
@@ -8314,7 +8356,7 @@
       },
       "CardSetupSessionView": {
         "additionalProperties": false,
-        "description": "The provider's page that saves the card: Flitt's verification page or\nStripe's checkout (a first card) or billing portal (a new one).\n`payment_order_id` names the order a saved card reports back to.",
+        "description": "The provider's page that saves the card: Flitt's verification page or\nStripe's checkout (for a first card and for a new one alike).\n`payment_order_id` names the order a saved card reports back to.",
         "properties": {
           "payment_order_id": {
             "anyOf": [
@@ -8347,7 +8389,7 @@
       },
       "CarrierForwardingInstructions": {
         "additionalProperties": false,
-        "description": "Ready-to-dial codes of one named mobile carrier.",
+        "description": "Ready-to-dial codes of one named mobile carrier: GSM codes (`codes`)\nand star codes (`star_codes`), either of them possibly empty.",
         "properties": {
           "carrier_name": {
             "title": "Carrier Name",
@@ -8370,6 +8412,13 @@
               }
             ],
             "title": "Note"
+          },
+          "star_codes": {
+            "items": {
+              "$ref": "#/components/schemas/CallForwardingStarCode"
+            },
+            "title": "Star Codes",
+            "type": "array"
           }
         },
         "required": [
@@ -12415,7 +12464,7 @@
       },
       "CountryProfile": {
         "additionalProperties": false,
-        "description": "Everything that changes when a business is in another country.\n\nBuilt for every country from phonenumbers and CLDR data, then refined by\ncurated overrides (emergency numbers, launch languages, recording rules).",
+        "description": "Everything that changes when a business is in another country.\n\nBuilt for every country from phonenumbers and CLDR data, then refined by\ncurated overrides (emergency numbers, launch languages, recording rules,\nwhether carriers want an SMS sender registered per business).",
         "properties": {
           "calling_code": {
             "maximum": 999.0,
@@ -12501,6 +12550,10 @@
           "recording_consent_rule": {
             "$ref": "#/components/schemas/RecordingConsentRule",
             "default": "notice"
+          },
+          "sms_sender_registration": {
+            "$ref": "#/components/schemas/SmsSenderRegistration",
+            "default": "not_required"
           },
           "timezones": {
             "items": {
@@ -17412,7 +17465,7 @@
         "type": "object"
       },
       "InboundEventKind": {
-        "description": "What a webhook brought into the inbox, and so which job processes it.\nCOMMENT_TRIGGER is an Instagram comment that named one of the owner's\nkeywords: it gets one private reply (written only once its release gate\nopens, app/utilities/storage/release_gates.py).",
+        "description": "What a webhook brought into the inbox, and so which job processes it.\nCOMMENT_TRIGGER is an Instagram comment that named one of the owner's\nkeywords: it gets one private reply (written only while its release\ngate is open, as it is from this release:\napp/utilities/storage/release_gates.py).",
         "enum": [
           "customer_message",
           "platform_bot_update",
@@ -18465,7 +18518,7 @@
         "type": "string"
       },
       "JobLane": {
-        "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification. OPS carries the platform alerts\non a thread of their own, so the alerts of a provider outage never wait\nbehind the sends that outage holds up (behind the release gate\n`ops_lane` until the next release: until then they use OUTBOUND).",
+        "description": "Worker lane of a queued job. Each lane has its own threads in every\nworker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up\na customer message or a notification. OPS carries the platform alerts\non a thread of their own, so the alerts of a provider outage never wait\nbehind the sends that outage holds up (since the release gate\n`ops_lane` opened; before that they used OUTBOUND).",
         "enum": [
           "inbound",
           "outbound",
@@ -22414,7 +22467,7 @@
         "type": "object"
       },
       "MissedCallReason": {
-        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)\nand CALLBACK_REQUESTED (the caller asked to be called back and the call\nleft staff nothing to act on; written once its release gate opens).",
+        "description": "Why a caller did not get through, or got nothing from the call.\n\nFrom the telephony line (PBX): NO_ANSWER (it rang out), BUSY, ABANDONED\n(the caller hung up before the assistant answered) and LINE_FAILED (the\nline could not put the call through). From the voice platform:\nNOT_STARTED (the assistant could not start the call), NO_SPEECH (the\nassistant answered, the caller hung up without a word) and\nTRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)\nand CALLBACK_REQUESTED (the caller asked to be called back and the call\nleft staff nothing to act on; written since its release gate opened,\nsuch a call was TRANSFER_UNANSWERED before).",
         "enum": [
           "no_answer",
           "busy",
@@ -23310,7 +23363,7 @@
       },
       "NotificationContactView": {
         "additionalProperties": false,
-        "description": "A staff contact as Settings shows it. `provider_ready` is False when\nthis server has no provider for its channel (then notifications fail\nin production and are only logged elsewhere); `delivery` is None until\na first notification.",
+        "description": "A staff contact as Settings shows it. `provider_ready` is False when\nthis server has no provider for its channel (then notifications fail\nin production and are only logged elsewhere); `delivery` is None until\na first notification.\n\n`sms_unavailable_reason`, for an SMS contact only (None for every\nother channel, and while the platform sends SMS): why the platform\nsends no SMS, `no_sender` while its SMS number waits for the phone\ncarriers' approval, else `not_configured`.",
         "properties": {
           "address": {
             "title": "Address",
@@ -23353,6 +23406,16 @@
           "provider_ready": {
             "title": "Provider Ready",
             "type": "boolean"
+          },
+          "sms_unavailable_reason": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SmsUnavailableReason"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "telegram_username": {
             "anyOf": [
@@ -23924,7 +23987,7 @@
         "type": "object"
       },
       "OutboundMessageKind": {
-        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK), and a guest's written\nconfirmation of a booking the assistant made or moved in a chat, with\nits manage link (BOOKING_CONFIRMATION), and the private reply to an\nInstagram comment that named one of the owner's keywords\n(COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).",
+        "description": "What an outbox message is: an assistant reply to a customer, a\nnotification to staff, or one of the messages a customer gets besides\nthe assistant's replies: a staff member's reply written in the cabinet\n(STAFF_REPLY), a reminder of a booking (BOOKING_REMINDER), the written\nconfirmation of a booking made on the phone (CALL_CONFIRMATION), the\nlinks the phone assistant promised (CALL_LINKS) and the message to a\ncaller who did not get through (TEXT_BACK), and a guest's written\nconfirmation of a booking the assistant made or moved in a chat, with\nits manage link (BOOKING_CONFIRMATION), and the private reply to an\nInstagram comment that named one of the owner's keywords\n(COMMENT_REPLY, behind the same release gate as COMMENT_TRIGGER).",
         "enum": [
           "customer_reply",
           "staff_notification",
@@ -25281,7 +25344,7 @@
         "type": "object"
       },
       "PaymentProvider": {
-        "description": "Payment service that charges owners: Flitt (concept: auto-debit) in\nGeorgia and Armenia, Stripe in the EU, the US and Israel\n(`PaymentProviderRegistry`). STRIPE is stored only once the\n`stripe_payments` release gate opens.",
+        "description": "Payment service that charges owners: Flitt (concept: auto-debit) in\nGeorgia and Armenia, Stripe in the EU, the US and Israel\n(`PaymentProviderRegistry`). STRIPE is stored only while the\n`stripe_payments` release gate is open, as it is from this release.",
         "enum": [
           "flitt",
           "stripe"
@@ -30613,7 +30676,7 @@
         "type": "object"
       },
       "SetupStepCode": {
-        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live. After the\nlaunch the guide goes on to the first real customer: writing to the\nassistant from the owner's own phone (PHONE_TEST), a second channel\nwhere customers write (SECOND_CHANNEL), and the link or QR code where\ncustomers see it (SHARE), and for an owner a second factor that\nprotects the customers' data (PROTECT_DATA). PROTECT_DATA is new in\nthis release and never stored (a closed release gate): the owner puts\nit away with the reminder banner (security_nudges), not as a skip.\n\nThe steps after the launch are new in this release: a skip of one is\nstored apart (`SetupStateDocument.skipped_after_launch`), which the\nrelease before ignores.",
+        "description": "One step of the guided setup, in the order the owner walks them: about\nthe business, what it offers, hours and bookings, who receives handoffs,\nwhere customers write, trying the assistant, and going live. After the\nlaunch the guide goes on to the first real customer: writing to the\nassistant from the owner's own phone (PHONE_TEST), a second channel\nwhere customers write (SECOND_CHANNEL), and the link or QR code where\ncustomers see it (SHARE), and for an owner a second factor that\nprotects the customers' data (PROTECT_DATA). Storage takes PROTECT_DATA\namong the skipped steps (its release gate is open), but the owner puts\nit away with the reminder banner (security_nudges), not as a skip.\n\nA skip of a step after the launch is stored apart\n(`SetupStateDocument.skipped_after_launch`), which a release before\nthose steps ignores.",
         "enum": [
           "business",
           "offer",
@@ -31110,6 +31173,25 @@
         "title": "SisterLocationOption",
         "type": "object"
       },
+      "SmsSenderRegistration": {
+        "description": "Whether the carriers of a country accept a business's text messages\nonly from a sender registered for that business (US A2P 10DLC: under\nTwilio's ISV model a brand and a campaign per business). The platform\nregisters no sender per business yet, so a business of a PER_BUSINESS\ncountry texts none of its callers by SMS, and no text-back goes by SMS\nto a number of such a country. Country profiles only: never stored.",
+        "enum": [
+          "not_required",
+          "per_business"
+        ],
+        "title": "SmsSenderRegistration",
+        "type": "string"
+      },
+      "SmsUnavailableReason": {
+        "description": "Why a text cannot go by SMS, for the cabinet to say so. Views only:\nnever stored.",
+        "enum": [
+          "no_sender",
+          "not_configured",
+          "business_registration_required"
+        ],
+        "title": "SmsUnavailableReason",
+        "type": "string"
+      },
       "SourceRowView": {
         "additionalProperties": false,
         "description": "Owners from one acquisition source: sign-ups, live and paying today. A\nsource whose links carried referral codes has a row per code\n(`referral_code`: a partner's or an inviting business's), so the\nfounder sees which partner or invitation brought whom.",
@@ -31498,6 +31580,15 @@
         "title": "StaffReplyView",
         "type": "object"
       },
+      "StarCodeCondition": {
+        "description": "When a North American star code forwards a call to the assistant.\n\nVerizon's *71 has one code for unanswered and busy calls; like the GSM\ncodes, star codes never forward every call. CANCEL_ALL switches\nforwarding off.",
+        "enum": [
+          "no_answer_or_busy",
+          "cancel_all"
+        ],
+        "title": "StarCodeCondition",
+        "type": "string"
+      },
       "StarterAnswersApplied": {
         "additionalProperties": false,
         "description": "What applying changed: the sections filled, the ones left as the owner\nhad them, the profile, the frequent questions saved and the resource\ncreated.",
@@ -31815,7 +31906,7 @@
         "type": "object"
       },
       "StatusComponent": {
-        "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
+        "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored since\nthe `status_payments` release gate opened).",
         "enum": [
           "chat",
           "meta",
@@ -32233,7 +32324,7 @@
         "type": "object"
       },
       "SubscriptionStatus": {
-        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.\nPAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;\nthe assistant only takes requests, the channels stay connected and\nthe pause costs a share of the price (R14). Written only with\nSUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught\nevery reader the value: the release gate `subscription_pause`\n(docs/operations/deploys.md).",
+        "description": "Subscription state driven by the payment provider.\n\nINCOMPLETE: chosen without a trial and waiting for its first payment;\nthe business has no service from it until that payment arrives.\nPAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;\nthe assistant only takes requests, the channels stay connected and\nthe pause costs a share of the price (R14). Written only with\nSUBSCRIPTION_PAUSE_ENABLED and while the release gate\n`subscription_pause` is open, as it is from this release\n(docs/operations/deploys.md).",
         "enum": [
           "incomplete",
           "trialing",
@@ -36774,7 +36865,7 @@
                 "properties": {
                   "components": {
                     "items": {
-                      "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
+                      "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored since\nthe `status_payments` release gate opened).",
                       "enum": [
                         "chat",
                         "meta",
@@ -36996,7 +37087,7 @@
                     "anyOf": [
                       {
                         "items": {
-                          "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
+                          "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored since\nthe `status_payments` release gate opened).",
                           "enum": [
                             "chat",
                             "meta",
@@ -41306,7 +41397,7 @@
                         "properties": {
                           "components": {
                             "items": {
-                              "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored\nbehind the `status_payments` release gate).",
+                              "description": "The parts of the platform the public status page reports on: the\nwebsite chat and hosted chat page (CHAT), WhatsApp, Instagram and\nMessenger (META), Telegram, phone calls (VOICE), the owner cabinet\nwith its sign-in (CABINET) and payments (PAYMENTS: deposits, payment\nlinks and subscriptions through Flitt and Stripe, REL-06; stored since\nthe `status_payments` release gate opened).",
                               "enum": [
                                 "chat",
                                 "meta",
@@ -59294,7 +59385,7 @@
                   "status": {
                     "anyOf": [
                       {
-                        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
+                        "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19; written since the release gate\n`booking_deposits` opened, before that such a booking was PENDING with\na deposit that waits).",
                         "enum": [
                           "pending",
                           "pending_deposit",
@@ -59940,7 +60031,7 @@
                 "description": "Body of an Undo of a booking's status change: `status` is the status\nthe change set (the one being undone), so an Undo never reverts a later\nchange it did not see.",
                 "properties": {
                   "status": {
-                    "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19, written once the release gate\n`booking_deposits` opens; until then such a booking is PENDING with a\ndeposit that waits).",
+                    "description": "Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the\ncustomer pays a deposit (W19; written since the release gate\n`booking_deposits` opened, before that such a booking was PENDING with\na deposit that waits).",
                     "enum": [
                       "pending",
                       "pending_deposit",

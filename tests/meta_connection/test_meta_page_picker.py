@@ -107,7 +107,7 @@ class TestPickPage:
         assert response.json()["account_id"] == PICKED_INSTAGRAM_ID
         assert response.json()["comment_replies"] == {
             "is_on": False,
-            "is_available": False,
+            "is_available": True,
             "keywords": [],
             "reply_text": None,
         }
@@ -139,6 +139,32 @@ class TestPickPage:
         assert response.status_code == 200
         assert response.json()["account_id"] == PICKED_PAGE_ID
         assert response.json()["comment_replies"] is None
+
+    def test_a_page_connected_again_drops_what_was_known_of_its_old_token(
+        self,
+    ) -> None:
+        world = MetaWorld()
+        old = world.testbed.add_channel(
+            world.business.id, ChannelKind.MESSENGER, PLAIN_PAGE_ID, "old-page-token"
+        )
+        now = world.testbed.clock.now_microseconds()
+        world.testbed.channel_repo.save(
+            old.model_copy(
+                update={"credential_expires_at": now, "credential_checked_at": now}
+            )
+        )
+        state, _ = listed(world)
+        script_picked_page(world.graph)
+
+        response = world.pick_page(
+            "messenger", {"state": state, "page_id": PICKED_PAGE_ID}
+        )
+
+        assert response.status_code == 200, response.text
+        channel = world.stored(ChannelKind.MESSENGER)
+        assert channel.id == old.id
+        assert channel.credential_expires_at is None
+        assert channel.credential_checked_at is None
 
     def test_refusals(self) -> None:
         world = MetaWorld()

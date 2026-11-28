@@ -20,7 +20,6 @@ from app.schemas.constants.payments import PaymentOrderPurpose, PaymentProvider
 from app.schemas.constants.users import BusinessMemberRole
 from app.schemas.domain.billing import InvoiceDocument, SubscriptionDocument
 from app.schemas.domain.businesses import BusinessDocument
-from app.schemas.domain.payments import PaymentOrderDocument
 from app.schemas.dto.access import BusinessAccessRequest
 from app.schemas.dto.billing import Money
 from app.schemas.dto.billing_ledger import DueInvoicesRequest, InvoiceDescriptionInput
@@ -30,10 +29,7 @@ from app.schemas.dto.payment_methods import (
 )
 from app.schemas.exceptions.application_errors import ConflictError
 from app.schemas.typings.billing.constrained_integers import MoneyAmountMinor
-from app.schemas.typings.billing.strings import (
-    InvoiceDescription,
-    PaymentProviderReference,
-)
+from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.billing.card_on_file.card_on_file_views import (
     can_save_card,
@@ -44,7 +40,6 @@ from app.use_cases.billing.card_on_file.card_setup_terms import (
     find_first_charge_at,
     list_open_setup_fees,
 )
-from app.use_cases.billing.card_on_file.dunning_rules import find_schedule_order
 from app.use_cases.billing.checkout_rules import select_order_description
 from app.use_cases.billing.payment_order_opening import (
     PaymentOrderOpening,
@@ -65,16 +60,18 @@ class StartCardSetupUseCase(
     UseCaseContract[StartCardSetupCommand, CardSetupSessionView]
 ):
     """
-    "Save card" (a trial), "Update card" (a paid subscription, or one
-    whose declined charge is being retried), owners only: the provider's
-    page that saves the card for the automatic charges. Flitt verifies the
-    card for nothing (a zero amount); Stripe opens Checkout in subscription
-    mode for a first card and its billing portal to replace one. The
-    charges start when the trial or the paid period ends (after a declined
-    period, which the retries charge the new card for), at the plan price
-    with tax, and replace those of an earlier card once the provider
-    confirms the new one. The page names the charges like the invoice of
-    the first period they pay, in the page's language.
+    "Save card" (a trial), "Update card" (a paid subscription, or at
+    Flitt one whose declined charge is being retried), owners only: the
+    provider's page that saves the card for the automatic charges. Flitt
+    verifies the card for nothing (a zero amount); Stripe opens Checkout
+    in subscription mode, which charges nothing now, for a first card and
+    for a new one alike. The charges start when the trial or the paid
+    period ends (at Flitt after a declined period, which the retries
+    charge the new card for), at the plan price with tax, and replace
+    those of an earlier card once the provider confirms the new one (at
+    Stripe the earlier subscription is cancelled). The page names the
+    charges like the invoice of the first period they pay, in the page's
+    language.
 
     A trial of a business the platform team sets up (done-for-you, monthly)
     owes the one-time setup fee that a trial without a card is billed at
@@ -84,8 +81,9 @@ class StartCardSetupUseCase(
 
     Raises:
         ConflictError: no card can be saved now (an unpaid bill is paid
-            instead, which saves the card too; a paused or cancelled
-            subscription has no charges to save it for).
+            instead, which saves the card too, and so is a charge Stripe
+            declined; a paused or cancelled subscription has no charges
+            to save it for).
         RateLimitedError: the business's declined payments reached the
             card-testing brake (LOG-05).
     """
@@ -187,7 +185,6 @@ class StartCardSetupUseCase(
             description=charges_named,
             language=language,
             return_url=input_data.request.return_url,
-            customer_reference=self._stripe_customer(provider, subscription),
             recurring_description=charges_named,
         )
         if setup_fees != []:
@@ -197,7 +194,6 @@ class StartCardSetupUseCase(
                     "invoice_ids": [invoice.id for invoice in setup_fees],
                     "amount": sum_invoice_amounts(setup_fees),
                     "description": select_order_description(setup_fees),
-                    "customer_reference": None,
                 }
             )
 
@@ -246,16 +242,3 @@ class StartCardSetupUseCase(
             for invoice in issued
             if invoice.status in OPEN_INVOICE_STATUSES and invoice.id not in open_ids
         ]
-
-    def _stripe_customer(
-        self, provider: PaymentProvider, subscription: SubscriptionDocument
-    ) -> PaymentProviderReference | None:
-        """The Stripe customer of the running charges: its card is replaced."""
-
-        if provider is not PaymentProvider.STRIPE:
-            return None
-
-        schedule_order: PaymentOrderDocument | None = find_schedule_order(
-            self._payment_order_repo, subscription
-        )
-        return None if schedule_order is None else schedule_order.customer_reference

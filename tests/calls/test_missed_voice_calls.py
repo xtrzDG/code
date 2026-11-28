@@ -165,7 +165,7 @@ class TestCallbacks:
         process_call(setup, callback_payload())
 
         [missed] = missed_calls(setup)
-        assert missed.reason is MissedCallReason.TRANSFER_UNANSWERED
+        assert missed.reason is MissedCallReason.CALLBACK_REQUESTED
         assert missed.status is TextBackStatus.SENT
 
     def test_a_callback_with_a_handoff_is_left_to_the_handoff(self) -> None:
@@ -186,17 +186,18 @@ class TestCallbacks:
         assert missed_calls(setup) == []
         assert whatsapp_templates(setup) == []
 
-    def test_a_callback_keeps_the_old_reason_until_its_gate_opens(self) -> None:
-        open_gate = ReleaseGate(
+    def test_a_callback_has_its_own_reason_now_its_gate_is_open(self) -> None:
+        closed_gate = ReleaseGate(
             name=CALLBACK_REQUESTED_GATE,
             collection_name=DocumentCollectionName("missed_calls"),
             path=StoredEnumPath("reason"),
             values=[GatedEnumValue("callback_requested")],
-            is_open=True,
+            is_open=False,
         )
 
-        assert callback_reason() is MissedCallReason.TRANSFER_UNANSWERED
-        assert callback_reason([open_gate]) is MissedCallReason.CALLBACK_REQUESTED
+        assert callback_reason() is MissedCallReason.CALLBACK_REQUESTED
+        # Behind a closed gate (the release before) it was the old reason.
+        assert callback_reason([closed_gate]) is MissedCallReason.TRANSFER_UNANSWERED
 
 
 class TestTransfers:

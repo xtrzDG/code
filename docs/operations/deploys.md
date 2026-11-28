@@ -544,11 +544,12 @@ outbound lane. Environment variables survive a rollback, and the release
 before this one refuses an unknown lane in `WORKER_LANES` and
 `WORKER_LANE_CONCURRENCY` at startup, so neither names `ops` in this
 release (`render.yaml`, `.env.example`; `tests/platform/test_worker_roles.py`
-checks it). The release that opens the gate adds `ops` to the customer
-worker's `WORKER_LANES`; this release already reads it, so a rollback
-from that one starts. GET /v1/admin/system lists the `ops` lane only
-once the gate is open, so the previous cabinet never meets it, and the
-new cabinet reads an absent `circuits` as none.
+checks it). The release that opens the gate ("The release that opens
+the gates" below) adds `ops` to the customer worker's `WORKER_LANES`; this
+release already reads it, so a rollback from that one starts. GET
+/v1/admin/system lists the `ops` lane only once the gate is open, so the
+previous cabinet never meets it, and the new cabinet reads an absent
+`circuits` as none.
 
 The release with recording consent and call memory (W20-CALL-CONSENT, no
 migration; `CallDocument` version 4, `MessageDocument` version 9,
@@ -610,6 +611,64 @@ the new release can say the link does not work until the rollout ends,
 and reopening the link fixes it. After a rollback the old release ignores
 the four fields; a session the new release wound down ends at its stored
 end as before.
+
+**The release that opens the gates.** The first release after
+launch-2026-11-05 (`d08190a4`, the snapshot in
+`tests/storage/release_enums.json`) opens all thirteen release gates:
+`subscription_pause`, `offer_choices_tool`, `booking_deposits`,
+`send_payment_link_tool`, `ops_lane`, `protect_data_step`,
+`decline_recording_tool`, `stripe_payments`, `phone_number_rental`,
+`instagram_comment_replies`, `missed_call_callback`, `status_payments` and
+`send_call_transcript`. launch-2026-11-05 reads every value they cover, so
+a rolling deploy and a rollback to it lose no document; but it writes none
+of them, so after a rollback the work that would write one fails until
+this release is back (a pause due to start: call off scheduled pauses
+first, as the pause paragraph above says; a Stripe charge's retry). Once
+the snapshot names that release, a gate whose values it reads may not stay
+closed (`test_a_closed_gate_covers_only_values_the_last_release_lacks`),
+so they open together. The release after this one deletes them. Around the
+deploy:
+
+- **Before the deploy: the ops lane.** The platform alerts, the
+  critical-clients digest and the spend-limit notices are now queued in
+  the lane `ops`, and only a worker that names it serves it. The live
+  `workshop-worker` keeps its own values (the Blueprint sync does not
+  reach it): set `WORKER_LANES=inbound,outbound,ops` and `DB_POOL_SIZE=15`
+  there and restart it first. launch-2026-11-05 already accepts `ops`, so
+  this is safe before the deploy and after a rollback. Without it those
+  jobs wait in the queue and nothing reports it (only `worker_down` goes
+  out directly). The connection budget becomes 100 of basic-1gb's 100
+  (docs/operations/capacity.md).
+- **Stripe.** Owners in the EU, the US and Israel pay through Stripe
+  whenever `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are set. Merge
+  and deploy this release only once Stripe reports `charges_enabled`,
+  Smart Retries are off and the payment check of docs/LAUNCH.md 4.7.2
+  passed (on test keys, which needs a separate stand) or is set for the
+  first minutes after the deploy (with a live card), and not before
+  2026-11-22, the day the published DPA names for Stripe. Stripe's
+  Customer portal is not used and needs no configuration. Once it runs,
+  the only switch is unsetting `STRIPE_SECRET_KEY` (Stripe's webhooks then
+  answer 403).
+- **The seasonal pause** changes nothing until `SUBSCRIPTION_PAUSE_ENABLED`
+  is set: set it once this release serves everywhere.
+- **The rest writes when its feature is used:** a booking held for its
+  deposit is `pending_deposit`; stored messages keep the tool calls
+  `offer_choices`, `send_payment_link`, `decline_recording` and
+  `send_call_transcript` (an `offer_choices` result backs no value of a
+  later reply); a callback request is a missed call `callback_requested`;
+  Instagram comments that name a keyword are answered; each month of a
+  rented number is billed, catching up from `billed_until`; the status
+  page records payments days and an admin may announce payments. With
+  production's configuration at the deploy (no phone line, no Meta keys,
+  no rented number, one demo business) most of these write nothing yet.
+  `protect_data` is accepted among the skipped setup steps, but nothing
+  writes it.
+- **The visual baselines stay as they are.** The demo restaurant's
+  billing page now shows the pause card and the admin system page lists
+  the `ops` lane, but both sit below the first screen the pictures take:
+  `npm run e2e:visual:update` in the pinned browser image (web/README.md,
+  "Visual tests and the review gate") finds no picture that differs. The
+  demo asks no deposit, so none of its bookings is `pending_deposit`.
 
 The storage layer makes the second part mechanical
 (`app/adapters/storage/persisted_document_codec.py`): documents are

@@ -97,18 +97,17 @@ def test_a_trial_paid_ahead_with_a_card_is_never_prompted() -> None:
         (KAZAKHSTAN, PaymentProvider.FLITT),
     ],
 )
-@pytest.mark.usefixtures("stripe_gate_open")
 def test_the_region_names_the_provider(
     country: CountryPreset, provider: PaymentProvider
 ) -> None:
     assert payment_method(build_trial(country)).provider is provider
 
 
-def test_until_the_release_gate_opens_everyone_pays_through_flitt() -> None:
+def test_with_the_release_gate_open_an_italian_owner_pays_through_stripe() -> None:
     world = build_trial(ITALY)
 
-    assert payment_method(world).provider is PaymentProvider.FLITT
-    assert save_card(world).provider is PaymentProvider.FLITT
+    assert payment_method(world).provider is PaymentProvider.STRIPE
+    assert save_card(world).provider is PaymentProvider.STRIPE
 
 
 def test_the_retries_of_a_declined_charge_are_shown() -> None:

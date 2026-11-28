@@ -46,6 +46,8 @@ digests of opted-out numbers.
    `TWILIO_AUTH_TOKEN`, deploy, then promote it in the console (API calls
    accept both tokens until the promotion; callbacks come signed with the
    old primary until then, which `TWILIO_AUTH_TOKEN_PREVIOUS` accepts).
+   Right after the promotion, re-import the rented numbers in ElevenLabs
+   (below).
 3. **Watch** the security log for `security_event=webhook_delivery_refused`
    with that `provider` (`../observability.md`, "Security and payment
    events") and the channel's own signals (`/admin/system`): nothing new
@@ -55,6 +57,33 @@ digests of opted-out numbers.
    before the switch have arrived): delete `<NAME>_PREVIOUS` from the env
    group and deploy.
    A leaked value is retired as soon as step 2 is live.
+
+## Twilio: re-import the rented numbers in ElevenLabs
+
+`TWILIO_AUTH_TOKEN` is also the account that rents phone numbers
+(`PHONE_NUMBER_PROVIDER=twilio`), and ElevenLabs keeps the token it was
+given when it imported each rented number: it takes that number's calls
+with it (`app/clients/elevenlabs/elevenlabs_phone_numbers_client.py`). The
+platform never hands ElevenLabs a new token: the job
+`maintain_phone_numbers` imports only a number ElevenLabs does not have
+yet, and no command re-imports the others yet. Once the old token stops
+working at Twilio (the promotion in step 2), every rented number must be
+re-imported by hand, and until then its calls can fail:
+
+1. List the account's active numbers in the Twilio console (Phone
+   Numbers); each one's label in ElevenLabs is its business's name.
+2. In the ElevenLabs console (Phone numbers), replace each of them: remove
+   it and import it again as a Twilio number with `TWILIO_ACCOUNT_SID` and
+   the new token, assigned to the agent that answered it.
+3. Call each number: the business's agent answers.
+4. A number imported by hand has a new ElevenLabs id, and the platform
+   keeps the old one, which it uses to move the number to another agent
+   and to remove it from ElevenLabs. So if the business's voice agent is
+   ever created anew (a pause or a plan without voice removed it, and the
+   business published again), assign the number to the new agent in
+   ElevenLabs by hand (the worker's log keeps saying the number "is not
+   attached to its voice agent yet"), and when the number is given back,
+   remove it from ElevenLabs by hand too.
 
 ## Afterwards
 

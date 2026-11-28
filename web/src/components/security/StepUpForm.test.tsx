@@ -52,6 +52,26 @@ describe("StepUpForm: a passkey person confirms with a second factor, never a lo
     expect(screen.queryByRole("button", { name: t("mfa.stepUp.resend") })).toBeNull();
   });
 
+  it("gives a passkey person who asks for a code the recovery code field, never the app's", async () => {
+    const { t } = textsIn("en");
+    // A browser with passkeys (jsdom has none): the passkey is offered first.
+    vi.stubGlobal("PublicKeyCredential", function PublicKeyCredential() {});
+    Object.defineProperty(navigator, "credentials", { configurable: true, value: { create: vi.fn(), get: vi.fn() } });
+    answerStepUp({ method: "passkey", passkey_available: true });
+    try {
+      renderInLocale(<StepUpForm />);
+      await userEvent.click(await screen.findByRole("button", { name: t("mfa.secondStep.useRecovery") }));
+
+      expect(screen.getByLabelText(t("mfa.secondStep.recoveryCode"))).toBeTruthy();
+      expect(screen.queryByLabelText(t("mfa.stepUp.code"))).toBeNull();
+      expect(screen.queryByRole("button", { name: t("mfa.secondStep.useApp") })).toBeNull();
+      expect(screen.getByRole("button", { name: t("passkeys.stepUp.use") })).toBeTruthy();
+    } finally {
+      vi.unstubAllGlobals();
+      Reflect.deleteProperty(navigator, "credentials");
+    }
+  });
+
   it("confirms a person with no second factor with the login code sent", async () => {
     const { t } = textsIn("en");
     answerStepUp({

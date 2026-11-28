@@ -54,8 +54,8 @@ class StripeNotFoundError(PaymentProviderRefusedError):
 class StripeClient(ClientContract):
     """
     Minimal client of the Stripe API (https://docs.stripe.com/api): Checkout
-    in subscription mode, the billing portal, subscriptions, invoices,
-    payment methods, and the verification of webhook signatures.
+    in subscription mode, subscriptions, invoices, payment methods, and
+    the verification of webhook signatures.
 
     Requests are form-encoded, authenticated with the secret key and pinned
     to STRIPE_API_VERSION; a POST that must not run twice carries an
@@ -92,11 +92,6 @@ class StripeClient(ClientContract):
         return self._request(
             "POST", "/v1/checkout/sessions", parameters, idempotency_key
         )
-
-    def create_billing_portal_session(
-        self, parameters: Mapping[str, FormValue]
-    ) -> dict[str, object]:
-        return self._request("POST", "/v1/billing_portal/sessions", parameters)
 
     def cancel_subscription(self, subscription_id: str) -> None:
         """Cancel at once; one already gone counts as cancelled."""

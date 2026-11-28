@@ -273,11 +273,7 @@ class TestTwilioSignature:
     @pytest.mark.parametrize(
         "removed",
         [
-            {
-                "TWILIO_ACCOUNT_SID": "",
-                "TWILIO_AUTH_TOKEN": "",
-                "TWILIO_FROM_NUMBER": "",
-            },
+            {"TWILIO_ACCOUNT_SID": "", "TWILIO_AUTH_TOKEN": ""},
             {"APP_BASE_URL": ""},
         ],
     )

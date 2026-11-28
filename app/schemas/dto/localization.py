@@ -10,6 +10,7 @@ from app.schemas.constants.localization import (
     OtpDeliveryChannel,
     PhoneNumberKind,
     RecordingConsentRule,
+    SmsSenderRegistration,
     TextDirection,
 )
 from app.schemas.typings.localization.booleans import IsMobilePhoneNumber
@@ -60,7 +61,8 @@ class CountryProfile(ImmutableDTO):
     Everything that changes when a business is in another country.
 
     Built for every country from phonenumbers and CLDR data, then refined by
-    curated overrides (emergency numbers, launch languages, recording rules).
+    curated overrides (emergency numbers, launch languages, recording rules,
+    whether carriers want an SMS sender registered per business).
     """
 
     country_code: CountryCode
@@ -80,6 +82,7 @@ class CountryProfile(ImmutableDTO):
     otp_delivery_channels: list[OtpDeliveryChannel]
     local_number_provisioning: LocalNumberProvisioning
     recording_consent_rule: RecordingConsentRule = RecordingConsentRule.NOTICE
+    sms_sender_registration: SmsSenderRegistration = SmsSenderRegistration.NOT_REQUIRED
 
 
 class LanguageProfile(ImmutableDTO):

@@ -136,11 +136,17 @@ export const channelsIt: Translation<typeof channelsEn> = {
     stepsTitle: "Come configurarlo",
     codesTitle: "Codici",
     carriersTitle: "Codici per operatore mobile",
+    chooseCarrierTitle: "Codici per operatore: apri il tuo",
+    otherCarriersTitle: "Altri operatori: codici standard",
     notesTitle: "Buono a sapersi",
     condition: {
       no_answer: "Nessuna risposta",
       busy: "Occupato",
       unreachable: "Non raggiungibile",
+      cancel_all: "Disattiva",
+    },
+    starCondition: {
+      no_answer_or_busy: "Nessuna risposta o occupato",
       cancel_all: "Disattiva",
     },
     dial: "Componi",

@@ -27,6 +27,9 @@ from app.utilities.config_helpers.production.secret_requirements import (
 from app.utilities.config_helpers.production.sign_in_requirements import (
     find_sign_in_problems,
 )
+from app.utilities.config_helpers.production.telephony_requirements import (
+    find_telephony_problems,
+)
 
 
 def find_production_problems(settings: AppSettings) -> list[ProductionSettingProblem]:
@@ -39,6 +42,7 @@ def find_production_problems(settings: AppSettings) -> list[ProductionSettingPro
         *find_sign_in_problems(settings),
         *find_model_problems(settings),
         *find_provider_secret_problems(settings),
+        *find_telephony_problems(settings),
     ]
 
 

@@ -1,7 +1,7 @@
 """
-The worker roles of the Render Blueprints: customer replies run on their
-own worker (two once the database has room for them), batch jobs on
-another, every lane has exactly one role, each
+The worker roles of the Render Blueprints: customer replies and the
+platform alerts run on their own worker (two once the database has room
+for them), batch jobs on another, every lane has exactly one role, each
 role's pool fits its threads (a lane behind a closed release gate takes
 no role yet), and only light customer-facing periodic jobs
 run with the workers that answer customers.

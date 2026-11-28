@@ -93,6 +93,13 @@ class CallFallbackAdapterContract(AdapterContract, Protocol):
         """Hang up."""
         raise NotImplementedError
 
+    def reject_call(self) -> CallFallbackReply:
+        """
+        Refuse the call unanswered, as busy: a call forwarded to the line
+        fails back to whoever forwarded it.
+        """
+        raise NotImplementedError
+
     def ignore_request(self) -> CallFallbackReply:
         """Answer a repeated request with nothing to do."""
         raise NotImplementedError

@@ -52,7 +52,6 @@ def status_of(world: PhoneWorld, business: BusinessDocument) -> SubscriptionStat
     return subscription.status
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_a_trial_that_ends_unpaid_gives_the_number_back_after_the_grace() -> None:
     world = PhoneWorld()
     owner, business = trial_business(world)
@@ -74,7 +73,6 @@ def test_a_trial_that_ends_unpaid_gives_the_number_back_after_the_grace() -> Non
     assert status_of(world, business) is SubscriptionStatus.PAST_DUE
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_a_month_that_begins_within_the_grace_is_still_billed() -> None:
     world = PhoneWorld()
     owner, business = trial_business(world)
@@ -96,12 +94,11 @@ JOB_GATE_CHECK: str = (
 
 
 def gate_closed_for_the_job(name: ReleaseGateName) -> IsReleaseGateOpen:
-    """This release, as the rental job sees it: the rental gate is closed."""
+    """The release before, as the rental job saw it: the rental gate closed."""
 
     return name != PHONE_NUMBER_RENTAL_GATE and release_gates.is_gate_open(name)
 
 
-@pytest.mark.usefixtures("open_rental_gate")
 def test_catching_up_after_the_gate_opens_leaves_the_trial_month_unbilled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -110,7 +107,7 @@ def test_catching_up_after_the_gate_opens_leaves_the_trial_month_unbilled(
     pay_open_invoices(world, owner, business)
     world.rent_austin_number(owner, business)
     rented_at = world.rented(business).rented_at
-    # This release: the gate is closed for the job; the next one opens it.
+    # The release before: the gate is closed for the job; this one opens it.
     monkeypatch.setattr(JOB_GATE_CHECK, gate_closed_for_the_job)
     assert bill(world) == 0
     world.clock.advance(days=TRIAL_DAYS, hours=1)

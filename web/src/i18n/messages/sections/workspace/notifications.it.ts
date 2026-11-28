@@ -81,6 +81,9 @@ export const notificationsIt: Translation<typeof notificationsEn> = {
     retrying: "L'ultimo tentativo non è andato a buon fine; riproviamo.",
     providerMissing: "Non disponibile al momento",
     providerMissingHint: "Per ora con {channel} non si invia nulla. Contatta l'assistenza se ti serve.",
+    smsNotYet: "In attesa di approvazione",
+    smsNoSenderHint:
+      "Nessun SMS viene inviato finché il numero SMS della piattaforma non è approvato dagli operatori telefonici. Per le notifiche aggiungi un contatto e-mail, WhatsApp o Telegram oppure attivale su questo dispositivo; questo numero può comunque ricevere le chiamate trasferite.",
     testUnavailable: "Impossibile inviare una prova: {channel} non è disponibile al momento.",
     status: {
       delivered: "Consegnata",

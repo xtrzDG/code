@@ -53,6 +53,7 @@ class TestCallSettings:
         assert body["is_sms_fallback_enabled"] is True
         assert body["is_whatsapp_connected"] is False
         assert body["is_sms_available"] is True
+        assert body["sms_unavailable_reason"] is None
         previews = {
             preview["language"]: preview for preview in body["template_previews"]
         }

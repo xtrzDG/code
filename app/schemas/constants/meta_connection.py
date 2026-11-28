@@ -32,3 +32,35 @@ class MetaConnectionRefusal(StrEnum):
     WHATSAPP_PIN_MISMATCH = "whatsapp_pin_mismatch"
     PAGE_NOT_FOUND = "meta_page_not_found"
     NO_INSTAGRAM_ACCOUNT = "instagram_account_missing"
+
+
+class WhatsAppTokenRefreshOutcome(StrEnum):
+    """
+    What renewing a WhatsApp Embedded Signup token that ends soon came to:
+    Meta issued a new one and it was stored (REFRESHED); Meta refused, the
+    new token failed its check or the stored one cannot be read, so the old
+    one stays (REFUSED); Meta could not be asked now (a rate limit, an open
+    circuit, an outage), so the next run tries again (DEFERRED); the owner
+    reconnected or switched the channel off meanwhile, so the new token was
+    dropped (REPLACED). Never stored: it names log lines and picks the
+    owner's notice.
+    """
+
+    REFRESHED = "refreshed"
+    REFUSED = "refused"
+    DEFERRED = "deferred"
+    REPLACED = "replaced"
+
+
+class WhatsAppTokenNoticeStage(StrEnum):
+    """
+    Which reminder the owners of a WhatsApp number get about its token:
+    Meta would not renew it (REFRESH_REFUSED), it ends within three days
+    (ENDING), it ended and the number needs connecting again (ENDED). Each
+    stage reaches each recipient once per token (it is part of the notice's
+    subject). Never stored.
+    """
+
+    REFRESH_REFUSED = "refresh_refused"
+    ENDING = "ending"
+    ENDED = "ended"

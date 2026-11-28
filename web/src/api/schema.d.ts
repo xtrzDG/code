@@ -8109,9 +8109,9 @@ export interface components {
         /**
          * BookingStatus
          * @description Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the
-         *     customer pays a deposit (W19, written once the release gate
-         *     `booking_deposits` opens; until then such a booking is PENDING with a
-         *     deposit that waits).
+         *     customer pays a deposit (W19; written since the release gate
+         *     `booking_deposits` opened, before that such a booking was PENDING with
+         *     a deposit that waits).
          * @enum {string}
          */
         BookingStatus: "pending" | "pending_deposit" | "confirmed" | "cancelled" | "no_show" | "completed";
@@ -9112,6 +9112,9 @@ export interface components {
          *     venue's phone to the assistant's number (concept section 6).
          *
          *     Texts are in the display language when available, else in English.
+         *     `is_carrier_choice_needed`: the country's carriers take different codes
+         *     (the United States), so the owner opens their own carrier first and the
+         *     top-level `codes` are the standard codes for carriers not listed.
          */
         CallForwardingInstructions: {
             /** Assistant Phone Number */
@@ -9128,10 +9131,26 @@ export interface components {
             country_code: string;
             /** Display Language */
             display_language: string;
+            /**
+             * Is Carrier Choice Needed
+             * @default false
+             */
+            is_carrier_choice_needed: boolean;
             /** Notes */
             notes?: string[];
             /** Steps */
             steps: string[];
+        };
+        /**
+         * CallForwardingStarCode
+         * @description A ready-to-dial North American star code (Verizon's *71 and *73).
+         */
+        CallForwardingStarCode: {
+            condition: components["schemas"]["StarCodeCondition"];
+            /** Description */
+            description: string;
+            /** Dial Code */
+            dial_code: string;
         };
         /**
          * CallGuardVerdict
@@ -9154,11 +9173,20 @@ export interface components {
         /**
          * CallSettingsView
          * @description The settings with what they rely on: whether the business's WhatsApp
-         *     number is connected, whether the platform can send SMS, and the
-         *     text-back in each language of the business; whether calls are
+         *     number is connected, whether its text-backs can go by SMS
+         *     (`is_sms_available`, and else why not: `sms_unavailable_reason`), and
+         *     the text-back in each language of the business; whether calls are
          *     recorded, and the staff number transfers go to (None: no allowed staff
          *     number) with the owner's confirmation of the staff notice (who
-         *     confirmed it, when).
+         *     confirmed it, when). `is_sms_fallback_enabled` is the owner's stored
+         *     choice, kept as it is while SMS is unavailable.
+         *
+         *     `sms_unavailable_reason`: `business_registration_required` where
+         *     carriers accept the business's texts only from a sender registered for
+         *     it (the US), which the platform does not offer yet, whatever SMS the
+         *     platform sends; else `no_sender` while the platform's SMS number waits
+         *     for the phone carriers' approval, `not_configured` without an SMS
+         *     provider.
          */
         CallSettingsView: {
             /**
@@ -9181,6 +9209,7 @@ export interface components {
             is_text_back_enabled: boolean;
             /** Is Whatsapp Connected */
             is_whatsapp_connected: boolean;
+            sms_unavailable_reason?: components["schemas"]["SmsUnavailableReason"] | null;
             /** Staff Transfer Confirmed At */
             staff_transfer_confirmed_at?: number | null;
             /** Staff Transfer Confirmed By */
@@ -9444,7 +9473,7 @@ export interface components {
         /**
          * CardSetupSessionView
          * @description The provider's page that saves the card: Flitt's verification page or
-         *     Stripe's checkout (a first card) or billing portal (a new one).
+         *     Stripe's checkout (for a first card and for a new one alike).
          *     `payment_order_id` names the order a saved card reports back to.
          */
         CardSetupSessionView: {
@@ -9456,7 +9485,8 @@ export interface components {
         };
         /**
          * CarrierForwardingInstructions
-         * @description Ready-to-dial codes of one named mobile carrier.
+         * @description Ready-to-dial codes of one named mobile carrier: GSM codes (`codes`)
+         *     and star codes (`star_codes`), either of them possibly empty.
          */
         CarrierForwardingInstructions: {
             /** Carrier Name */
@@ -9465,6 +9495,8 @@ export interface components {
             codes: components["schemas"]["CallForwardingCode"][];
             /** Note */
             note?: string | null;
+            /** Star Codes */
+            star_codes?: components["schemas"]["CallForwardingStarCode"][];
         };
         /**
          * ChannelCount
@@ -11189,7 +11221,8 @@ export interface components {
          * @description Everything that changes when a business is in another country.
          *
          *     Built for every country from phonenumbers and CLDR data, then refined by
-         *     curated overrides (emergency numbers, launch languages, recording rules).
+         *     curated overrides (emergency numbers, launch languages, recording rules,
+         *     whether carriers want an SMS sender registered per business).
          */
         CountryProfile: {
             /** Calling Code */
@@ -11217,6 +11250,8 @@ export interface components {
             otp_delivery_channels: components["schemas"]["OtpDeliveryChannel"][];
             /** @default notice */
             recording_consent_rule: components["schemas"]["RecordingConsentRule"];
+            /** @default not_required */
+            sms_sender_registration: components["schemas"]["SmsSenderRegistration"];
             /** Timezones */
             timezones: string[];
         };
@@ -13160,8 +13195,9 @@ export interface components {
          * InboundEventKind
          * @description What a webhook brought into the inbox, and so which job processes it.
          *     COMMENT_TRIGGER is an Instagram comment that named one of the owner's
-         *     keywords: it gets one private reply (written only once its release gate
-         *     opens, app/utilities/storage/release_gates.py).
+         *     keywords: it gets one private reply (written only while its release
+         *     gate is open, as it is from this release:
+         *     app/utilities/storage/release_gates.py).
          * @enum {string}
          */
         InboundEventKind: "customer_message" | "platform_bot_update" | "voice_post_call" | "comment_trigger";
@@ -13647,8 +13683,8 @@ export interface components {
          *     worker (WORKER_LANE_CONCURRENCY), so a long autotest run never holds up
          *     a customer message or a notification. OPS carries the platform alerts
          *     on a thread of their own, so the alerts of a provider outage never wait
-         *     behind the sends that outage holds up (behind the release gate
-         *     `ops_lane` until the next release: until then they use OUTBOUND).
+         *     behind the sends that outage holds up (since the release gate
+         *     `ops_lane` opened; before that they used OUTBOUND).
          * @enum {string}
          */
         JobLane: "inbound" | "outbound" | "default" | "autotests" | "ops";
@@ -15185,7 +15221,8 @@ export interface components {
          *     assistant answered, the caller hung up without a word) and
          *     TRANSFER_UNANSWERED (the caller asked for a person and nobody picked up)
          *     and CALLBACK_REQUESTED (the caller asked to be called back and the call
-         *     left staff nothing to act on; written once its release gate opens).
+         *     left staff nothing to act on; written since its release gate opened,
+         *     such a call was TRANSFER_UNANSWERED before).
          * @enum {string}
          */
         MissedCallReason: "no_answer" | "busy" | "abandoned" | "line_failed" | "not_started" | "no_speech" | "transfer_unanswered" | "callback_requested";
@@ -15521,6 +15558,11 @@ export interface components {
          *     this server has no provider for its channel (then notifications fail
          *     in production and are only logged elsewhere); `delivery` is None until
          *     a first notification.
+         *
+         *     `sms_unavailable_reason`, for an SMS contact only (None for every
+         *     other channel, and while the platform sends SMS): why the platform
+         *     sends no SMS, `no_sender` while its SMS number waits for the phone
+         *     carriers' approval, else `not_configured`.
          */
         NotificationContactView: {
             /** Address */
@@ -15536,6 +15578,7 @@ export interface components {
             preferences: components["schemas"]["StaffNotificationPreferences"];
             /** Provider Ready */
             provider_ready: boolean;
+            sms_unavailable_reason?: components["schemas"]["SmsUnavailableReason"] | null;
             /** Telegram Username */
             telegram_username?: string | null;
         };
@@ -15777,7 +15820,7 @@ export interface components {
          *     confirmation of a booking the assistant made or moved in a chat, with
          *     its manage link (BOOKING_CONFIRMATION), and the private reply to an
          *     Instagram comment that named one of the owner's keywords
-         *     (COMMENT_REPLY, behind its release gate like COMMENT_TRIGGER).
+         *     (COMMENT_REPLY, behind the same release gate as COMMENT_TRIGGER).
          * @enum {string}
          */
         OutboundMessageKind: "customer_reply" | "staff_notification" | "staff_reply" | "booking_reminder" | "call_confirmation" | "call_links" | "text_back" | "booking_confirmation" | "comment_reply";
@@ -16302,8 +16345,8 @@ export interface components {
          * PaymentProvider
          * @description Payment service that charges owners: Flitt (concept: auto-debit) in
          *     Georgia and Armenia, Stripe in the EU, the US and Israel
-         *     (`PaymentProviderRegistry`). STRIPE is stored only once the
-         *     `stripe_payments` release gate opens.
+         *     (`PaymentProviderRegistry`). STRIPE is stored only while the
+         *     `stripe_payments` release gate is open, as it is from this release.
          * @enum {string}
          */
         PaymentProvider: "flitt" | "stripe";
@@ -18462,13 +18505,13 @@ export interface components {
          *     assistant from the owner's own phone (PHONE_TEST), a second channel
          *     where customers write (SECOND_CHANNEL), and the link or QR code where
          *     customers see it (SHARE), and for an owner a second factor that
-         *     protects the customers' data (PROTECT_DATA). PROTECT_DATA is new in
-         *     this release and never stored (a closed release gate): the owner puts
+         *     protects the customers' data (PROTECT_DATA). Storage takes PROTECT_DATA
+         *     among the skipped steps (its release gate is open), but the owner puts
          *     it away with the reminder banner (security_nudges), not as a skip.
          *
-         *     The steps after the launch are new in this release: a skip of one is
-         *     stored apart (`SetupStateDocument.skipped_after_launch`), which the
-         *     release before ignores.
+         *     A skip of a step after the launch is stored apart
+         *     (`SetupStateDocument.skipped_after_launch`), which a release before
+         *     those steps ignores.
          * @enum {string}
          */
         SetupStepCode: "business" | "offer" | "hours_and_bookings" | "staff_contact" | "channels" | "test" | "launch" | "phone_test" | "second_channel" | "share" | "protect_data";
@@ -18639,6 +18682,24 @@ export interface components {
             /** Timezone */
             timezone: string;
         };
+        /**
+         * SmsSenderRegistration
+         * @description Whether the carriers of a country accept a business's text messages
+         *     only from a sender registered for that business (US A2P 10DLC: under
+         *     Twilio's ISV model a brand and a campaign per business). The platform
+         *     registers no sender per business yet, so a business of a PER_BUSINESS
+         *     country texts none of its callers by SMS, and no text-back goes by SMS
+         *     to a number of such a country. Country profiles only: never stored.
+         * @enum {string}
+         */
+        SmsSenderRegistration: "not_required" | "per_business";
+        /**
+         * SmsUnavailableReason
+         * @description Why a text cannot go by SMS, for the cabinet to say so. Views only:
+         *     never stored.
+         * @enum {string}
+         */
+        SmsUnavailableReason: "no_sender" | "not_configured" | "business_registration_required";
         /**
          * SourceRowView
          * @description Owners from one acquisition source: sign-ups, live and paying today. A
@@ -18825,6 +18886,16 @@ export interface components {
             window_closes_at?: number | null;
         };
         /**
+         * StarCodeCondition
+         * @description When a North American star code forwards a call to the assistant.
+         *
+         *     Verizon's *71 has one code for unanswered and busy calls; like the GSM
+         *     codes, star codes never forward every call. CANCEL_ALL switches
+         *     forwarding off.
+         * @enum {string}
+         */
+        StarCodeCondition: "no_answer_or_busy" | "cancel_all";
+        /**
          * StarterAnswersApplied
          * @description What applying changed: the sections filled, the ones left as the owner
          *     had them, the profile, the frequent questions saved and the resource
@@ -18949,8 +19020,8 @@ export interface components {
          *     website chat and hosted chat page (CHAT), WhatsApp, Instagram and
          *     Messenger (META), Telegram, phone calls (VOICE), the owner cabinet
          *     with its sign-in (CABINET) and payments (PAYMENTS: deposits, payment
-         *     links and subscriptions through Flitt and Stripe, REL-06; stored
-         *     behind the `status_payments` release gate).
+         *     links and subscriptions through Flitt and Stripe, REL-06; stored since
+         *     the `status_payments` release gate opened).
          * @enum {string}
          */
         StatusComponent: "chat" | "meta" | "telegram" | "voice" | "cabinet" | "payments";
@@ -19141,8 +19212,8 @@ export interface components {
          *     PAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;
          *     the assistant only takes requests, the channels stay connected and
          *     the pause costs a share of the price (R14). Written only with
-         *     SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
-         *     every reader the value: the release gate `subscription_pause`
+         *     SUBSCRIPTION_PAUSE_ENABLED and while the release gate
+         *     `subscription_pause` is open, as it is from this release
          *     (docs/operations/deploys.md).
          * @enum {string}
          */
@@ -35088,9 +35159,9 @@ export interface operations {
                     /**
                      * BookingStatus
                      * @description Lifecycle of a booking. PENDING_DEPOSIT: the place is held while the
-                     *     customer pays a deposit (W19, written once the release gate
-                     *     `booking_deposits` opens; until then such a booking is PENDING with a
-                     *     deposit that waits).
+                     *     customer pays a deposit (W19; written since the release gate
+                     *     `booking_deposits` opened, before that such a booking was PENDING with
+                     *     a deposit that waits).
                      * @enum {string}
                      */
                     status: "pending" | "pending_deposit" | "confirmed" | "cancelled" | "no_show" | "completed";

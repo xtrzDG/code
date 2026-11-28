@@ -288,10 +288,11 @@ service refuses and limits at each boundary, with its code and tests:
   again by hand (`POST /v1/admin/jobs/{job_id}/retry`, audited), and
   whether dead payment jobs should go back to the queue automatically is
   an open decision. The job runs on the default lane, beside exports and integration
-  webhooks, so a busy lane can delay a payment by minutes. Stripe (behind
-  the closed `stripe_payments` gate) still reads the card from Stripe
-  inside the request for two events, and its refund and dispute events are
-  not mapped yet. The card-testing watch counts on an exact 5th and 10th
+  webhooks, so a busy lane can delay a payment by minutes. Stripe (its
+  `stripe_payments` gate is open from the release after launch-2026-11-05,
+  which deploys only once the account can charge) still reads the card
+  from Stripe inside the request for two events, and its refund and
+  dispute events are not mapped yet. The card-testing watch counts on an exact 5th and 10th
   decline, so two concurrent declines can step over the alert (the brake,
   at 10 or more, still holds), a retried job can count a decline twice,
   the counts live in the UNLOGGED `rate_limit_buckets` table, deposit

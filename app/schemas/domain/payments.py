@@ -43,8 +43,8 @@ class PaymentOrderDocument(BaseDocument):
     Version 2 (R17, optional): its `purpose` (a CARD_SETUP order charges
     nothing now and only saves the card), the provider's own references of
     what it started (`schedule_reference`: Stripe's subscription;
-    `customer_reference`: Stripe's customer, whose billing portal updates
-    the card) and the saved card's token (`sealed_card_token`: Flitt's
+    `customer_reference`: Stripe's customer, kept to find the payer at
+    Stripe) and the saved card's token (`sealed_card_token`: Flitt's
     rectoken, sealed with the platform's key ring, for the retries of a
     declined charge).
     """

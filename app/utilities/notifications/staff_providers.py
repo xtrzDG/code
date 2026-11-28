@@ -5,11 +5,16 @@ import logging
 from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.environment import DeploymentEnvironment
 from app.schemas.constants.handoffs import ManagerContactChannel
+from app.schemas.constants.messaging import SmsUnavailableReason
 from app.schemas.domain.businesses import ManagerContact
 from app.schemas.domain.outbound_messages import OutboundTemplate
 from app.schemas.typings.channels.constrained_strings import WhatsAppTemplateName
 from app.schemas.typings.deliveries.strings import DeliveryErrorText
 from app.utilities.channels.language_codes import to_whatsapp_template_language
+from app.utilities.config_helpers.sms_sender import (
+    platform_sms_sender,
+    platform_sms_unavailable_reason,
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -31,14 +36,8 @@ def is_provider_configured(
         case ManagerContactChannel.EMAIL:
             return settings.smtp_host is not None and settings.smtp_sender is not None
         case ManagerContactChannel.SMS:
-            return (
-                settings.twilio_account_sid is not None
-                and settings.twilio_auth_token is not None
-                and (
-                    settings.twilio_sender is not None
-                    or settings.twilio_messaging_service_sid is not None
-                )
-            )
+            # The Twilio account alone sends no SMS: it needs its sender.
+            return platform_sms_sender(settings) is not None
 
 
 # Channels whose notifications are written to the log when no provider is
@@ -72,6 +71,15 @@ MISSING_PROVIDER_SETTINGS: dict[ManagerContactChannel, str] = {
     ManagerContactChannel.EMAIL: "SMTP_HOST and SMTP_FROM",
     ManagerContactChannel.SMS: "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and a sender",
 }
+# SMS while the platform's Twilio account waits for its sender
+# (SmsUnavailableReason.NO_SENDER): the stored reason of a refused message
+# (platform admins read it; owners read the cabinet's own explanation of the
+# contact's `sms_unavailable_reason`) and the settings the log names.
+MISSING_SMS_SENDER_TEXT: str = (
+    "SMS notifications are not available yet: the platform's SMS number is "
+    "waiting for the phone carriers' approval."
+)
+MISSING_SMS_SENDER_SETTINGS: str = "TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID"
 MISSING_TEMPLATE_PROVIDER_TEXT: str = MISSING_PROVIDER_TEXTS[
     ManagerContactChannel.WHATSAPP
 ]
@@ -85,7 +93,8 @@ def missing_staff_provider(
     Why a channel cannot deliver here, in words for the owner, None when it
     can. Telegram and WhatsApp need their provider everywhere (their
     delivery is real); e-mail and SMS are written to the log outside
-    production. The missing settings are logged.
+    production. SMS says why it is off (`sms_unavailable_reason_for`).
+    The missing settings are logged.
     """
 
     if is_provider_configured(settings, channel):
@@ -96,18 +105,54 @@ def missing_staff_provider(
     ):
         return None
 
-    return report_missing_provider(channel)
+    return report_missing_provider(
+        channel, sms_unavailable_reason_for(settings, channel)
+    )
 
 
-def report_missing_provider(channel: ManagerContactChannel) -> DeliveryErrorText:
-    """Logs which settings the channel lacks; returns what the owner reads."""
+def sms_unavailable_reason_for(
+    settings: AppSettings,
+    channel: ManagerContactChannel,
+) -> SmsUnavailableReason | None:
+    """
+    Why the platform sends no SMS (`platform_sms_unavailable_reason`), for
+    the SMS channel only: None for every other channel, and while SMS goes.
+    The same reason wherever it is asked: when a staff notification is
+    queued, when it is sent, and in the contact's view.
+    """
 
+    if channel is not ManagerContactChannel.SMS:
+        return None
+
+    return platform_sms_unavailable_reason(settings)
+
+
+def report_missing_provider(
+    channel: ManagerContactChannel,
+    reason: SmsUnavailableReason | None = None,
+) -> DeliveryErrorText:
+    """
+    Logs which settings the channel lacks; returns what the owner reads.
+    SMS with the reason NO_SENDER (the Twilio account without a sender) is
+    not available yet rather than missing.
+    """
+
+    is_waiting_for_sender: bool = (
+        channel is ManagerContactChannel.SMS
+        and reason is SmsUnavailableReason.NO_SENDER
+    )
     logger.warning(
         "Staff %s notification not sent: %s not configured.",
         channel.value,
-        MISSING_PROVIDER_SETTINGS[channel],
+        MISSING_SMS_SENDER_SETTINGS
+        if is_waiting_for_sender
+        else MISSING_PROVIDER_SETTINGS[channel],
     )
-    return DeliveryErrorText(MISSING_PROVIDER_TEXTS[channel])
+    return DeliveryErrorText(
+        MISSING_SMS_SENDER_TEXT
+        if is_waiting_for_sender
+        else MISSING_PROVIDER_TEXTS[channel]
+    )
 
 
 def missing_template_provider(settings: AppSettings) -> DeliveryErrorText | None:

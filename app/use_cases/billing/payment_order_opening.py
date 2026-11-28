@@ -19,10 +19,7 @@ from app.schemas.dto.payments import (
 )
 from app.schemas.typings.billing.constrained_strings import PaymentReturnUrl
 from app.schemas.typings.billing.prefixed_id import InvoiceId
-from app.schemas.typings.billing.strings import (
-    InvoiceDescription,
-    PaymentProviderReference,
-)
+from app.schemas.typings.billing.strings import InvoiceDescription
 from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.use_cases.billing.payment_state_events import log_payment_order_opened
 from app.utilities.billing.billing_periods import (
@@ -48,7 +45,6 @@ class PaymentOrderOpening(ImmutableDTO):
     description: InvoiceDescription
     language: LanguageTag
     return_url: PaymentReturnUrl | None = None
-    customer_reference: PaymentProviderReference | None = None
     recurring_description: InvoiceDescription | None = None
 
 
@@ -78,7 +74,6 @@ def open_payment_order(
         currency_code=opening.amount.currency_code,
         recurring_amount_minor=opening.recurring.amount_minor,
         recurring_interval_months=get_interval_months(subscription.billing_period),
-        customer_reference=opening.customer_reference,
     )
     session: PaymentCheckoutSession = payment_gateway.create_checkout(
         PaymentCheckoutRequest(
@@ -98,7 +93,6 @@ def open_payment_order(
             language=opening.language,
             return_url=opening.return_url,
             purpose=opening.purpose,
-            customer_reference=opening.customer_reference,
         )
     )
     payment_order.checkout_url = session.checkout_url

@@ -43,8 +43,8 @@ class SubscriptionStatus(StrEnum):
     PAUSED: a seasonal pause between `pause_starts_at` and `pause_until`;
     the assistant only takes requests, the channels stay connected and
     the pause costs a share of the price (R14). Written only with
-    SUBSCRIPTION_PAUSE_ENABLED, by a release after the one that taught
-    every reader the value: the release gate `subscription_pause`
+    SUBSCRIPTION_PAUSE_ENABLED and while the release gate
+    `subscription_pause` is open, as it is from this release
     (docs/operations/deploys.md).
     """
 
@@ -77,7 +77,7 @@ class UsageKind(StrEnum):
     TRANSFER_SECONDS = "transfer_seconds"
     TRANSCRIPTION_SECONDS = "transcription_seconds"
     # A month of a number the platform rents for the business (W21); written
-    # once the release gate `phone_number_rental` opens.
+    # while the release gate `phone_number_rental` is open (from this release).
     NUMBER_RENTAL = "number_rental"
 
 
@@ -87,8 +87,8 @@ class InvoiceKind(StrEnum):
     SERVICE_PERIOD = "service_period"
     SETUP_FEE = "setup_fee"
     USAGE_OVERAGE = "usage_overage"
-    # A month of a rented phone number (W21), behind the release gate
-    # `phone_number_rental` like its usage kind.
+    # A month of a rented phone number (W21), behind the same release gate
+    # `phone_number_rental` as its usage kind.
     NUMBER_RENTAL = "number_rental"
 
 

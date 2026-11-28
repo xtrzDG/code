@@ -1,13 +1,11 @@
 """The background worker runs periodic jobs on time and retries queued jobs."""
 
-import pytest
-
 from app.gateways.worker.background_worker import PeriodicJobSpec
 from app.schemas.constants.jobs import JobLane, QueuedJobStatus
 from app.schemas.typings.platform.constrained_integers import JobIntervalSeconds
 from app.schemas.typings.platform.constrained_strings import JobName
 from app.schemas.typings.platform.strings import JobPayloadJson
-from app.utilities.storage import release_gates
+from app.utilities.jobs.live_lanes import closed_lanes
 from tests.platform.worker_fakes import (
     RUN_AUTOTESTS,
     ControlledClock,
@@ -116,16 +114,9 @@ def test_queued_job_dies_after_max_attempts_or_without_handler() -> None:
     assert kit.reporter.errors == []
 
 
-def test_every_lane_is_drained_in_one_tick(monkeypatch: pytest.MonkeyPatch) -> None:
-    # The next release, where every lane (the alerts' `ops` among them) is open.
-    monkeypatch.setattr(
-        release_gates,
-        "RELEASE_GATES",
-        tuple(
-            gate.model_copy(update={"is_open": True})
-            for gate in release_gates.RELEASE_GATES
-        ),
-    )
+def test_every_lane_is_drained_in_one_tick() -> None:
+    # Every lane is open in this release, the alerts' `ops` among them.
+    assert closed_lanes() == frozenset()
     clock = ControlledClock()
     operator = FlakyQueuedOperator(failures_before_success=0)
     kit = build_worker(clock, [], {RUN_AUTOTESTS: operator})

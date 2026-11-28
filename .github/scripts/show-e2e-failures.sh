@@ -10,6 +10,13 @@ find e2e/.artifacts/results -name error-context.md -print0 2>/dev/null |
     head -c 20000 "${context}"
     echo "::endgroup::"
   done
+# A visual run's differing screens: where each differs, a small region drawn
+# in text (a test's page snapshot shows its last page, not the one that differed).
+if find e2e/.artifacts/results -name '*-diff.png' -print -quit 2>/dev/null | grep -q .; then
+  echo "::group::Where the screenshots differ"
+  (cd .. && uv run --frozen python -m scripts.screenshot_diff_regions web/e2e/.artifacts/results) || true
+  echo "::endgroup::"
+fi
 echo "::group::api.log, last 300 lines"
 tail -n 300 e2e/.artifacts/api.log 2>/dev/null || true
 echo "::endgroup::"

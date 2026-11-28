@@ -37,7 +37,6 @@ from tests.payments.payment_world import (
     stripe_session,
 )
 
-pytestmark = pytest.mark.usefixtures("stripe_gate_open")
 MICROSECONDS_PER_SECOND: int = 1_000_000
 
 
@@ -62,6 +61,8 @@ def test_the_checkout_is_a_stripe_subscription_session(country: CountryPreset) -
     assert order.purpose is PaymentOrderPurpose.CHECKOUT
     [form] = world.testbed.stripe.checkout_sessions
     assert form["mode"] == "subscription"
+    assert form["payment_method_types[0]"] == "card"
+    assert "payment_method_types[1]" not in form
     assert form["client_reference_id"] == str(order.id)
     assert form["metadata[payment_order_id]"] == str(order.id)
     assert form["subscription_data[metadata][payment_order_id]"] == str(order.id)

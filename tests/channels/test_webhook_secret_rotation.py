@@ -166,7 +166,6 @@ def test_twilio_callbacks_signed_with_the_previous_token(
             TWILIO_ACCOUNT_SID="AC" + "0" * 32,
             TWILIO_AUTH_TOKEN="the-current-auth-token-0000",
             TWILIO_AUTH_TOKEN_PREVIOUS=OLD,
-            TWILIO_FROM_NUMBER="+15005550006",
         ),
         InMemoryRateLimitBucketAdapter(),
     )

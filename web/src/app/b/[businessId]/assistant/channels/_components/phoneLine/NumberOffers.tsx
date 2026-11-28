@@ -87,7 +87,7 @@ export function NumberOffers({
   );
 }
 
-/** Taking one number: what it costs, what it becomes, how to give it back. */
+/** Taking one number: what it costs, what it becomes (calls only), how to give it back. */
 export function TakeNumberConfirm({
   offer,
   offers,
@@ -112,6 +112,7 @@ export function TakeNumberConfirm({
       <ul className="list-disc space-y-1 ps-5 text-sm text-ink-muted">
         <li>{t("phoneNumbers.confirm.price", { price })}</li>
         <li>{t("phoneNumbers.confirm.channel")}</li>
+        <li>{t("phoneNumbers.confirm.callsOnly")}</li>
         <li>{t("phoneNumbers.confirm.giveBack")}</li>
       </ul>
       <div className="flex flex-wrap gap-2 pt-1">

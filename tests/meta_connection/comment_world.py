@@ -25,7 +25,6 @@ from app.schemas.dto.channels.channel_webhooks import (
     ChannelWebhookPayload,
     MetaWebhookRequest,
 )
-from app.schemas.dto.release_gates import ReleaseGate
 from app.schemas.typings.channels.strings import WebhookSignatureHeader
 from app.schemas.typings.meta_connection.constrained_strings import (
     CommentReplyText,
@@ -39,8 +38,6 @@ from app.use_cases.channels.comment_replies.reply_to_comment_trigger_use_case im
     ReplyToCommentTriggerUseCase,
 )
 from app.utilities.deliveries.comment_trigger_jobs import PROCESS_COMMENT_TRIGGER_JOB
-from app.utilities.storage import release_gates
-from app.utilities.storage.release_gates import COMMENT_REPLIES_GATE
 from app.utilities.storage.storage_scope_context import StorageScopeContext
 from tests.channels.channels_deliveries import as_job_operator
 from tests.channels.channels_payloads import sign_meta, to_json_bytes
@@ -50,17 +47,6 @@ from tests.platform.worker_fakes import TEST_LANE_CONCURRENCY
 INSTAGRAM_ACCOUNT: str = "17841400000000001"
 PAGE_TOKEN: str = "test-page-token-0000-0000"
 REPLY: str = "Hi! Here is our menu: write here and we answer at once."
-
-
-def opened_gates() -> tuple[ReleaseGate, ...]:
-    """This release's gates with comment replies open (the next release)."""
-
-    return tuple(
-        gate.model_copy(update={"is_open": True})
-        if gate.name == COMMENT_REPLIES_GATE
-        else gate
-        for gate in release_gates.RELEASE_GATES
-    )
 
 
 def comment(

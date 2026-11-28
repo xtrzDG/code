@@ -16,6 +16,7 @@ vi.mock("@/api/client", () => ({ api: { GET: vi.fn(), PUT: vi.fn(), POST: vi.fn(
 const business = {
   id: "business_1",
   name: "Trattoria del Sole",
+  country_code: "IT",
   viewer_role: "owner",
   status: "live",
   currency_code: "EUR",
@@ -105,5 +106,27 @@ describe("CallsTab on a phone", () => {
     view.unmount();
     renderTab();
     expect((await waitFor(() => row(t("callSettings.recording.title")))).getAttribute("aria-expanded")).toBe("true");
+  });
+});
+
+describe("CallsTab while SMS cannot be sent", () => {
+  beforeEach(() => queryCache.clear());
+
+  it.each([
+    ["no_sender", "callSettings.textBack.smsNoSender"],
+    ["business_registration_required", "callSettings.textBack.smsNeedsRegistration"],
+  ] as const)("keeps the stored SMS fallback, shows the switch off and disabled, and says why (%s)", async (reason, hint) => {
+    const { t } = textsIn("en");
+    const view = { ...settings, is_text_back_enabled: true, is_sms_fallback_enabled: true, is_sms_available: false, sms_unavailable_reason: reason };
+    answer(view, []);
+    renderTab();
+
+    const sms = await waitFor(() => screen.getByRole("switch", { name: t("callSettings.textBack.sms") }));
+    expect(sms.hasAttribute("disabled")).toBe(true);
+    expect(sms.getAttribute("aria-checked")).toBe("false");
+    expect(document.getElementById(sms.getAttribute("aria-describedby") ?? "")?.textContent).toBe(t(hint));
+    // Nothing can be sent yet, and SMS is not offered as the way out; the reason sits under the switch only.
+    expect(screen.getByText(t("callSettings.textBack.readiness.noneWithoutSms"))).toBeTruthy();
+    expect(screen.queryByText(t("callSettings.textBack.smsMissing"))).toBeNull();
   });
 });

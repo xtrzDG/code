@@ -6,6 +6,7 @@ from app.containers.meta_connection.meta_connection_use_case_factories import (
 )
 from app.containers.role_chain_factories import (
     business_scoped_operator,
+    platform_wide_operator,
     team_view_operator,
 )
 from app.contracts.operator_contract import OperatorContract
@@ -28,7 +29,7 @@ from app.schemas.dto.channels.meta_connection import (
     MetaSignInOptionsView,
     StartMetaConnectionCommand,
 )
-from app.schemas.dto.jobs import JobReport, QueuedJobInput
+from app.schemas.dto.jobs import JobReport, JobTick, QueuedJobInput
 from app.utilities.deliveries.provider_error_details import team_channel
 
 
@@ -39,7 +40,8 @@ class MetaConnectionOperatorFactories:
     last_error only for platform admins, API-05), and the worker's private
     reply to a comment (its own orchestrator: claim the inbox event, reply,
     finish or release it). Each runs in the storage scope of the business its input
-    names.
+    names, except the periodic renewal of WhatsApp tokens, which reads the
+    channels of every business (platform-wide).
     """
 
     def __init__(
@@ -115,4 +117,11 @@ class MetaConnectionOperatorFactories:
                 orchestrator=orchestrator
             ),
             storage_scope=deps.storage_scope,
+        )
+
+    def refresh_whatsapp_tokens(self) -> OperatorContract[JobTick, JobReport]:
+        """The `refresh_whatsapp_tokens` job over every business's channels."""
+
+        return platform_wide_operator(
+            self._use_cases.refresh_whatsapp_tokens(), self._dependencies.storage_scope
         )

@@ -5,6 +5,11 @@
  * for people who have an app, and, for a platform admin without one,
  * setting it up first (then saving the recovery codes). A session opens
  * only here; `next` then loads in full.
+ *
+ * The code asked for follows the step's methods: the app's code only where
+ * the step lists it ("totp"); without it (a passkey person, or a platform
+ * admin held to passkeys, whose app code the API refuses) the form asks for
+ * a recovery code and offers no switch to the app.
  */
 
 import { useState } from "react";
@@ -28,7 +33,9 @@ export function useSecondStep(step: SecondStepRequired, next: string) {
   const { t } = useI18n();
   const toast = useToast();
   const challengeId = step.mfa_challenge.mfa_challenge_id;
-  const [useRecovery, setUseRecovery] = useState(false);
+  const takesAppCode = (step.mfa_challenge.methods ?? []).includes("totp");
+  const [prefersRecovery, setPrefersRecovery] = useState(false);
+  const useRecovery = prefersRecovery || !takesAppCode;
   const [code, setCode] = useState("");
   const [recoveryCode, setRecoveryCode] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
@@ -110,10 +117,13 @@ export function useSecondStep(step: SecondStepRequired, next: string) {
   return {
     requiresEnrollment: step.mfa_challenge.requires_enrollment,
     useRecovery,
-    toggleRecovery: () => {
-      setUseRecovery((value) => !value);
-      setProblem(null);
-    },
+    /** Between the app's code and a recovery code; null where the step takes no app code. */
+    toggleRecovery: takesAppCode
+      ? () => {
+          setPrefersRecovery((value) => !value);
+          setProblem(null);
+        }
+      : null,
     code,
     typeCode: (digits: string) => {
       setCode(digits);

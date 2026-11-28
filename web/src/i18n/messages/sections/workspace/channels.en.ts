@@ -137,11 +137,19 @@ export const channelsEn = {
     stepsTitle: "How to set it up",
     codesTitle: "Codes",
     carriersTitle: "Codes by mobile operator",
+    /** Where each carrier takes its own codes (the US): the carriers come first, then the standard codes. */
+    chooseCarrierTitle: "Codes by carrier: open yours",
+    otherCarriersTitle: "Other carriers: standard codes",
     notesTitle: "Good to know",
     condition: {
       no_answer: "No answer",
       busy: "Busy",
       unreachable: "Unreachable",
+      cancel_all: "Switch off",
+    },
+    /** A carrier's star codes (Verizon's *71 and *73). */
+    starCondition: {
+      no_answer_or_busy: "No answer or busy",
       cancel_all: "Switch off",
     },
     dial: "Dial",

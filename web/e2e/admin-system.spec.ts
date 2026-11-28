@@ -56,14 +56,11 @@ test("the platform admin reads the system page and records a data breach that no
   await expect(admin.getByRole("region", { name: en.platformBrakes.reconciliation.title })).toBeVisible();
   await expect(admin.getByRole("region", { name: texts.workers.title })).toBeVisible();
   const lanes = admin.getByRole("region", { name: texts.lanes.title });
-  // The ops lane joins once the release gate ops_lane opens: until then no
-  // job is in it, and the API leaves it out (the cabinet before it cannot
-  // name it).
-  const { ops, ...liveLanes } = texts.lanes.names;
-  for (const lane of Object.values(liveLanes)) {
+  // Every lane is listed, the platform alerts' ops lane too: its release
+  // gate ops_lane is open in this release.
+  for (const lane of Object.values(texts.lanes.names)) {
     await expect(lanes.getByRole("rowheader", { name: lane })).toBeVisible();
   }
-  await expect(lanes.getByRole("rowheader", { name: ops })).toHaveCount(0);
   await expect(admin.getByRole("region", { name: texts.deadLetters.title })).toBeVisible();
   await expect(admin.getByRole("region", { name: texts.channels.title })).toBeVisible();
   // The e2e API keeps its data in memory: no database to measure, no backups recorded.

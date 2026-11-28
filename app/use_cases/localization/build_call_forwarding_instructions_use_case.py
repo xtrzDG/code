@@ -11,27 +11,25 @@ from app.schemas.domain.businesses import BusinessDocument
 from app.schemas.domain.channels import ChannelDocument
 from app.schemas.dto.catalog.call_forwarding import (
     CallForwardingCode,
-    CallForwardingCodeTemplate,
     CallForwardingGuide,
     CallForwardingInstructions,
     CallForwardingInstructionsQuery,
-    CarrierForwardingInstructions,
 )
 from app.schemas.dto.localization import LocalizedText, PhoneNumberDetails
 from app.schemas.exceptions.application_errors import (
     InvalidPhoneNumberError,
     ValidationFailedError,
 )
-from app.schemas.typings.localization.constrained_strings import (
-    CallForwardingDialCode,
-    LanguageTag,
-)
+from app.schemas.typings.localization.constrained_strings import LanguageTag
 from app.schemas.typings.localization.strings import (
     InstructionText,
     RawPhoneNumberInput,
 )
+from app.use_cases.localization.forwarding_code_rendering import (
+    render_carrier,
+    render_gsm_codes,
+)
 
-NUMBER_PLACEHOLDER: str = "{number}"
 CODE_PLACEHOLDER_NAMES: dict[CallForwardingCondition, str] = {
     CallForwardingCondition.NO_ANSWER: "no_answer_code",
     CallForwardingCondition.BUSY: "busy_code",
@@ -48,9 +46,10 @@ class BuildCallForwardingInstructionsUseCase(
     venue's own number to the assistant's number (concept section 6).
 
     The assistant's number is the `external_id` of the business's phone
-    channel (E.164). Codes are filled with that number; texts are rendered in
-    the display language with English as the fallback. Georgia also lists
-    Magti, Silknet and Cellfie.
+    channel (E.164). Codes are filled with that number, written as each
+    carrier asks for it; texts are rendered in the display language with
+    English as the fallback. Georgia also lists Magti, Silknet and Cellfie;
+    in the United States the owner opens their carrier first.
 
     Raises:
         ValidationFailedError: the business has no assistant phone number yet.
@@ -82,10 +81,14 @@ class BuildCallForwardingInstructionsUseCase(
             business.country_code
         )
         language: LanguageTag = input_data.display_language
-        codes: list[CallForwardingCode] = self._render_codes(
-            guide.code_templates,
-            assistant_number,
-            language,
+
+        def describe(text: LocalizedText) -> InstructionText:
+            return InstructionText(
+                self._localized_text_resolver.resolve(text, language)
+            )
+
+        codes: list[CallForwardingCode] = render_gsm_codes(
+            guide.code_templates, assistant_number, guide.country_code, describe
         )
         placeholder_values: dict[str, str] = {
             CODE_PLACEHOLDER_NAMES[code.condition]: str(code.dial_code)
@@ -100,13 +103,11 @@ class BuildCallForwardingInstructionsUseCase(
             assistant_phone_number_display=assistant_number.international_format,
             codes=codes,
             carriers=[
-                CarrierForwardingInstructions(
-                    carrier_name=carrier.carrier_name,
-                    codes=self._render_codes(
-                        carrier.code_templates,
-                        assistant_number,
-                        language,
-                    ),
+                render_carrier(
+                    carrier,
+                    assistant_number,
+                    guide.country_code,
+                    describe,
                     note=(
                         self._render_text(carrier.notes, language, placeholder_values)
                         if carrier.notes is not None
@@ -123,6 +124,7 @@ class BuildCallForwardingInstructionsUseCase(
                 self._render_text(note, language, placeholder_values)
                 for note in guide.notes
             ],
+            is_carrier_choice_needed=guide.is_carrier_choice_needed,
         )
 
     def _find_assistant_number(
@@ -160,31 +162,6 @@ class BuildCallForwardingInstructionsUseCase(
                 "The assistant's phone number is not a valid phone number. "
                 "Reconnect the phone channel."
             ) from error
-
-    def _render_codes(
-        self,
-        code_templates: list[CallForwardingCodeTemplate],
-        assistant_number: PhoneNumberDetails,
-        language: LanguageTag,
-    ) -> list[CallForwardingCode]:
-        return [
-            CallForwardingCode(
-                condition=code_template.condition,
-                dial_code=CallForwardingDialCode(
-                    str(code_template.dial_code_template).replace(
-                        NUMBER_PLACEHOLDER,
-                        str(assistant_number.e164),
-                    )
-                ),
-                description=InstructionText(
-                    self._localized_text_resolver.resolve(
-                        code_template.descriptions,
-                        language,
-                    )
-                ),
-            )
-            for code_template in code_templates
-        ]
 
     def _render_text(
         self,

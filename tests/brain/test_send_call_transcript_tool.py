@@ -39,7 +39,7 @@ def test_a_caller_no_messenger_reaches_is_promised_nothing() -> None:
     assert "do not promise one" in str(result["note"])
 
 
-def test_a_voice_call_keeps_the_request_by_its_text_only() -> None:
+def test_a_voice_call_keeps_the_request_by_its_text_and_its_call() -> None:
     world = build_world(scripted())
 
     _, is_error = voice_call(world, AssistantToolName.SEND_CALL_TRANSCRIPT, "{}")
@@ -49,7 +49,9 @@ def test_a_voice_call_keeps_the_request_by_its_text_only() -> None:
     [message] = world.messages(conversation.id)
     assert message.author is MessageAuthor.SYSTEM
     assert str(message.text) == "Voice agent called send_call_transcript."
-    assert message.tool_calls == []
+    # Its release gate is open: the message keeps the call by name.
+    [record] = message.tool_calls
+    assert record.tool_name is AssistantToolName.SEND_CALL_TRANSCRIPT
 
 
 def test_a_chat_is_already_in_writing() -> None:

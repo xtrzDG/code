@@ -4,6 +4,7 @@ Example:
     is_mobile_number: IsMobilePhoneNumber = True
 """
 
+IsCarrierChoiceNeeded = bool
 IsHighCostPhoneNumber = bool
 IsLanguageReadFromText = bool
 IsMobilePhoneNumber = bool

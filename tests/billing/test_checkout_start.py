@@ -76,10 +76,12 @@ def test_annual_checkout_includes_the_setup_fee_and_charges_yearly() -> None:
     assert [invoice.kind for invoice in invoices] == [InvoiceKind.SERVICE_PERIOD]
     assert int(invoices[0].amount_minor) == 178500
     assert session.amount.text == "1.785,00\xa0€"
-    recurring = world.testbed.flitt.checkout_orders[0]["recurring_data"]
-    assert isinstance(recurring, dict)
-    assert recurring["every"] == 12
-    assert world.testbed.flitt.checkout_orders[0]["lang"] == "it"
+    # Italy pays through Stripe now that its release gate is open.
+    assert world.testbed.flitt.checkout_orders == []
+    [form] = world.testbed.stripe.checkout_sessions
+    assert form["line_items[0][price_data][recurring][interval]"] == "year"
+    assert form["line_items[0][price_data][recurring][interval_count]"] == "1"
+    assert form["locale"] == "it"
 
 
 @pytest.mark.parametrize(

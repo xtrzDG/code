@@ -720,11 +720,16 @@ jobs:
             # shellcheck disable=SC2086 # one word per package
             [[ "$(dpkg-query --show --showformat='${db:Status-Status}\n' $PDF_PACKAGES 2>/dev/null | grep -cx installed)" == "$(wc -w <<< "$PDF_PACKAGES")" ]]
           }
-          if [[ "$CACHE_HIT" == "true" ]] && sudo dpkg --install ~/system-packages/*.deb && installed; then
+          # --auto-deconfigure: a cached pair that replaces a library the image
+          # has (libasound2-data then libasound2t64) installs in one pass.
+          if [[ "$CACHE_HIT" == "true" ]] && sudo dpkg --install --auto-deconfigure ~/system-packages/*.deb && installed; then
             npx playwright install chromium
             exit 0
           fi
+          # Phased updates included: every runner resolves the versions the
+          # cache holds, not only the runners Ubuntu's phase has reached.
           printf '%s\n' 'APT::Keep-Downloaded-Packages "true";' 'Acquire::Retries "5";' 'Acquire::http::Timeout "30";' \
+            'APT::Get::Always-Include-Phased-Updates "true";' \
             | sudo tee /etc/apt/apt.conf.d/99ci-packages
           mkdir -p ~/system-packages
           find ~/system-packages -maxdepth 1 -name '*.deb' -exec sudo cp -t /var/cache/apt/archives {} +

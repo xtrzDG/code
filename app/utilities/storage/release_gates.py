@@ -14,6 +14,9 @@ fails the whole document. So a new value is added in two releases:
 compares the enum values of every stored document with the snapshot of
 the last release and fails on a new value that no closed gate covers.
 Writers that choose between an old and a new value ask `is_gate_open`.
+
+Every gate below is open: the release before this one (launch-2026-11-05)
+reads all their values, and the release after this one deletes them.
 """
 
 import re
@@ -44,125 +47,119 @@ COMMENT_REPLIES_GATE: ReleaseGateName = ReleaseGateName("instagram_comment_repli
 CALLBACK_REQUESTED_GATE: ReleaseGateName = ReleaseGateName("missed_call_callback")
 
 RELEASE_GATES: tuple[ReleaseGate, ...] = (
-    # The seasonal pause (R14, migration 1161) stores a subscription as
-    # `paused`; it opens in the next release. Pausing also needs
-    # SUBSCRIPTION_PAUSE_ENABLED.
+    # Open from this release: the seasonal pause (R14, migration 1161) stores
+    # `paused` once SUBSCRIPTION_PAUSE_ENABLED (off by default) is set.
     ReleaseGate(
         name=SUBSCRIPTION_PAUSE_GATE,
         collection_name=DocumentCollectionName("subscriptions"),
         path=StoredEnumPath("status"),
         values=[GatedEnumValue("paused")],
-        is_open=False,
+        is_open=True,
     ),
-    # The model tool offer_choices (R14): offered by every chat conversation
-    # but never written as a version's tool or a stored tool call until the
-    # next release opens these gates (the reply keeps the choices it made).
+    # Open from this release: the chat tool offer_choices (R14) is kept in a
+    # stored message (its result backs no reply, `reply_evidence`); a version
+    # never lists it (conversation tools are no version's).
     ReleaseGate(
         name=OFFER_CHOICES_GATE,
         collection_name=DocumentCollectionName("assistant_versions"),
         path=StoredEnumPath("tools[]"),
         values=[GatedEnumValue("offer_choices")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=OFFER_CHOICES_GATE,
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("offer_choices")],
-        is_open=False,
+        is_open=True,
     ),
-    # Deposits (W19, migration 1190): a booking that waits for its deposit
-    # is PENDING (with its deposit AWAITING) until the next release opens
-    # this gate and writes PENDING_DEPOSIT.
+    # Open from this release: a booking that waits for its deposit (W19,
+    # migration 1190) is PENDING_DEPOSIT (deposits need the owner's settings).
     ReleaseGate(
         name=BOOKING_DEPOSITS_GATE,
         collection_name=DocumentCollectionName("bookings"),
         path=StoredEnumPath("status"),
         values=[GatedEnumValue("pending_deposit")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=BOOKING_DEPOSITS_GATE,
         collection_name=DocumentCollectionName("bookings"),
         path=StoredEnumPath("last_status_change.previous_status"),
         values=[GatedEnumValue("pending_deposit")],
-        is_open=False,
+        is_open=True,
     ),
-    # The model tool send_payment_link (W19): offered by the chat
-    # conversations, never written as a version's tool or a stored tool
-    # call until the next release opens these gates (the reply keeps the
-    # payment line it carried).
+    # Open from this release: a stored message keeps the chat tool
+    # send_payment_link (W19, needs deposit settings); no version lists it.
     ReleaseGate(
         name=PAYMENT_LINK_TOOL_GATE,
         collection_name=DocumentCollectionName("assistant_versions"),
         path=StoredEnumPath("tools[]"),
         values=[GatedEnumValue("send_payment_link")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=PAYMENT_LINK_TOOL_GATE,
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("send_payment_link")],
-        is_open=False,
+        is_open=True,
     ),
-    # The platform alerts' own worker lane (W20): this release reads the
-    # lane `ops` and runs its thread; the alerts are queued in it once the
-    # next release opens this gate (until then they use the outbound lane,
-    # where each provider holds at most half of the threads).
+    # Open from this release: the platform alerts, the critical-clients digest
+    # and spend-limit notices queue in `ops` (W20), which production's customer
+    # worker must name in WORKER_LANES before this release deploys (render.yaml;
+    # docs/operations/deploys.md).
     ReleaseGate(
         name=OPS_LANE_GATE,
         collection_name=DocumentCollectionName("queued_jobs"),
         path=StoredEnumPath("lane"),
         values=[GatedEnumValue("ops")],
-        is_open=False,
+        is_open=True,
     ),
-    # The setup guide's step "Protect your customers' data" (W20): an owner
-    # puts it away with the second-factor reminder (security_nudges), so
-    # it is never stored as a skipped step; the gate stays closed until a
-    # release lets owners skip it like the other steps after the launch.
+    # Open from this release: the setup step "Protect your customers' data"
+    # (W20) may be stored, but nothing writes it yet (put away with the
+    # second-factor reminder, and not in SKIPPABLE_STEPS).
     ReleaseGate(
         name=PROTECT_DATA_STEP_GATE,
         collection_name=DocumentCollectionName("setup_states"),
         path=StoredEnumPath("skipped_steps[]"),
         values=[GatedEnumValue("protect_data")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=PROTECT_DATA_STEP_GATE,
         collection_name=DocumentCollectionName("setup_states"),
         path=StoredEnumPath("skipped_after_launch[]"),
         values=[GatedEnumValue("protect_data")],
-        is_open=False,
+        is_open=True,
     ),
-    # The phone tool decline_recording (W20): offered by every call's
-    # conversation, never written as a version's tool or a stored tool call
-    # until the next release opens these gates (the post-call report names
-    # the call that declined its recording).
+    # Open from this release: a voice tool call's message keeps the phone tool
+    # decline_recording (W20); no version lists it (calls need a phone line).
     ReleaseGate(
         name=DECLINE_RECORDING_GATE,
         collection_name=DocumentCollectionName("assistant_versions"),
         path=StoredEnumPath("tools[]"),
         values=[GatedEnumValue("decline_recording")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=DECLINE_RECORDING_GATE,
         collection_name=DocumentCollectionName("messages"),
         path=StoredEnumPath("tool_calls[].tool_name"),
         values=[GatedEnumValue("decline_recording")],
-        is_open=False,
+        is_open=True,
     ),
-    # Stripe (R17-PAYMENTS-REGIONAL, migration 1214): the provider registry
-    # routes owners in the EU, the US and Israel to Stripe only once the
-    # next release opens this gate; until then everyone pays through Flitt.
+    # Open from this release (R17-PAYMENTS-REGIONAL, migration 1214): owners in
+    # the EU, the US and Israel pay through Stripe whenever STRIPE_SECRET_KEY and
+    # its webhook secret are set. Deploy only once the account can charge and
+    # 2026-11-22 has come (docs/LAUNCH.md, 4.7.2).
     *(
         ReleaseGate(
             name=STRIPE_PAYMENTS_GATE,
             collection_name=DocumentCollectionName(collection),
             path=StoredEnumPath(path),
             values=[GatedEnumValue("stripe")],
-            is_open=False,
+            is_open=True,
         )
         for collection, path in (
             ("payment_orders", "provider"),
@@ -171,50 +168,49 @@ RELEASE_GATES: tuple[ReleaseGate, ...] = (
             ("payment_retry_attempts", "provider"),
         )
     ),
-    # Rented phone numbers (W21, migration 1213): a rental month is a usage
-    # event and an invoice of the kind `number_rental`; the rental job bills
-    # no month until the next release opens these gates, then catches up
-    # from each number's `billed_until`.
+    # Open from this release: the rental job bills each month of a rented
+    # number (W21, migration 1213; usage event, invoice `number_rental`) from its
+    # `billed_until`. Numbers need PHONE_NUMBER_PROVIDER=twilio and its keys.
     ReleaseGate(
         name=PHONE_NUMBER_RENTAL_GATE,
         collection_name=DocumentCollectionName("usage_events"),
         path=StoredEnumPath("kind"),
         values=[GatedEnumValue("number_rental")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=PHONE_NUMBER_RENTAL_GATE,
         collection_name=DocumentCollectionName("invoices"),
         path=StoredEnumPath("kind"),
         values=[GatedEnumValue("number_rental")],
-        is_open=False,
+        is_open=True,
     ),
-    # Instagram comment-to-DM (W21, migration 1212): a comment that names one
-    # of the owner's keywords is an inbox event COMMENT_TRIGGER and its
-    # private reply an outbox message COMMENT_REPLY. Until the next release
-    # opens this gate, comments are read and left alone (nothing stored).
+    # Open from this release: Instagram comment-to-DM (W21, migration 1212). A
+    # keyword comment is an inbox event COMMENT_TRIGGER, its private reply an
+    # outbox COMMENT_REPLY; it needs the Meta keys, the `comments` webhook field
+    # and instagram_manage_comments.
     ReleaseGate(
         name=COMMENT_REPLIES_GATE,
         collection_name=DocumentCollectionName("inbound_events"),
         path=StoredEnumPath("kind"),
         values=[GatedEnumValue("comment_trigger")],
-        is_open=False,
+        is_open=True,
     ),
     ReleaseGate(
         name=COMMENT_REPLIES_GATE,
         collection_name=DocumentCollectionName("outbound_messages"),
         path=StoredEnumPath("kind"),
         values=[GatedEnumValue("comment_reply")],
-        is_open=False,
+        is_open=True,
     ),
-    # A call that asked for a callback and left staff nothing (R16): its
-    # missed call says TRANSFER_UNANSWERED until the next release opens this.
+    # Open from this release: a call that asked for a callback and left staff
+    # nothing (R16) is a missed call CALLBACK_REQUESTED (calls need a phone line).
     ReleaseGate(
         name=CALLBACK_REQUESTED_GATE,
         collection_name=DocumentCollectionName("missed_calls"),
         path=StoredEnumPath("reason"),
         values=[GatedEnumValue("callback_requested")],
-        is_open=False,
+        is_open=True,
     ),
     *APPENDED_RELEASE_GATES,  # Status payments (REL-06), send_call_transcript.
 )

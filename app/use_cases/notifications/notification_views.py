@@ -29,7 +29,10 @@ from app.utilities.notifications.staff_delivery_keys import (
     notification_contact_key,
     staff_delivery_state_id,
 )
-from app.utilities.notifications.staff_providers import is_provider_configured
+from app.utilities.notifications.staff_providers import (
+    is_provider_configured,
+    sms_unavailable_reason_for,
+)
 
 
 def contact_key_of(
@@ -75,6 +78,12 @@ def contact_view(
     state: StaffDeliveryStateDocument | None,
     settings: AppSettings,
 ) -> NotificationContactView:
+    """
+    An SMS contact also says why the platform sends no SMS, if it does not
+    (these are the platform's own messages: the carriers' rules for a
+    business's texts to its callers do not apply).
+    """
+
     return NotificationContactView(
         key=contact_key_of(business, contact),
         name=contact.name,
@@ -84,6 +93,7 @@ def contact_view(
         language=contact.language,
         preferences=contact.preferences or StaffNotificationPreferences(),
         provider_ready=is_provider_configured(settings, contact.channel),
+        sms_unavailable_reason=sms_unavailable_reason_for(settings, contact.channel),
         delivery=None if state is None else delivery_of_state(state),
     )
 

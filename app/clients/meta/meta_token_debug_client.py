@@ -1,8 +1,8 @@
 import httpx
-from typed_time_provider import Microseconds
 
 from app.clients.meta.graph_api_client import GraphApiClient
 from app.clients.meta.meta_graph_errors import build_graph_error
+from app.clients.meta.meta_graph_readers import earliest_end
 from app.contracts.channel_clients import ProviderToken
 from app.contracts.channel_credentials import MetaTokenDebugClientContract
 from app.schemas.dto.channels.credential_inspection import MetaTokenFacts
@@ -15,8 +15,6 @@ from app.utilities.channels.json_values import (
     read_integer,
     read_object,
 )
-
-MICROSECONDS_PER_SECOND: int = 1_000_000
 
 
 class MetaTokenDebugClient(GraphApiClient, MetaTokenDebugClientContract):
@@ -62,10 +60,3 @@ class MetaTokenDebugClient(GraphApiClient, MetaTokenDebugClientContract):
                 read_integer(data, "data_access_expires_at"),
             ),
         )
-
-
-def earliest_end(*unix_seconds: int | None) -> Microseconds | None:
-    """The earliest of Meta's end times in seconds (0 or missing: no end)."""
-
-    ends: list[int] = [seconds for seconds in unix_seconds if seconds]
-    return Microseconds(min(ends) * MICROSECONDS_PER_SECOND) if ends else None

@@ -17,6 +17,9 @@ from app.use_cases.voice.call_settings.get_call_settings_use_case import (
 from app.use_cases.voice.call_settings.list_text_backs_use_case import (
     ListTextBacksUseCase,
 )
+from app.use_cases.voice.call_settings.text_back_sms_availability import (
+    TextBackSmsAvailability,
+)
 from app.use_cases.voice.call_settings.text_back_template_check import (
     TextBackTemplateCheck,
 )
@@ -33,6 +36,10 @@ def build_calls_http_client(
     testbed: ChannelsTestbed,
     template_catalog: WhatsAppTemplateCatalogClientContract | None = None,
 ) -> TestClient:
+    # Text-backs by SMS through the testbed's recording SMS client.
+    availability = TextBackSmsAvailability(
+        testbed.sms_client, testbed.settings, testbed.country_registry
+    )
     http_application = FastAPI()
     install_error_handlers(http_application)
     http_application.include_router(
@@ -56,7 +63,7 @@ def build_calls_http_client(
                     testbed.channel_repo,
                     testbed.profile_repo,
                     testbed.text_resolver,
-                    testbed.sms_client,
+                    availability,
                 )
             ),
             update_settings=wrap_use_case(
@@ -67,7 +74,7 @@ def build_calls_http_client(
                     testbed.profile_repo,
                     testbed.audit_log_repo,
                     testbed.text_resolver,
-                    testbed.sms_client,
+                    availability,
                     testbed.wall_clock,
                     testbed.assistant_version_repo,
                     TextBackTemplateCheck(

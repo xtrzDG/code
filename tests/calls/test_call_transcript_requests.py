@@ -131,11 +131,11 @@ def test_every_call_offers_the_tool_after_its_version_tools() -> None:
     ) == [AssistantToolName.SEND_CALL_TRANSCRIPT, AssistantToolName.DECLINE_RECORDING]
 
 
-def test_a_stored_message_never_names_the_tool_while_its_gate_is_closed() -> None:
+def test_a_stored_message_names_the_tool_now_its_gate_is_open() -> None:
     record = ToolCallRecord(
         tool_name=AssistantToolName.SEND_CALL_TRANSCRIPT,
         input_json=LlmToolInputJson("{}"),
         result_json=LlmToolResultJson(json.dumps({"texted_after_call": True})),
     )
 
-    assert storable_tool_calls([record]) == []
+    assert storable_tool_calls([record]) == [record]

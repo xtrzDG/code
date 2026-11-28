@@ -115,11 +115,12 @@ def stripe_invoice(
     invoice_id: str,
     attempt_count: int = 1,
     billing_reason: str = "subscription_cycle",
+    subscription_id: str = "sub_test_0001",
 ) -> dict[str, object]:
     return {
         "id": invoice_id,
         "billing_reason": billing_reason,
-        "subscription": "sub_test_0001",
+        "subscription": subscription_id,
         "subscription_details": {"metadata": {"payment_order_id": str(order.id)}},
         "amount_paid": int(order.recurring_amount_minor),
         "amount_due": int(order.recurring_amount_minor),

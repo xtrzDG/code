@@ -34,10 +34,27 @@
   copy (`../go-live.md`, step 4, item 5), so set it on both of them as
   well. Redeploy.
 - **Tokens running out:** `/admin/system` lists Meta tokens that run out
-  within 14 days; ask those owners to reconnect before they do. The hourly
-  `check_channel_credentials` job asks Meta (`debug_token`, with
-  `META_APP_ID` and `META_APP_SECRET`) about each token once a day; a
-  token Meta no longer accepts shows as expired.
+  within 14 days. The hourly `check_channel_credentials` job asks Meta
+  (`debug_token`, with `META_APP_ID` and `META_APP_SECRET`) about each
+  token once a day; a token Meta no longer accepts shows as expired.
+  - **WhatsApp** (Embedded Signup's 60-day tokens) is renewed by the
+    platform: the `refresh_whatsapp_tokens` job (every 6 hours on
+    `workshop-batch-worker`) asks Meta for a new token
+    `META_TOKEN_REFRESH_DAYS` (15) days before the end and stores it; the
+    old token is never revoked and runs out by itself. A WhatsApp row that
+    stays on the list means the renewal failed: Meta refused it, or could
+    not be asked (an outage or a rate limit); every run tries again. The
+    job's log says which: one line per run ("WhatsApp token refresh: N
+    renewed, N refused, N deferred, …") and one per channel ("Meta refused
+    to renew the WhatsApp token of channel …", "Meta could not renew …
+    now"). A run that logs "skipped" has no `META_APP_ID` or
+    `META_APP_SECRET`: check both on the batch worker (copied from
+    `workshop-api`). The owners are told to connect the number again: after
+    a refusal, within the last 3 days, and urgently when the token ended
+    (the channel then goes to ERROR). Nothing to do unless they ask for
+    help.
+  - **Instagram and Messenger** tokens are still renewed by hand: ask
+    those owners to reconnect before they run out.
 - **Throughput:** Meta raises messaging limits by quality and volume; the
   outbox retries with backoff, keep it running.
 

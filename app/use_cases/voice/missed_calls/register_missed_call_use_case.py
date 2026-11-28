@@ -87,7 +87,8 @@ class RegisterMissedCallUseCase(
     number, an assistant that is not live, a report hours late, no
     channel (an SMS goes only to numbers `TextBackSmsDestinations` allows,
     never to the premium, satellite or foreign ranges a spoofed caller id
-    can name), a number staff blocked or whose customer opted out (STOP, on
+    can name, nor where carriers want a sender registered for the
+    business), a number staff blocked or whose customer opted out (STOP, on
     any contact holding the number or the suppression list, which outlives
     an erasure) or already writes with the business in a messenger, and a
     caller texted in the last day (one per caller per day, at most 200 per

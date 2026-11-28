@@ -35,11 +35,20 @@ export const callSettingsEn = {
       whatsapp: "Callers get your WhatsApp template.",
       sms: "Callers get an SMS.",
       none: "Nothing can be sent yet: connect WhatsApp and name the template, or allow SMS.",
+      /** "none" while SMS is not available (the reason sits under the SMS switch). */
+      noneWithoutSms: "Nothing can be sent yet: connect WhatsApp and name the approved template.",
       off: "Text-backs are off.",
     },
     whatsappMissing: "WhatsApp is not connected.",
     connectWhatsapp: "Connect WhatsApp",
+    /** Why the SMS switch cannot be used (`sms_unavailable_reason`): no SMS provider. */
     smsMissing: "SMS is not available right now. Contact support.",
+    /** The platform's SMS sender waits for the carriers' approval. */
+    smsNoSender:
+      "SMS cannot be sent while the platform's SMS number waits for the phone carriers' approval. Until then, callers are texted on WhatsApp only.",
+    /** The business's country wants a sender registered per business (the US). */
+    smsNeedsRegistration:
+      "SMS to your callers is not available: in your country, carriers accept business texts only from a sender registered for your business, which we do not offer yet. Callers are texted on WhatsApp.",
   },
   recording: {
     title: "Call recording",
@@ -59,13 +68,18 @@ export const callSettingsEn = {
   },
   transfers: {
     title: "Transfers to staff",
+    /** The card's description; a business in Italy reads `descriptionItaly`. */
     description:
+      "While you are open, a caller who asks for a person is put through to your staff number. After the transfer the voice platform may still process the call, so tell the staff who take these calls beforehand. We keep nothing of the staff part of the call: no transcript, summary or recording.",
+    descriptionItaly:
       "While you are open, a caller who asks for a person is put through to your staff number. After the transfer the voice platform may still process the call, so Italian labour law (art. 4 of the Workers' Statute) asks that the staff who take these calls are told beforehand. We keep nothing of the staff part of the call: no transcript, summary or recording.",
     confirm: "The staff who take transferred calls have been told",
     confirmHint: "Without this confirmation nobody is put through: the assistant takes a message and a colleague calls back.",
     confirmedOn: "Confirmed on {date}",
     number: "Staff number for transfers",
-    numberRule: "Only a mobile or landline of your country or another EU country, never a premium, shared-cost or satellite number.",
+    /** Which numbers calls go to (the API's rule): a business outside the EU; one in the EU reads `numberRuleEu`. */
+    numberRule: "Only a mobile or landline of your country or an EU country, never a premium, shared-cost or satellite number.",
+    numberRuleEu: "Only a mobile or landline of your country or another EU country, never a premium, shared-cost or satellite number.",
     openContacts: "Staff numbers",
     noticeTemplate: "Notice template for your staff",
     turnedOff: "Transfers to staff are off",

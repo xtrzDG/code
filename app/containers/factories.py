@@ -56,7 +56,9 @@ from app.schemas.configurations.app_settings import AppSettings
 from app.schemas.constants.assistants import LlmProvider
 from app.schemas.constants.localization import OtpDeliveryChannel
 from app.schemas.constants.storage import RecordingStorageKind
+from app.schemas.dto.messaging import TwilioSmsSender
 from app.schemas.typings.assistants.constrained_strings import LlmModelId
+from app.utilities.config_helpers.sms_sender import platform_sms_sender
 from app.utilities.conversations.llm_model_pins import OPENAI_GPT_5_MINI
 from app.utilities.conversations.llm_models import resolve_llm_provider
 
@@ -126,23 +128,20 @@ def build_langfuse_ingestion_client(
 def build_twilio_messaging_client(
     settings: AppSettings,
 ) -> TwilioMessagingClient | None:
-    """Twilio SMS client when the account and a sender are set, else None."""
+    """
+    Twilio SMS client when the account has a sender, else None: the account
+    alone rents phone numbers and sends no SMS (`platform_sms_sender`).
+    """
 
-    if (
-        settings.twilio_account_sid is None
-        or settings.twilio_auth_token is None
-        or (
-            settings.twilio_sender is None
-            and settings.twilio_messaging_service_sid is None
-        )
-    ):
+    sms_sender: TwilioSmsSender | None = platform_sms_sender(settings)
+    if sms_sender is None:
         return None
 
     return TwilioMessagingClient(
-        account_sid=settings.twilio_account_sid,
-        auth_token=settings.twilio_auth_token,
-        sender=settings.twilio_sender,
-        messaging_service_sid=settings.twilio_messaging_service_sid,
+        account_sid=sms_sender.account_sid,
+        auth_token=sms_sender.auth_token,
+        sender=sms_sender.sender,
+        messaging_service_sid=sms_sender.messaging_service_sid,
     )
 
 

@@ -1,8 +1,8 @@
 """
-The status page's payments component (REL-06): shown from this release,
-degraded by a payment reconciliation mismatch or failing storage, and
-written into the day records and the announcements only once its release
-gate opens (the release before reads the value then).
+The status page's payments component (REL-06): degraded by a payment
+reconciliation mismatch or failing storage, and written into the day
+records and the announcements now that its release gate is open (the
+release before, launch-2026-11-05, reads the value).
 """
 
 import pytest
@@ -35,17 +35,17 @@ from tests.platform_status.status_world import StatusWorld
 from tests.platform_status.test_announcements import ENGLISH, create, update
 from tests.platform_status.test_platform_status import component, record, status
 
-NEXT_RELEASE: tuple[ReleaseGate, ...] = tuple(
-    gate.model_copy(update={"is_open": True}) for gate in STATUS_RELEASE_GATES
+CLOSED: tuple[ReleaseGate, ...] = tuple(
+    gate.model_copy(update={"is_open": False}) for gate in STATUS_RELEASE_GATES
 )
 PAYMENTS = [StatusComponent.PAYMENTS]
 
 
-def test_the_gate_is_closed_in_this_release() -> None:
-    assert is_gate_open(PAYMENTS_STATUS_GATE) is False
+def test_the_gate_is_open_in_this_release() -> None:
+    assert is_gate_open(PAYMENTS_STATUS_GATE) is True
     assert all(gate in RELEASE_GATES for gate in STATUS_RELEASE_GATES)
-    assert StatusComponent.PAYMENTS not in stored_components()
-    assert stored_components(NEXT_RELEASE) == tuple(StatusComponent)
+    assert stored_components() == tuple(StatusComponent)
+    assert StatusComponent.PAYMENTS not in stored_components(CLOSED)
 
 
 @pytest.mark.parametrize(
@@ -74,23 +74,25 @@ def test_the_page_shows_payments_from_the_alerts_that_affect_them(
     assert payments.history[-1].level is level
 
 
-def test_the_job_records_no_payments_day_while_the_gate_is_closed() -> None:
+def test_the_job_records_the_payments_day_now_the_gate_is_open() -> None:
     world = StatusWorld()
     world.fire(PlatformAlertCode.PAYMENT_MISMATCH, 2)
 
     record(world)
 
     [day] = world.days.list_all()
-    assert StatusComponent.PAYMENTS not in [row.component for row in day.components]
+    [payments] = [
+        row for row in day.components if row.component is StatusComponent.PAYMENTS
+    ]
+    assert payments.worst_level is StatusLevel.DEGRADED
 
 
-def test_the_next_release_records_payments_days() -> None:
+def test_this_release_records_payments_days() -> None:
     day = fold_levels(
         None,
         StatusDay("2026-11-02"),
         {StatusComponent.PAYMENTS: StatusLevel.DEGRADED},
         Microseconds(1_790_000_000_000_000),
-        NEXT_RELEASE,
     )
 
     [payments] = [
@@ -100,21 +102,22 @@ def test_the_next_release_records_payments_days() -> None:
     assert int(payments.degraded_count) == 1
 
 
-def test_an_announcement_names_payments_only_from_the_next_release() -> None:
+def test_an_announcement_names_payments_now_the_gate_is_open() -> None:
     world = StatusWorld()
     body = CreateAnnouncementBody(
         level=AnnouncementLevel.OUTAGE, components=PAYMENTS, messages=ENGLISH
     )
 
-    with pytest.raises(ValidationFailedError, match="payments"):
-        create(world, body)
+    create(world, body)
     created = create(
         world, body.model_copy(update={"components": [StatusComponent.CHAT]})
     )
-    with pytest.raises(ValidationFailedError, match="payments"):
-        update(world, created.id, UpdateAnnouncementBody(components=PAYMENTS))
+    update(world, created.id, UpdateAnnouncementBody(components=PAYMENTS))
 
     assert [row.components for row in world.announcements.list_all()] == [
-        [StatusComponent.CHAT]
+        PAYMENTS,
+        PAYMENTS,
     ]
-    require_announceable(PAYMENTS, NEXT_RELEASE)
+    require_announceable(PAYMENTS)
+    with pytest.raises(ValidationFailedError, match="payments"):
+        require_announceable(PAYMENTS, CLOSED)

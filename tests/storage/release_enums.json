@@ -1,5 +1,5 @@
 {
-  "commit": "cb72dfd38b645338bb1aa95a7337de69cedba42c",
+  "commit": "d08190a4c32f9df6350ebcd452b33698a18acb69",
   "documents": {
     "ActivationEventDocument": {
       "kind": [
@@ -14,6 +14,21 @@
     "AdminDigestStateDocument": {
       "kind": [
         "critical_clients"
+      ]
+    },
+    "ApiKeyDocument": {
+      "scopes[]": [
+        "bookings:read",
+        "bookings:write",
+        "contacts:read",
+        "conversations:read",
+        "leads:read",
+        "leads:write",
+        "webhooks:manage"
+      ],
+      "status": [
+        "active",
+        "revoked"
       ]
     },
     "AssistantApplyDocument": {
@@ -36,7 +51,26 @@
         "publishing"
       ]
     },
-    "AssistantSettingsDocument": {},
+    "AssistantSettingsDocument": {
+      "disabled_tools[]": [
+        "cancel_booking",
+        "check_availability",
+        "create_booking",
+        "create_lead",
+        "decline_recording",
+        "get_price",
+        "handoff_to_human",
+        "join_waitlist",
+        "list_my_bookings",
+        "offer_choices",
+        "record_unanswered_question",
+        "reschedule_booking",
+        "search_knowledge",
+        "send_call_transcript",
+        "send_link",
+        "send_payment_link"
+      ]
+    },
     "AssistantVersionDocument": {
       "niche_key": [
         "b2b_supply",
@@ -69,14 +103,33 @@
         "check_availability",
         "create_booking",
         "create_lead",
+        "decline_recording",
         "get_price",
         "handoff_to_human",
         "join_waitlist",
         "list_my_bookings",
+        "offer_choices",
         "record_unanswered_question",
         "reschedule_booking",
         "search_knowledge",
-        "send_link"
+        "send_call_transcript",
+        "send_link",
+        "send_payment_link"
+      ]
+    },
+    "AuditChainCheckpointDocument": {},
+    "AuditChainHeadDocument": {},
+    "AuditChainStatusDocument": {
+      "problem": [
+        "checkpoint_mismatch",
+        "hash_mismatch",
+        "head_lost",
+        "link_broken",
+        "position_gap"
+      ],
+      "status": [
+        "broken",
+        "intact"
       ]
     },
     "AuditLogEntryDocument": {
@@ -102,8 +155,20 @@
         "support_access_start",
         "update",
         "view"
+      ],
+      "outcome": [
+        "failure",
+        "success"
+      ],
+      "security_event": [
+        "key_rotation",
+        "login_failed",
+        "logout",
+        "mfa_locked",
+        "otp_locked"
       ]
     },
+    "AuditViewCountDocument": {},
     "AutotestCaseDocument": {
       "expectation": [
         "must_create_lead",
@@ -170,6 +235,16 @@
         "ready",
         "testing",
         "tests_failed"
+      ],
+      "results[].channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
       ],
       "results[].check_codes[]": [
         "conversation_failed",
@@ -248,12 +323,32 @@
     },
     "BillingProfileDocument": {},
     "BookingDocument": {
+      "booking_system_booking.kind": [
+        "cal_com"
+      ],
+      "deposit.status": [
+        "awaiting",
+        "cancelled",
+        "expired",
+        "kept",
+        "paid",
+        "refund_due"
+      ],
+      "deposit_status": [
+        "awaiting",
+        "cancelled",
+        "expired",
+        "kept",
+        "paid",
+        "refund_due"
+      ],
       "last_status_change.previous_status": [
         "cancelled",
         "completed",
         "confirmed",
         "no_show",
-        "pending"
+        "pending",
+        "pending_deposit"
       ],
       "origin": [
         "campaign",
@@ -274,7 +369,57 @@
         "completed",
         "confirmed",
         "no_show",
-        "pending"
+        "pending",
+        "pending_deposit"
+      ]
+    },
+    "BrandDocument": {
+      "members[].role": [
+        "brand_owner",
+        "regional_manager"
+      ]
+    },
+    "BrandKnowledgeItemDocument": {
+      "kind": [
+        "faq",
+        "menu_item",
+        "package",
+        "policy",
+        "product",
+        "room_type",
+        "service",
+        "vehicle"
+      ]
+    },
+    "BusinessClosureDocument": {
+      "reason": [
+        "owner_request",
+        "unpaid_subscription"
+      ],
+      "status_before": [
+        "live",
+        "onboarding",
+        "paused",
+        "testing"
+      ]
+    },
+    "BusinessDeletionDocument": {
+      "deprovisioned[].outcome": [
+        "done",
+        "nothing",
+        "skipped"
+      ],
+      "deprovisioned[].target": [
+        "google_calendar",
+        "meta_subscription",
+        "payment_schedule",
+        "phone_number",
+        "telegram_webhook",
+        "voice_agent"
+      ],
+      "reason": [
+        "owner_request",
+        "unpaid_subscription"
       ]
     },
     "BusinessDocument": {
@@ -396,9 +541,26 @@
       ]
     },
     "CalendarAuthorizationStateDocument": {},
+    "CalendarBusyTimesDocument": {
+      "source": [
+        "booking_system",
+        "google",
+        "ical"
+      ]
+    },
     "CalendarConnectionDocument": {},
     "CalendarEventLinkDocument": {},
     "CallDocument": {
+      "analysis.booking_correct": [
+        "failure",
+        "success",
+        "unknown"
+      ],
+      "analysis.disclosure_said": [
+        "failure",
+        "success",
+        "unknown"
+      ],
       "guard_verdict": [
         "clean",
         "flagged",
@@ -563,6 +725,34 @@
         "paid"
       ]
     },
+    "ConsentRecordDocument": {
+      "channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "event": [
+        "given",
+        "withdrawn"
+      ],
+      "purpose": [
+        "marketing"
+      ],
+      "source": [
+        "booking_page",
+        "erasure",
+        "in_person",
+        "stop"
+      ],
+      "text_version": [
+        "2026-11-02"
+      ]
+    },
     "ContactDocument": {
       "channel_identities[].channel": [
         "instagram",
@@ -573,6 +763,18 @@
         "viber",
         "web_chat",
         "whatsapp"
+      ],
+      "marketing_consent.source": [
+        "booking_page",
+        "in_person"
+      ],
+      "marketing_consent.text_version": [
+        "2026-11-02"
+      ],
+      "marketing_consent.withdrawal": [
+        "booking_page",
+        "in_person",
+        "stop"
       ],
       "opted_out_channels[]": [
         "instagram",
@@ -599,6 +801,10 @@
       "rating": [
         "bad",
         "good"
+      ],
+      "rating_by": [
+        "customer",
+        "team"
       ],
       "rating_reason": [
         "should_hand_off",
@@ -640,6 +846,62 @@
     },
     "CustomerSegmentDocument": {},
     "CustomerSettingsDocument": {},
+    "DataTaskStateDocument": {
+      "kind": [
+        "backfill_lookup",
+        "migrate_documents"
+      ],
+      "status": [
+        "done",
+        "failed",
+        "pending",
+        "running"
+      ]
+    },
+    "DepositRequestDocument": {
+      "source_channel": [
+        "instagram",
+        "messenger",
+        "owner_test",
+        "phone",
+        "telegram",
+        "viber",
+        "web_chat",
+        "whatsapp"
+      ],
+      "status": [
+        "awaiting",
+        "cancelled",
+        "expired",
+        "kept",
+        "paid",
+        "refund_due"
+      ],
+      "subject": [
+        "banquet",
+        "booking"
+      ]
+    },
+    "DepositSettingsDocument": {
+      "payment_links[].kind": [
+        "static",
+        "template"
+      ],
+      "policies[].policy.rule": [
+        "fixed",
+        "per_guest",
+        "percent_of_value"
+      ],
+      "policies[].target": [
+        "banquet",
+        "resource",
+        "service"
+      ],
+      "retired_payment_links[].link.kind": [
+        "static",
+        "template"
+      ]
+    },
     "DigestPreferencesDocument": {
       "channels[]": [
         "email",
@@ -657,6 +919,7 @@
       ]
     },
     "ExportDownloadLinkDocument": {},
+    "FeatureFlagDocument": {},
     "FeedbackRequestDocument": {
       "channel": [
         "instagram",
@@ -725,6 +988,13 @@
       ]
     },
     "HelpProgressDocument": {},
+    "IcalExportFeedDocument": {},
+    "IdempotencyKeyDocument": {
+      "status": [
+        "completed",
+        "in_progress"
+      ]
+    },
     "InboundEventDocument": {
       "channel": [
         "instagram",
@@ -744,7 +1014,12 @@
         "other",
         "sticker"
       ],
+      "customer_message.context_note": [
+        "story_mention",
+        "story_reply"
+      ],
       "kind": [
+        "comment_trigger",
         "customer_message",
         "platform_bot_update",
         "voice_post_call"
@@ -764,6 +1039,10 @@
         "degradation",
         "outage"
       ],
+      "scope": [
+        "all_businesses",
+        "listed"
+      ],
       "severity": [
         "sev1",
         "sev2",
@@ -777,6 +1056,7 @@
     "InvoiceCounterDocument": {},
     "InvoiceDocument": {
       "kind": [
+        "number_rental",
         "service_period",
         "setup_fee",
         "usage_overage"
@@ -807,6 +1087,10 @@
       ]
     },
     "KnowledgeItemDocument": {
+      "aliases[].status": [
+        "approved",
+        "suggested"
+      ],
       "kind": [
         "faq",
         "menu_item",
@@ -825,6 +1109,14 @@
       ]
     },
     "LeadDocument": {
+      "deposit.status": [
+        "awaiting",
+        "cancelled",
+        "expired",
+        "kept",
+        "paid",
+        "refund_due"
+      ],
       "lead_type": [
         "banquet",
         "corporate",
@@ -909,6 +1201,10 @@
         "unchecked",
         "unsupported"
       ],
+      "context_note": [
+        "story_mention",
+        "story_reply"
+      ],
       "direction": [
         "inbound",
         "outbound"
@@ -935,14 +1231,18 @@
         "check_availability",
         "create_booking",
         "create_lead",
+        "decline_recording",
         "get_price",
         "handoff_to_human",
         "join_waitlist",
         "list_my_bookings",
+        "offer_choices",
         "record_unanswered_question",
         "reschedule_booking",
         "search_knowledge",
-        "send_link"
+        "send_call_transcript",
+        "send_link",
+        "send_payment_link"
       ]
     },
     "MessageMediaDocument": {
@@ -955,6 +1255,12 @@
         "sticker"
       ]
     },
+    "MetaConnectionStateDocument": {
+      "purpose": [
+        "pages",
+        "whatsapp"
+      ]
+    },
     "MfaChallengeDocument": {},
     "MissedCallDocument": {
       "channel": [
@@ -964,6 +1270,7 @@
       "reason": [
         "abandoned",
         "busy",
+        "callback_requested",
         "line_failed",
         "no_answer",
         "no_speech",
@@ -990,6 +1297,51 @@
         "queued",
         "sent",
         "skipped"
+      ]
+    },
+    "NicheTextDraftDocument": {
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
+      ]
+    },
+    "NicheTextReleaseDocument": {
+      "kind": [
+        "publish",
+        "reset",
+        "revert"
+      ],
+      "niche_key": [
+        "b2b_supply",
+        "beauty_salon",
+        "car_rental_and_tours",
+        "car_service",
+        "clinic",
+        "education",
+        "entertainment",
+        "event_venue",
+        "fitness",
+        "home_services",
+        "hotel",
+        "online_shop",
+        "real_estate",
+        "restaurant",
+        "short_term_rental",
+        "veterinary"
       ]
     },
     "NudgeSentDocument": {
@@ -1045,6 +1397,7 @@
         "booking_reminder",
         "call_confirmation",
         "call_links",
+        "comment_reply",
         "customer_reply",
         "staff_notification",
         "staff_reply",
@@ -1097,9 +1450,33 @@
         "paused"
       ]
     },
+    "PasskeyChallengeDocument": {
+      "purpose": [
+        "registration",
+        "sign_in",
+        "sign_in_enrollment",
+        "step_up"
+      ]
+    },
+    "PasskeyDocument": {
+      "transports[]": [
+        "ble",
+        "cable",
+        "hybrid",
+        "internal",
+        "nfc",
+        "smart-card",
+        "usb"
+      ]
+    },
     "PaymentOrderDocument": {
       "provider": [
-        "flitt"
+        "flitt",
+        "stripe"
+      ],
+      "purpose": [
+        "card_setup",
+        "checkout"
       ],
       "status": [
         "approved",
@@ -1110,11 +1487,94 @@
         "reversed"
       ]
     },
+    "PaymentReconciliationDocument": {
+      "mismatches[].kind": [
+        "failed_at_provider",
+        "paid_at_provider",
+        "renewal_paid_at_provider",
+        "reversed_at_provider"
+      ],
+      "mismatches[].provider": [
+        "flitt",
+        "stripe"
+      ],
+      "mismatches[].provider_status": [
+        "approved",
+        "created",
+        "declined",
+        "expired",
+        "processing",
+        "reversed"
+      ],
+      "mismatches[].recorded_status": [
+        "approved",
+        "created",
+        "declined",
+        "expired",
+        "processing",
+        "reversed"
+      ]
+    },
+    "PaymentRetryAttemptDocument": {
+      "outcome": [
+        "approved",
+        "claimed",
+        "declined",
+        "failed",
+        "not_possible",
+        "processing",
+        "skipped"
+      ],
+      "provider": [
+        "flitt",
+        "stripe"
+      ]
+    },
+    "PeriodicJobHeartbeatDocument": {
+      "lane": [
+        "autotests",
+        "default",
+        "inbound",
+        "ops",
+        "outbound"
+      ]
+    },
     "PeriodicJobRunDocument": {
       "status": [
         "failed",
         "running",
         "succeeded"
+      ]
+    },
+    "PhoneNumberDocument": {
+      "number_type": [
+        "local",
+        "mobile",
+        "toll_free"
+      ],
+      "provider": [
+        "twilio"
+      ],
+      "release_reason": [
+        "owner",
+        "unpaid"
+      ],
+      "status": [
+        "active",
+        "released",
+        "releasing"
+      ]
+    },
+    "PhoneNumberRequestDocument": {
+      "number_type": [
+        "local",
+        "mobile",
+        "toll_free"
+      ],
+      "status": [
+        "cancelled",
+        "done",
+        "open"
       ]
     },
     "PlatformAdminDocument": {
@@ -1130,17 +1590,42 @@
     },
     "PlatformAlertStateDocument": {
       "code": [
+        "answer_budget_fast_burn",
+        "answer_budget_slow_burn",
+        "api_budget_fast_burn",
+        "api_budget_slow_burn",
+        "api_latency",
+        "audit_chain_broken",
+        "backfill_stalled",
+        "backup_failed",
+        "booking_spike",
+        "bulk_personal_data",
+        "campaign_opt_outs",
+        "cancellation_spike",
         "dead_jobs",
+        "failed_sign_in_checks",
         "handoff_spike",
         "inbound_backlog",
         "llm_errors",
+        "missed_job_runs",
         "otp_cap_trips",
+        "otp_conversion",
         "outbound_failures",
+        "payment_mismatch",
         "quality_drop",
         "spend_budget",
+        "spend_budget_stop",
         "spend_spike",
         "stale_worker",
-        "tool_errors"
+        "storage_errors",
+        "tenant_hopping",
+        "tenant_payment_declines",
+        "tenant_sms_volume",
+        "tool_errors",
+        "voice_health",
+        "webhook_signature_failures",
+        "whatsapp_quality",
+        "worker_down"
       ],
       "status": [
         "firing",
@@ -1158,6 +1643,7 @@
         "cabinet",
         "chat",
         "meta",
+        "payments",
         "telegram",
         "voice"
       ],
@@ -1172,11 +1658,38 @@
         "resolved"
       ]
     },
+    "PlatformMonitorDocument": {
+      "monitor": [
+        "alert_checks",
+        "pipeline_watchdog"
+      ]
+    },
+    "PlatformPauseDocument": {
+      "disabled_tools[]": [
+        "cancel_booking",
+        "check_availability",
+        "create_booking",
+        "create_lead",
+        "decline_recording",
+        "get_price",
+        "handoff_to_human",
+        "join_waitlist",
+        "list_my_bookings",
+        "offer_choices",
+        "record_unanswered_question",
+        "reschedule_booking",
+        "search_knowledge",
+        "send_call_transcript",
+        "send_link",
+        "send_payment_link"
+      ]
+    },
     "PlatformStatusDayDocument": {
       "components[].component": [
         "cabinet",
         "chat",
         "meta",
+        "payments",
         "telegram",
         "voice"
       ],
@@ -1278,6 +1791,7 @@
         "autotests",
         "default",
         "inbound",
+        "ops",
         "outbound"
       ],
       "status": [
@@ -1300,6 +1814,55 @@
       "owner_kind": [
         "business",
         "partner"
+      ]
+    },
+    "ResourceCalendarLinkDocument": {
+      "booking_system.kind": [
+        "cal_com"
+      ],
+      "booking_system.status.problem": [
+        "access_denied",
+        "address_refused",
+        "needs_reconnect",
+        "not_a_calendar",
+        "not_connected",
+        "not_found",
+        "provider_error",
+        "timeout",
+        "unreachable"
+      ],
+      "booking_system.write_status.problem": [
+        "access_denied",
+        "address_refused",
+        "needs_reconnect",
+        "not_a_calendar",
+        "not_connected",
+        "not_found",
+        "provider_error",
+        "timeout",
+        "unreachable"
+      ],
+      "google_status.problem": [
+        "access_denied",
+        "address_refused",
+        "needs_reconnect",
+        "not_a_calendar",
+        "not_connected",
+        "not_found",
+        "provider_error",
+        "timeout",
+        "unreachable"
+      ],
+      "ical_imports[].status.problem": [
+        "access_denied",
+        "address_refused",
+        "needs_reconnect",
+        "not_a_calendar",
+        "not_connected",
+        "not_found",
+        "provider_error",
+        "timeout",
+        "unreachable"
       ]
     },
     "ResourceDocument": {
@@ -1339,6 +1902,14 @@
         "7"
       ]
     },
+    "SecurityNudgeDocument": {},
+    "ServiceLevelHourDocument": {},
+    "ServiceLevelSlotDocument": {
+      "series": [
+        "api_availability",
+        "inbound_answered"
+      ]
+    },
     "SetupStateDocument": {
       "skipped_after_launch[]": [
         "business",
@@ -1347,6 +1918,7 @@
         "launch",
         "offer",
         "phone_test",
+        "protect_data",
         "second_channel",
         "share",
         "staff_contact",
@@ -1359,6 +1931,7 @@
         "launch",
         "offer",
         "phone_test",
+        "protect_data",
         "second_channel",
         "share",
         "staff_contact",
@@ -1396,6 +1969,14 @@
         "annual",
         "monthly"
       ],
+      "payment_method_summary.provider": [
+        "flitt",
+        "stripe"
+      ],
+      "payment_provider": [
+        "flitt",
+        "stripe"
+      ],
       "plan_key": [
         "chat",
         "plus",
@@ -1410,7 +1991,37 @@
         "cancelled",
         "incomplete",
         "past_due",
+        "paused",
         "trialing"
+      ]
+    },
+    "SubscriptionEventDocument": {
+      "cancellation_reason": [
+        "answer_quality",
+        "closing_business",
+        "missing_feature",
+        "not_enough_use",
+        "other",
+        "seasonal_break",
+        "switched_provider",
+        "too_expensive"
+      ],
+      "kind": [
+        "cancelled",
+        "offer_accepted",
+        "pause_scheduled",
+        "pause_started",
+        "resumed",
+        "win_back_sent"
+      ],
+      "offer_kind": [
+        "credit",
+        "downgrade",
+        "pause"
+      ],
+      "win_back_stage": [
+        "day_14",
+        "day_30"
       ]
     },
     "SupportAccessGrantDocument": {
@@ -1453,6 +2064,7 @@
         "dialog",
         "llm_input_tokens",
         "llm_output_tokens",
+        "number_rental",
         "transcription_seconds",
         "transfer_seconds",
         "voice_seconds",
@@ -1568,6 +2180,58 @@
         "lcp"
       ]
     },
+    "WebhookDeliveryDocument": {
+      "event_type": [
+        "booking.cancelled",
+        "booking.created",
+        "booking.updated",
+        "call.finished",
+        "conversation.started",
+        "handoff.created",
+        "handoff.resolved",
+        "lead.created",
+        "lead.updated",
+        "webhook.test"
+      ],
+      "last_problem": [
+        "connection_failed",
+        "endpoint_off",
+        "gone",
+        "http_status",
+        "not_public",
+        "request_failed",
+        "timeout",
+        "unknown_host"
+      ],
+      "status": [
+        "delivered",
+        "failed",
+        "pending"
+      ]
+    },
+    "WebhookEndpointDocument": {
+      "event_types[]": [
+        "booking.cancelled",
+        "booking.created",
+        "booking.updated",
+        "call.finished",
+        "conversation.started",
+        "handoff.created",
+        "handoff.resolved",
+        "lead.created",
+        "lead.updated",
+        "webhook.test"
+      ],
+      "origin": [
+        "api",
+        "cabinet"
+      ],
+      "status": [
+        "active",
+        "disabled",
+        "paused"
+      ]
+    },
     "WebsiteImportDocument": {
       "problem": [
         "website_import_interrupted",
@@ -1583,12 +2247,27 @@
         "reading"
       ]
     },
+    "WidgetUploadDocument": {
+      "kind": [
+        "audio",
+        "contact",
+        "image",
+        "location",
+        "other",
+        "sticker"
+      ]
+    },
     "WorkerHeartbeatDocument": {
+      "circuits[].state": [
+        "closed",
+        "half_open",
+        "open"
+      ],
       "periodic_results[].outcome": [
         "failed",
         "succeeded"
       ]
     }
   },
-  "release": "wave-15"
+  "release": "launch-2026-11-05"
 }

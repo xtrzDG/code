@@ -2,7 +2,8 @@
  * Settings → Calls: the owner's form (summaries, text-backs, the WhatsApp
  * template name, the SMS fallback, the recording of calls, the staff
  * notice of transfers), what a caller who did not get through would get
- * with it, and the labels of the latest text-backs.
+ * with it, why SMS may not be a choice, and the labels of the latest
+ * text-backs.
  */
 
 import type { ReasonMessages } from "@/api/errors";
@@ -23,6 +24,7 @@ export type TextBackStatus = Schema<"TextBackStatus">;
 export type TextBackChannel = Schema<"TextBackChannel">;
 export type MissedCallReason = Schema<"MissedCallReason">;
 export type TextBackSkipReason = Schema<"TextBackSkipReason">;
+type SmsUnavailableReason = Schema<"SmsUnavailableReason">;
 
 /** Settings → Calls lists the latest text-backs only (the API pages further). */
 export const TEXT_BACK_LIST_SIZE = 20;
@@ -140,6 +142,51 @@ export function textBackReadiness(form: CallSettingsForm, view: CallSettingsView
     return "sms";
   }
   return "none";
+}
+
+/** Why text-backs cannot go by SMS (`sms_unavailable_reason`), in words. */
+export const SMS_UNAVAILABLE_TEXTS: Record<SmsUnavailableReason, MessageKey> = {
+  no_sender: "callSettings.textBack.smsNoSender",
+  not_configured: "callSettings.textBack.smsMissing",
+  business_registration_required: "callSettings.textBack.smsNeedsRegistration",
+};
+
+/**
+ * Why a caller who did not get through cannot be texted by SMS, or null
+ * while SMS is available. Without a reason (an API of the release before)
+ * it is the general "not available right now".
+ */
+export function smsUnavailableText(view: CallSettingsView): MessageKey | null {
+  if (view.is_sms_available) {
+    return null;
+  }
+  return view.sms_unavailable_reason ? SMS_UNAVAILABLE_TEXTS[view.sms_unavailable_reason] : "callSettings.textBack.smsMissing";
+}
+
+/** What the readiness line says: with SMS unavailable, "nothing yet" names WhatsApp only. */
+export function textBackReadinessText(readiness: TextBackReadiness, view: CallSettingsView): MessageKey {
+  return readiness === "none" && !view.is_sms_available ? "callSettings.textBack.readiness.noneWithoutSms" : READINESS_TEXTS[readiness];
+}
+
+export interface SmsSwitchState {
+  isChecked: boolean;
+  isDisabled: boolean;
+  hint: MessageKey;
+}
+
+/**
+ * The SMS fallback's switch: a choice only with text-backs on and SMS
+ * available, its hint saying why not (text-backs first, then why SMS is
+ * unavailable). The owner's stored choice is kept as it is meanwhile: the
+ * switch shows off, and saving sends the stored value back unchanged.
+ */
+export function smsSwitchState(form: CallSettingsForm, view: CallSettingsView): SmsSwitchState {
+  const unavailable = smsUnavailableText(view);
+  return {
+    isChecked: form.isTextBackEnabled && form.isSmsFallbackEnabled && view.is_sms_available,
+    isDisabled: !form.isTextBackEnabled || unavailable !== null,
+    hint: form.isTextBackEnabled ? (unavailable ?? "callSettings.textBack.smsHint") : "callSettings.textBack.smsNeedsTextBack",
+  };
 }
 
 export type TransferReadiness = "ready" | "unconfirmed" | "noNumber";

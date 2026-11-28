@@ -3,6 +3,8 @@ Staff e-mail, SMS, WhatsApp and device notifications as their providers get
 them.
 """
 
+import re
+
 import pytest
 
 from app.clients.twilio.twilio_messaging_client import TwilioMessagingClient
@@ -39,7 +41,10 @@ from app.schemas.typings.notifications.strings import StaffAlertTitle
 from app.schemas.typings.platform.strings import PlatformSecret
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.notifications.staff_delivery_keys import push_subscription_id
-from app.utilities.notifications.staff_providers import is_delivery_simulated
+from app.utilities.notifications.staff_providers import (
+    MISSING_SMS_SENDER_TEXT,
+    is_delivery_simulated,
+)
 from tests.channels.channels_settings import build_settings
 from tests.channels.testbed import ChannelsTestbed
 from tests.notifications.staff_alert_fakes import push_subscription_repo
@@ -140,6 +145,28 @@ def test_without_a_provider_in_production_nothing_is_sent(
     # The missing settings are for the operator's log, not for the owner.
     assert "TWILIO_ACCOUNT_SID" in caplog.text
     assert mask_address("ab") == "***"
+
+
+def test_an_sms_found_without_a_sender_says_the_sender_is_pending(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    # Queued while the platform could send SMS, sent after its sender was
+    # unset (the Twilio account stays): the reason the queue itself stores.
+    production = ChannelsTestbed(
+        build_settings(
+            APP_ENV="production",
+            TWILIO_ACCOUNT_SID="AC" + "1f" * 16,
+            TWILIO_AUTH_TOKEN="fake-twilio-auth-token",
+        )
+    )
+
+    with pytest.raises(
+        DeliveryNotConfiguredError, match=f"^{re.escape(MISSING_SMS_SENDER_TEXT)}$"
+    ):
+        sender(production).send(
+            contact(ManagerContactChannel.SMS, "+393330001222"), BRIEF, None
+        )
+    assert "TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID" in caplog.text
 
 
 @pytest.mark.parametrize(

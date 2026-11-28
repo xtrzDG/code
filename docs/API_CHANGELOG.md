@@ -11,6 +11,132 @@ Kinds of change: **Added**, **Changed** (additive), **Deprecated** (with
 sunset date), **Removed** and **Breaking** (only with the `api-breaking`
 label and a migration path).
 
+## 2026-11-28 — Stripe: a new card is saved through Checkout; a charge Stripe declined is paid, not given a new card
+
+Spec: `f032dddfd1c4ff12`
+
+No request, path or field changes; one description changed. What an
+owner whose business pays through Stripe (the EU, the US, Israel) gets
+from two existing answers changes:
+
+- **Changed** `POST /v1/businesses/{business_id}/billing/payment-method`
+  ("Save card" / "Update card"): for Stripe the `url` of
+  `CardSetupSessionView` is always a Checkout page that charges nothing
+  now, for a first card and for a new one alike. It was Stripe's billing
+  portal once a card was saved. The earlier automatic charges stop when
+  Stripe confirms the new card. The page takes cards only (Apple Pay and
+  Google Pay included).
+- **Changed** `PaymentMethodView.can_save_card`
+  (`GET /v1/businesses/{business_id}/billing/payment-method`) is false
+  while a charge Stripe declined is being retried (`retry` is present),
+  and the POST above answers 409 then. The owner pays the declined bill
+  (`POST …/billing/checkout`), whose page saves the card paid with. For
+  Flitt nothing changes: a card saved then is the card the retries charge.
+
+## 2026-11-27 — why SMS cannot be sent (a Twilio account without a sender, business texts in the US), US call forwarding by carrier
+
+Spec: `629fa36e8812554e`
+
+Everything below is additive within `/v1`: new optional response fields
+and new enums in responses only; no request, path or required field
+changes. A platform may now run with a Twilio account that has no SMS
+sender yet (`TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` without
+`TWILIO_FROM_NUMBER` or `TWILIO_MESSAGING_SERVICE_SID`): it rents numbers
+and takes calls, and sends no SMS until a sender is set.
+
+- **Added** `CallSettingsView.sms_unavailable_reason`
+  (`GET`/`PUT /v1/businesses/{business_id}/call-settings`;
+  `SmsUnavailableReason` or null): why a text-back cannot go by SMS while
+  `is_sms_available` is false. `business_registration_required`: the
+  carriers of the business's country accept business texts only from a
+  sender registered for that business, which the platform does not offer
+  yet (the US); it comes first, since no sender of the platform ends it.
+  Else `no_sender`: the platform's SMS number waits for the phone carriers'
+  approval; `not_configured`: no SMS provider. Null exactly when
+  `is_sms_available` is true.
+- **Changed** `CallSettingsView.is_sms_available` is false for a business in
+  the US whatever SMS the platform sends (reason
+  `business_registration_required`, also while the platform has no sender
+  or no SMS provider): none of its text-backs goes by SMS,
+  whatever the country of the caller's number, and no business's text-back
+  goes by SMS to a US number. `is_sms_fallback_enabled` is not reset: it
+  keeps the owner's stored choice while SMS is unavailable (a `PUT` stores
+  it as sent) and applies again once SMS can be sent.
+- **Added** `NotificationContactView.sms_unavailable_reason`
+  (`GET /v1/businesses/{business_id}/notification-contacts`;
+  `SmsUnavailableReason` or null): for an SMS contact while the platform
+  sends no SMS (`provider_ready` false), `no_sender` or `not_configured`;
+  null for every other channel and while SMS is sent.
+- **Added** `CountryProfile.sms_sender_registration`
+  (`GET /v1/catalog/countries/{country_code}`, its `profile`;
+  `SmsSenderRegistration`, default `not_required`): `per_business` where
+  carriers accept a business's texts only from a sender registered for that
+  business (the US).
+- **Added** `CarrierForwardingInstructions.star_codes` (list of
+  `CallForwardingStarCode` `{condition, dial_code, description}` with a
+  `StarCodeCondition` of `no_answer_or_busy` or `cancel_all`; empty for a
+  carrier without star codes) and
+  `CallForwardingInstructions.is_carrier_choice_needed` (default false) in
+  `GET /v1/businesses/{business_id}/call-forwarding-instructions`.
+- **Changed** For a business in the United States that endpoint answers
+  `is_carrier_choice_needed` true and lists the carriers Verizon (no GSM
+  `codes`; `star_codes` `*71` with the 10 digits, as `*712125550123`, and
+  `*73`), T-Mobile (`**61*12125550123#`, `**67*…#`, `**62*…#`, `##004#`) and
+  AT&T (`**61*2125550123#`, `**67*…#`, `**62*…#`, `##002#`), each noting
+  that its codes are not yet confirmed with the carrier. Its top-level
+  `codes`, now the standard codes for carriers not listed, carry the number
+  as 1 and 10 digits (`**61*12125550123#`) instead of E.164
+  (`**61*+12125550123#`), and its `steps` and `notes` are the US ones. No
+  code forwards every call. The answers for other countries are unchanged
+  apart from the new fields at their defaults.
+
+## 2026-11-21 — the release gates open: deposits held, Stripe, comment replies, the seasonal pause, rented numbers, callback requests, stored tool calls, the ops lane, payments on the status page
+
+Spec: `799dec293bc66e18`
+
+Every release gate of the API opens: the release before this one
+(launch-2026-11-05) reads all the values below, so this one writes them
+(docs/operations/deploys.md, "Enum values one release ahead"). No value is
+new to the description; what changes is that the API now returns or
+accepts them. Only the descriptions of `BookingStatus`, `PaymentProvider`,
+`MissedCallReason`, `JobLane`, `StatusComponent`, `SetupStepCode`,
+`SubscriptionStatus`, `InboundEventKind` and `OutboundMessageKind` changed
+in the document.
+
+- **Changed** A booking held for its deposit has `status`
+  `pending_deposit` (with its deposit `awaiting`) in the cabinet's and the
+  public API's booking views and in the assistant's tool results; before,
+  it was `pending`. Clients read it like `pending` (2026-10-12 entry).
+- **Changed** `GET …/billing/payment-method` answers `provider` `stripe` for
+  a business in the EU, the US or Israel once the platform has its Stripe
+  keys; paying (`POST …/billing/checkout`) and saving or replacing the card
+  (`POST …/billing/payment-method`) then open a Stripe page. Payment
+  orders and subscriptions may name `stripe` (`payment_provider`,
+  `payment_method_summary.provider`).
+- **Changed** A channel view's `comment_replies.is_available` is `true`: with
+  the Meta app connected, an Instagram comment that names one of the
+  owner's keywords gets one private reply.
+- **Changed** With `SUBSCRIPTION_PAUSE_ENABLED` (off unless set),
+  `GET …/billing/lifecycle` offers the seasonal pause to an active monthly
+  subscription instead of `feature_off`, `POST …/billing/pause` schedules
+  it instead of answering 409, and a subscription may be `paused`.
+- **Changed** Each month of a rented phone number is billed as it begins:
+  invoices and usage events of the kind `number_rental`.
+- **Changed** A call that asked to be called back and left staff nothing to
+  act on is a missed call with `reason` `callback_requested` (the call
+  settings' text-back history, `TextBackView.reason`, and the staff alert)
+  instead of `transfer_unanswered`.
+- **Changed** Conversation views list the tool calls `offer_choices`,
+  `send_payment_link`, `decline_recording` and `send_call_transcript` of
+  the messages stored from now on (a call the tool refused, with
+  `is_error`).
+- **Changed** `GET /v1/admin/system` lists the lane `ops`, where the platform
+  alerts now run.
+- **Changed** `POST /v1/admin/announcements` and
+  `PATCH /v1/admin/announcements/{announcement_id}` accept the component
+  `payments` (no longer 422), and the status page's payments history
+  records levels from the deploy day on.
+
 ## 2026-11-03 — readiness checklist round 2: queued payment webhooks, card-testing brake, campaign holds, feature flags, call transcripts, health notes withheld, knowledge mentions in exports
 
 Spec: `133bc52d25af19c1`

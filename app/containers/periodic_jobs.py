@@ -23,6 +23,7 @@ from app.gateways.worker.periodic.business_closure_jobs import (
 from app.gateways.worker.periodic.calendar_sync import sync_calendars_job
 from app.gateways.worker.periodic.channel_credentials import (
     check_channel_credentials_job,
+    refresh_whatsapp_tokens_job,
 )
 from app.gateways.worker.periodic.critical_clients_digest import (
     critical_clients_digest_job,
@@ -217,6 +218,10 @@ def periodic_job_specs(
         Factory(
             check_channel_credentials_job,
             operator=operators.platform_ops.check_channel_credentials_operator,
+        ),
+        Factory(  # Embedded Signup's WhatsApp tokens renewed before they end.
+            refresh_whatsapp_tokens_job,
+            operator=operators.channels.refresh_whatsapp_tokens_operator,
         ),
         # Clients that newly turned critical, once a day to the team's chats.
         Factory(

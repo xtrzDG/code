@@ -2,6 +2,7 @@
 
 import base64
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import cast
 
@@ -57,8 +58,14 @@ class Restaurant:
         return bearer(self.token)
 
 
-def start_notifications_workshop(push: FakeWebPushClient | None) -> Workshop:
-    """The workshop API; device notifications are on when `push` is given."""
+def start_notifications_workshop(
+    push: FakeWebPushClient | None,
+    environment: Mapping[str, str] | None = None,
+) -> Workshop:
+    """
+    The workshop API; device notifications are on when `push` is given.
+    `environment` adds settings to NOTIFICATIONS_ENVIRONMENT.
+    """
 
     def prepare(container: AppContainer) -> None:
         if push is not None:
@@ -66,7 +73,7 @@ def start_notifications_workshop(push: FakeWebPushClient | None) -> Workshop:
                 providers.Object(push)
             )
 
-    return start_workshop(NOTIFICATIONS_ENVIRONMENT, prepare)
+    return start_workshop({**NOTIFICATIONS_ENVIRONMENT, **(environment or {})}, prepare)
 
 
 def open_restaurant_with_contacts(workshop: Workshop) -> Restaurant:

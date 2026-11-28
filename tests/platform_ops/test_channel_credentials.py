@@ -210,3 +210,49 @@ def test_one_run_asks_about_a_bounded_number_of_tokens() -> None:
     world.clock.advance(HOUR)
     assert check(world, client) == 5
     assert sorted(client.asked) == tokens
+
+
+def ended_since(
+    token: str, checked_at: Microseconds, ends_at: Microseconds
+) -> ChannelDocument:
+    return meta_channel(token, checked_at=checked_at).model_copy(
+        update={"credential_expires_at": ends_at}
+    )
+
+
+def test_a_stored_end_that_passed_since_the_last_check_is_confirmed() -> None:
+    world = OpsWorld()
+    ended = ended_since("token-a", at(-2 * HOUR), at(-HOUR))
+    renewed = ended_since("token-b", at(-2 * HOUR), at(-HOUR))
+    coming = ended_since("token-c", at(-2 * HOUR), at(HOUR))
+    confirmed = ended_since("token-d", at(-HOUR), at(-2 * HOUR))
+    put(world.channels, ended, renewed, coming, confirmed)
+    client = FakeTokenClient(
+        {
+            "token-a": MetaTokenFacts(is_valid=False, expires_at=at(-HOUR)),
+            "token-b": MetaTokenFacts(is_valid=True, expires_at=at(59 * DAY)),
+        }
+    )
+
+    assert check(world, client) == 2
+
+    assert sorted(client.asked) == ["token-a", "token-b"]
+    assert stored(world, ended).credential_expires_at == at(-HOUR)
+    assert stored(world, ended).credential_checked_at == at(0)
+    assert stored(world, renewed).credential_expires_at == at(59 * DAY)
+    assert stored(world, coming).credential_checked_at == at(-2 * HOUR)
+    assert stored(world, confirmed).credential_checked_at == at(-HOUR)
+
+
+def test_a_token_that_stays_refused_keeps_the_moment_it_ended() -> None:
+    world = OpsWorld()
+    revoked = meta_channel("token-a")
+    put(world.channels, revoked)
+    client = FakeTokenClient({"token-a": MetaTokenFacts(is_valid=False)})
+
+    assert check(world, client) == 1
+    world.clock.advance(DAY)
+    assert check(world, client) == 1
+
+    assert stored(world, revoked).credential_expires_at == at(0)
+    assert stored(world, revoked).credential_checked_at == at(DAY)

@@ -42,8 +42,9 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
     """
     Owner switches a channel off.
 
-    The credential is erased and the account released (another business may
-    connect it later); messages that still arrive for it are dropped. A
+    The credential is erased (with what the token check knew of it: when
+    it ends, when it was asked) and the account released (another business
+    may connect it later); messages that still arrive for it are dropped. A
     Telegram bot's webhook is removed when Telegram can be reached; a Meta
     channel gives the app's access back first (`MetaAccessRelease`: the
     page or WhatsApp account is unsubscribed). Turning
@@ -115,6 +116,8 @@ class DisableChannelUseCase(UseCaseContract[DisableChannelCommand, ChannelView])
         now: Microseconds = self._wall_clock.now_unix()
         channel.status = ChannelStatus.DISABLED
         channel.encrypted_secret = None
+        channel.credential_expires_at = None
+        channel.credential_checked_at = None
         channel.external_id = None
         channel.updated_at = now
         self._channel_repo.save(channel)

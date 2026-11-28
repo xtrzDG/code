@@ -46,6 +46,32 @@ class TestConnectMetaChannels:
             for request in meta.requests
         )
 
+    def test_a_number_connected_by_hand_forgets_its_old_tokens_end(self) -> None:
+        setup = CabinetSetup()
+        signed_up = setup.testbed.add_channel(
+            setup.business.id, ChannelKind.WHATSAPP, PHONE_NUMBER_ID, "EAAfake-token-1"
+        )
+        now = setup.testbed.clock.now_microseconds()
+        setup.testbed.channel_repo.save(
+            signed_up.model_copy(
+                update={"credential_expires_at": now, "credential_checked_at": now}
+            )
+        )
+        setup.testbed.meta_transport.respond(
+            "GET",
+            rf"/{PHONE_NUMBER_ID}$",
+            {"id": PHONE_NUMBER_ID, "display_phone_number": "+995 32 200 00 00"},
+        )
+
+        response = setup.put("whatsapp", {"phone_number_id": PHONE_NUMBER_ID})
+
+        assert response.status_code == 200, response.text
+        channel = setup.testbed.channel_repo.get(signed_up.id)
+        assert channel is not None
+        assert channel.encrypted_secret is None
+        assert channel.credential_expires_at is None
+        assert channel.credential_checked_at is None
+
     def test_whatsapp_errors(self) -> None:
         setup = CabinetSetup()
         assert setup.put("whatsapp", {}).status_code == 422

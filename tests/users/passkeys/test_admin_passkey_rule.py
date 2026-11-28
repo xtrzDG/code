@@ -14,20 +14,17 @@ import pytest
 from typed_time_provider import Microseconds
 
 from app.schemas.constants.access import SupportAccessKind
-from app.schemas.domain.mfa import TotpFactorDocument
 from app.schemas.domain.support_access_grants import SupportAccessGrantDocument
 from app.schemas.typings.businesses.prefixed_id import BusinessId
-from app.schemas.typings.mfa.constrained_integers import TotpTimeStep
-from app.schemas.typings.users.constrained_strings import EmailAddress
 from app.schemas.typings.users.prefixed_id import UserId
 from app.utilities.config_helpers.app_settings.app_settings_assembler import (
     assemble_app_settings,
 )
-from app.utilities.security.totp_codes import generate_totp_secret
 from tests.e2e.harness import Workshop, bearer, start_workshop
 from tests.e2e.harness_settings import ADMIN_EMAIL, CABINET_ORIGIN, E2E_ENVIRONMENT
 from tests.e2e.journeys import sign_in_and_create_restaurant
 from tests.users.mfa.mfa_api import login_code_step, reason_codes, second_step
+from tests.users.passkeys.held_admins import admin_id, give_app
 from tests.users.passkeys.passkey_api import add_passkey, new_authenticator
 
 CLIENTS_URL: str = "/v1/admin/clients"
@@ -44,31 +41,6 @@ def workshop() -> Iterator[Workshop]:
     )
     with opened.client:
         yield opened
-
-
-def give_app(workshop: Workshop, user_id: str) -> None:
-    """An authenticator app that is on (set up before passkeys were required)."""
-
-    secret = generate_totp_secret()
-    workshop.authenticators.secrets[ADMIN_EMAIL] = secret
-    now = workshop.clock.wall_clock.now_unix()
-    factors = workshop.container.repositories.totp_factor_repo()
-    assert factors.start_enrollment(
-        TotpFactorDocument(
-            user_id=UserId(user_id),
-            sealed_secret=workshop.container.adapters.totp_secret_cipher().seal(secret),
-            created_at=now,
-            updated_at=now,
-        )
-    )
-    assert factors.activate(UserId(user_id), TotpTimeStep(1), now) is not None
-
-
-def admin_id(workshop: Workshop) -> str:
-    users = workshop.container.repositories.user_repo()
-    admin = users.find_by_email(EmailAddress(ADMIN_EMAIL))
-    assert admin is not None
-    return str(admin.id)
 
 
 def test_a_new_admin_sets_up_a_passkey_never_the_app(workshop: Workshop) -> None:

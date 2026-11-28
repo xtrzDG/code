@@ -26,6 +26,7 @@ from app.utilities.config_helpers.production.production_problems import (
     find_production_problems,
     require_production_settings,
 )
+from app.utilities.config_helpers.sms_sender import report_sms_sender
 from app.utilities.legal.processor_coverage import configure_uses, find_uncovered_uses
 from app.utilities.legal.subprocessor_dates import utc_day
 from app.utilities.storage.database_role_rules import find_role_problems
@@ -37,8 +38,9 @@ def run_startup_checks(app_container: AppContainer) -> None:
     """
     Production's requirements first, then the sub-processor list and the
     database roles (each refuses to start in production); a fallback model
-    whose provider has no key is reported once and skipped, and a model
-    named by a floating alias is reported once.
+    whose provider has no key is reported once and skipped, a model named
+    by a floating alias is reported once, and so is a Twilio account
+    without an SMS sender (SMS off; numbers and calls work).
     """
 
     check_production_requirements(app_container)
@@ -46,6 +48,7 @@ def run_startup_checks(app_container: AppContainer) -> None:
     check_database_roles(app_container)
     report_unusable_fallback(app_container.config.app_settings())
     report_floating_models(app_container.config.app_settings())
+    report_sms_sender(app_container.config.app_settings())
 
 
 def check_production_requirements(
@@ -70,8 +73,10 @@ def check_production_requirements(
         problems.append(
             ProductionSettingProblem(
                 "No login code provider is configured, so nobody could sign in: "
-                "set TWILIO_* (SMS), TELEGRAM_GATEWAY_API_TOKEN, WHATSAPP_OTP_* "
-                'or SMTP_* (.env.example, "Login codes").'
+                "set SMTP_* (e-mail), WHATSAPP_OTP_*, TELEGRAM_GATEWAY_API_TOKEN "
+                "or a Twilio SMS sender (TWILIO_FROM_NUMBER or "
+                "TWILIO_MESSAGING_SERVICE_SID with the account) "
+                '(.env.example, "Login codes").'
             )
         )
     require_production_settings(settings, problems)

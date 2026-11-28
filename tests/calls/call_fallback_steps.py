@@ -48,10 +48,10 @@ from tests.channels.voice_setup import ASSISTANT_LINE as ASSISTANT_LINE
 from tests.channels.voice_setup import CALLER, VoiceSetup
 
 TWILIO_AUTH_TOKEN: str = "test-token-0000"
+# The Twilio account alone, without an SMS sender, signs the fallback.
 TWILIO_SETTINGS: dict[str, str] = {
     "TWILIO_ACCOUNT_SID": "AC" + "0" * 32,
     "TWILIO_AUTH_TOKEN": TWILIO_AUTH_TOKEN,
-    "TWILIO_FROM_NUMBER": "+15005550006",
 }
 STAFF_MOBILE: str = "+995555123456"
 CALL_SID: str = "CA" + "0" * 31 + "1"

@@ -137,4 +137,4 @@ def test_every_new_market_is_a_draft_awaiting_review() -> None:
         if all(c.review_status is TextReviewStatus.NEEDS_REVIEW for c in carriers)
     }
 
-    assert drafts == {"AM", "AZ", "UA", "TR", "IT", "DE", "IL"}
+    assert drafts == {"AM", "AZ", "UA", "TR", "IT", "DE", "IL", "US"}

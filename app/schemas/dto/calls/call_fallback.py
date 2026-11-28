@@ -57,11 +57,15 @@ class CallFallbackPlan(ImmutableDTO):
     `transfer_phone_number`, or a missed call (`missed_call`) when nobody
     can take it. `looping_phone_number` is the staff phone on duty that was
     not rung because the call came from it, was forwarded from it or is
-    that very line (ringing it would loop). `is_caller_blocked`: the
-    caller's number is one staff blocked, so the call just ends (no staff
-    phone rings, no missed call, no notice). `is_repeated`: the carrier's
-    request was a signed copy of one already handled: it is answered with
-    nothing, and nobody is told.
+    that very line, or because the call came from the line itself (that
+    phone forwarding the call put through to it back to the line): ringing
+    it would loop. A call from the line itself is rejected unanswered and
+    has no `missed_call`: its caller is the platform's own line, and the
+    caller of the call put through is the missed call of how that call
+    ended. `is_caller_blocked`: the caller's number is one staff blocked,
+    so the call just ends (no staff phone rings, no missed call, no
+    notice). `is_repeated`: the carrier's request was a signed copy of one
+    already handled: it is answered with nothing, and nobody is told.
     """
 
     reply: CallFallbackReply

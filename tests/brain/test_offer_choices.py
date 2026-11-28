@@ -41,7 +41,8 @@ def test_offered_in_every_chat_channel_but_not_on_the_phone(
     tools = select_available_tools(world.version, world.business, channel)
 
     assert (AssistantToolName.OFFER_CHOICES in tools) is is_offered
-    # The version itself does not list it (its release gate is closed).
+    # The version itself does not list it: conversation tools are offered by
+    # the conversation, never stored as a version's tools.
     assert AssistantToolName.OFFER_CHOICES not in world.version.tools
 
 
@@ -131,6 +132,30 @@ def test_the_guard_reads_the_options_with_the_reply() -> None:
     assert reply.guard_verdict is ReplyGuardVerdict.REWRITTEN
     assert reply.choices is not None
     assert [str(option) for option in reply.choices.options] == ["Yes", "No"]
+
+
+def test_a_stored_offer_backs_no_price_of_a_later_reply() -> None:
+    world = build_world(
+        scripted(
+            call_tool(
+                AssistantToolName.OFFER_CHOICES,
+                offer(["Terrace", "Hall", "Bar"], "Where would you like to sit?"),
+            ),
+            say("We have tables tonight."),
+            say("Corkage is 3 ₾ per bottle."),
+            say("Corkage is 3 ₾ per bottle."),
+        )
+    )
+    first = world.send("A table tonight?", channel=ChannelKind.TELEGRAM)
+    [offered] = world.messages(first.conversation_id)[-1].tool_calls
+    assert offered.tool_name is AssistantToolName.OFFER_CHOICES
+    assert json.loads(str(offered.result_json))["shown"] == 3
+
+    reply = world.send("And what is your corkage fee?", channel=ChannelKind.TELEGRAM)
+
+    # The stored call counts its 3 options; that count backs no price.
+    assert reply.guard_verdict is ReplyGuardVerdict.HANDED_OFF
+    assert "3 ₾" not in str(reply.text)
 
 
 def test_a_handed_off_reply_offers_nothing() -> None:

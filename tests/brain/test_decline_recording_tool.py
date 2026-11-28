@@ -21,9 +21,11 @@ def test_a_caller_declines_the_recording_and_the_call_goes_on() -> None:
     [message] = world.messages(conversation.id)
     assert message.author is MessageAuthor.SYSTEM
     assert str(message.text) == "Voice agent called decline_recording."
-    # Behind its closed release gate the tool call is not stored by name:
-    # the voice platform's report of the call carries it.
-    assert message.tool_calls == []
+    # Its release gate is open: the message keeps the call by name (the
+    # voice platform's report of the call carries it too).
+    [record] = message.tool_calls
+    assert record.tool_name is AssistantToolName.DECLINE_RECORDING
+    assert record.is_error is False
 
 
 def test_declining_needs_no_paid_service() -> None:
@@ -61,4 +63,7 @@ def test_a_chat_is_not_offered_the_tool_and_cannot_call_it() -> None:
     offered = [tool.name for tool in requests_of(world)[0].tools]
     assert AssistantToolName.DECLINE_RECORDING not in offered
     reply = world.messages(world.conversations()[0].id)[-1]
-    assert reply.tool_calls == []
+    # The refused call is kept as an error (its release gate is open).
+    [record] = reply.tool_calls
+    assert record.tool_name is AssistantToolName.DECLINE_RECORDING
+    assert record.is_error is True

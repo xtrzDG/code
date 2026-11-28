@@ -133,6 +133,18 @@ ALL_PARTY_CONSENT_COUNTRIES: frozenset[CountryCode] = build_country_codes(
     "AU", "CH", "DE", "FR", "US"
 )
 
+# Carriers accept a business's text messages only from a sender registered
+# for that business. US: A2P 10DLC, under which a platform texting for many
+# businesses registers a brand and a campaign for each of them (Twilio's ISV
+# model, https://www.twilio.com/docs/messaging/compliance/a2p-10dlc/onboarding-isv
+# and https://www.twilio.com/docs/messaging/compliance/a2p-10dlc). The
+# platform has no sender per business yet, so a business of these countries
+# texts none of its callers by SMS, and no text-back goes by SMS to their
+# numbers.
+PER_BUSINESS_SMS_REGISTRATION_COUNTRIES: frozenset[CountryCode] = build_country_codes(
+    "US"
+)
+
 # Countries where the product is still in its pilot: Italy, the first
 # European market.
 PILOT_COUNTRIES: frozenset[CountryCode] = build_country_codes("IT")

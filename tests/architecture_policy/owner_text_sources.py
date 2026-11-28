@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from app.registries.billing.plan_registry import PlanRegistry
 from app.registries.localization.call_forwarding_carriers import (
     CARRIER_GUIDES_BY_COUNTRY,
+    COUNTRY_FORWARDING_TEXTS,
 )
 from app.registries.localization.call_forwarding_guide_registry import (
     CallForwardingGuideRegistry,
@@ -33,6 +34,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.registries.billing.plan_catalog",
     "app.registries.localization.call_forwarding_texts",
     "app.registries.localization.call_forwarding_carriers",
+    "app.registries.localization.call_forwarding_us",
     "app.transformers.notifications.booking_cancelled_notification_transformer",
     "app.transformers.notifications.booking_moved_notification_transformer",
     "app.transformers.notifications.calendar_event_text_transformer",
@@ -53,6 +55,7 @@ OWNER_TEXT_MODULES: tuple[str, ...] = (
     "app.utilities.security.security_change_notice_texts",
     "app.utilities.integrations.webhook_disabled_texts",
     "app.utilities.calls.voice_fallback_texts",
+    "app.utilities.channels.whatsapp_token_notice_texts",
     "app.utilities.calendar_sync.booking_system_writes",
     "app.utilities.campaigns.campaign_review_texts",
     "app.utilities.setup.setup_texts",
@@ -73,8 +76,9 @@ CUSTOMER_TEXT_NAMES: dict[str, str] = {
         "the cancellation policy line of a customer's booking confirmation"
     ),
 }
-# A country without named carriers: it gets the GSM codes only.
-COUNTRY_WITHOUT_CARRIERS: CountryCode = CountryCode("US")
+# A country without named carriers or texts of its own: it gets the
+# standard GSM guide only.
+COUNTRY_WITHOUT_CARRIERS: CountryCode = CountryCode("JP")
 
 
 def collect_texts(value: object, found: list[LocalizedText]) -> None:
@@ -113,7 +117,11 @@ def cabinet_language_texts() -> list[LocalizedText]:
     collect_texts(PlanRegistry().list_all(), found)
     collect_texts(NicheTemplateRegistry().list_all(), found)
     guides = CallForwardingGuideRegistry()
-    for country_code in (*CARRIER_GUIDES_BY_COUNTRY, COUNTRY_WITHOUT_CARRIERS):
+    for country_code in (
+        *CARRIER_GUIDES_BY_COUNTRY,
+        *COUNTRY_FORWARDING_TEXTS,
+        COUNTRY_WITHOUT_CARRIERS,
+    ):
         collect_texts(guides.get(country_code), found)
 
     return found

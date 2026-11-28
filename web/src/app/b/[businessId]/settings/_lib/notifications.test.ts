@@ -6,6 +6,7 @@ import { createTranslator } from "@/i18n/translate";
 import {
   contactCheckOutcome,
   findThisDevice,
+  isChannelUnavailableShown,
   isEverything,
   isSamePreferences,
   preferencesForm,
@@ -13,7 +14,9 @@ import {
   preferencesSummary,
   quietHoursErrors,
   toggleEvent,
+  unavailableChannelTexts,
   type NotificationCheckResult,
+  type NotificationContact,
   type PushDevice,
 } from "./notifications";
 
@@ -101,5 +104,33 @@ describe("notification checks and devices", () => {
     expect(findThisDevice(devices, remembered, null)).toBeNull();
     expect(findThisDevice(devices, null, "https://fcm.googleapis.com/x")).toBeNull();
     expect(findThisDevice([], remembered, "https://fcm.googleapis.com/x")).toBeNull();
+  });
+
+  it("say SMS is not available yet while the platform's SMS number waits, else not available right now", () => {
+    const contact = (channel: string, reason: string | null) =>
+      ({ channel, provider_ready: false, sms_unavailable_reason: reason }) as unknown as NotificationContact;
+
+    expect(unavailableChannelTexts(contact("sms", "no_sender"))).toEqual({
+      badge: "notifications.contacts.smsNotYet",
+      hint: "notifications.contacts.smsNoSenderHint",
+    });
+    for (const status of [contact("sms", "not_configured"), contact("sms", null), contact("email", null)]) {
+      expect(unavailableChannelTexts(status)).toEqual({
+        badge: "notifications.contacts.providerMissing",
+        hint: "notifications.contacts.providerMissingHint",
+      });
+    }
+  });
+
+  it("say why SMS waits even after notifications were refused, a missing provider until the first one", () => {
+    const delivery: NotificationContact["delivery"] = { status: "dead", attempted_at: 1, is_last_delivery_failed: true };
+    const contact = (fields: Partial<NotificationContact>) =>
+      ({ channel: "sms", provider_ready: false, delivery: null, ...fields }) as unknown as NotificationContact;
+
+    expect(isChannelUnavailableShown(contact({ sms_unavailable_reason: "no_sender" }))).toBe(true);
+    expect(isChannelUnavailableShown(contact({ sms_unavailable_reason: "no_sender", delivery }))).toBe(true);
+    expect(isChannelUnavailableShown(contact({ sms_unavailable_reason: "not_configured" }))).toBe(true);
+    expect(isChannelUnavailableShown(contact({ sms_unavailable_reason: "not_configured", delivery }))).toBe(false);
+    expect(isChannelUnavailableShown(contact({ provider_ready: true }))).toBe(false);
   });
 });

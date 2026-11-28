@@ -1,4 +1,10 @@
-"""TWILIO_*, TELEGRAM_GATEWAY_*, WHATSAPP_OTP_* and SMTP_*: who sends login codes."""
+"""
+TWILIO_*, TELEGRAM_GATEWAY_*, WHATSAPP_OTP_* and SMTP_*: who sends login
+codes. TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are also the account that
+rents phone numbers and signs the call fallback; it sends SMS (login codes
+among them) only with a sender, TWILIO_FROM_NUMBER or
+TWILIO_MESSAGING_SERVICE_SID.
+"""
 
 from collections.abc import Mapping
 from typing import TypedDict
@@ -37,9 +43,10 @@ DEFAULT_SMTP_PORTS: dict[SmtpSecurity, int] = {
     SmtpSecurity.SSL: 465,
     SmtpSecurity.NONE: 25,
 }
-TWILIO_VARIABLES: tuple[str, ...] = (
-    "TWILIO_ACCOUNT_SID",
-    "TWILIO_AUTH_TOKEN",
+# The Twilio account (phone numbers, the call fallback) and its optional SMS
+# sender, set only once the carriers approved it (.env.example, "Login codes").
+TWILIO_ACCOUNT_VARIABLES: tuple[str, ...] = ("TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN")
+TWILIO_SENDER_VARIABLES: tuple[str, ...] = (
     "TWILIO_FROM_NUMBER",
     "TWILIO_MESSAGING_SERVICE_SID",
 )
@@ -79,28 +86,21 @@ class OtpProviderSettingsSection(TypedDict):
 def check_login_code_providers(environment_variables: Mapping[str, str]) -> None:
     """
     A login code provider is configured completely or not at all, so a typo
-    stops the start instead of silently hiding a sign-in channel.
+    stops the start instead of silently hiding a sign-in channel. The Twilio
+    account is complete without a sender (`check_twilio_account`).
     """
 
     present: set[str] = {
         variable_name
         for variable_name in (
-            *TWILIO_VARIABLES,
+            *TWILIO_ACCOUNT_VARIABLES,
+            *TWILIO_SENDER_VARIABLES,
             *WHATSAPP_OTP_VARIABLES,
             *SMTP_VARIABLES,
         )
         if environment_variables.get(variable_name, "").strip() != ""
     }
-    has_twilio_sender: bool = bool(
-        present & {"TWILIO_FROM_NUMBER", "TWILIO_MESSAGING_SERVICE_SID"}
-    )
-    if present & set(TWILIO_VARIABLES) and not (
-        {"TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"} <= present and has_twilio_sender
-    ):
-        raise ValidationFailedError(
-            "Login codes by SMS need TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and "
-            "TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID."
-        )
+    check_twilio_account(present)
 
     has_whatsapp_token: bool = (
         "WHATSAPP_OTP_ACCESS_TOKEN" in present
@@ -125,6 +125,27 @@ def check_login_code_providers(environment_variables: Mapping[str, str]) -> None
             "Login codes by e-mail need SMTP_HOST and SMTP_FROM, and "
             "SMTP_USERNAME together with SMTP_PASSWORD when the server needs a "
             "login."
+        )
+
+
+def check_twilio_account(present: set[str]) -> None:
+    """
+    SID and token come together; a sender needs both; the account alone is
+    complete (phone numbers, the voice fallback) and sends no SMS.
+    `present` names the variables that are set.
+    """
+
+    account: set[str] = present & set(TWILIO_ACCOUNT_VARIABLES)
+    if account and account != set(TWILIO_ACCOUNT_VARIABLES):
+        raise ValidationFailedError(
+            "The Twilio account needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN "
+            "together."
+        )
+
+    if present & set(TWILIO_SENDER_VARIABLES) and not account:
+        raise ValidationFailedError(
+            "An SMS sender (TWILIO_FROM_NUMBER or TWILIO_MESSAGING_SERVICE_SID) "
+            "needs TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN."
         )
 
 

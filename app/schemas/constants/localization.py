@@ -44,6 +44,20 @@ class DataRegion(StrEnum):
     US = "us"
 
 
+class ForwardingNumberFormat(StrEnum):
+    """
+    How a forwarding code carries the assistant's number, as the carrier
+    asks for it. NATIONAL_DIGITS are the digits after the country calling
+    code (the 10 digits of a North American number); with
+    DIGITS_WITH_COUNTRY_CODE the calling code comes first ("1" and those
+    10 digits).
+    """
+
+    E164 = "e164"
+    NATIONAL_DIGITS = "national_digits"
+    DIGITS_WITH_COUNTRY_CODE = "digits_with_country_code"
+
+
 class LanguageTextSupport(StrEnum):
     """How well the assistant handles a language in text channels."""
 
@@ -93,6 +107,33 @@ class RecordingConsentRule(StrEnum):
 
     NOTICE = "notice"
     ALL_PARTY_CONSENT = "all_party_consent"
+
+
+class SmsSenderRegistration(StrEnum):
+    """
+    Whether the carriers of a country accept a business's text messages
+    only from a sender registered for that business (US A2P 10DLC: under
+    Twilio's ISV model a brand and a campaign per business). The platform
+    registers no sender per business yet, so a business of a PER_BUSINESS
+    country texts none of its callers by SMS, and no text-back goes by SMS
+    to a number of such a country. Country profiles only: never stored.
+    """
+
+    NOT_REQUIRED = "not_required"
+    PER_BUSINESS = "per_business"
+
+
+class StarCodeCondition(StrEnum):
+    """
+    When a North American star code forwards a call to the assistant.
+
+    Verizon's *71 has one code for unanswered and busy calls; like the GSM
+    codes, star codes never forward every call. CANCEL_ALL switches
+    forwarding off.
+    """
+
+    NO_ANSWER_OR_BUSY = "no_answer_or_busy"
+    CANCEL_ALL = "cancel_all"
 
 
 class TextDirection(StrEnum):

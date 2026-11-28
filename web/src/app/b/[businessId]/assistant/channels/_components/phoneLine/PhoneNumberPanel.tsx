@@ -2,7 +2,8 @@
 
 /**
  * The phone card's own part: the number the business rents from us (its
- * place, monthly price and whether it answers yet), an open request to our
+ * place, monthly price, whether it answers yet, and that it takes calls
+ * only: the platform reads no text sent to it), an open request to our
  * team, or "Get a number". Shown on the phone channel card and in the setup
  * tunnel's channels step. A rented number goes back when the phone channel
  * is disconnected.
@@ -120,6 +121,7 @@ function RentedNumber({ number }: { number: RentedPhoneNumber }) {
       <p className="text-sm text-ink-muted">
         {place} · {t("phoneNumbers.panel.monthly", { price })}
       </p>
+      <p className="text-xs text-ink-subtle">{t("phoneNumbers.panel.callsOnly")}</p>
       {number.status === "active" ? <p className="text-xs text-ink-subtle">{t("phoneNumbers.panel.giveBackHint")}</p> : null}
     </section>
   );

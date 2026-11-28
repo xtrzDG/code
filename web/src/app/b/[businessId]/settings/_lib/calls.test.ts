@@ -14,10 +14,14 @@ import {
   MISSED_CALL_REASON_LABELS,
   READINESS_TEXTS,
   SKIP_REASON_LABELS,
+  SMS_UNAVAILABLE_TEXTS,
+  smsSwitchState,
+  smsUnavailableText,
   templateNameError,
   TEXT_BACK_CHANNEL_LABELS,
   TEXT_BACK_STATUS_LABELS,
   textBackReadiness,
+  textBackReadinessText,
   TRANSFER_READINESS_TEXTS,
   transferReadiness,
   turnedOffText,
@@ -145,10 +149,62 @@ describe("what a missed caller gets", () => {
   });
 });
 
+describe("SMS while it cannot be sent", () => {
+  const unavailable = (reason?: CallSettingsView["sms_unavailable_reason"]): CallSettingsView => ({
+    ...VIEW,
+    is_text_back_enabled: true,
+    is_sms_available: false,
+    sms_unavailable_reason: reason,
+  });
+
+  it("says why in the API's words, and the general text without a reason", () => {
+    expect(smsUnavailableText(VIEW)).toBeNull();
+    expect(smsUnavailableText(unavailable("no_sender"))).toBe("callSettings.textBack.smsNoSender");
+    expect(smsUnavailableText(unavailable("business_registration_required"))).toBe("callSettings.textBack.smsNeedsRegistration");
+    expect(smsUnavailableText(unavailable("not_configured"))).toBe("callSettings.textBack.smsMissing");
+    // An API of the release before sends no reason.
+    expect(smsUnavailableText(unavailable(undefined))).toBe("callSettings.textBack.smsMissing");
+    expect(smsUnavailableText(unavailable(null))).toBe("callSettings.textBack.smsMissing");
+  });
+
+  it("leaves SMS out of what is missing when it cannot be allowed", () => {
+    expect(textBackReadinessText("none", VIEW)).toBe("callSettings.textBack.readiness.none");
+    expect(textBackReadinessText("none", unavailable("no_sender"))).toBe("callSettings.textBack.readiness.noneWithoutSms");
+    expect(textBackReadinessText("whatsapp", unavailable("no_sender"))).toBe(READINESS_TEXTS.whatsapp);
+    expect(textBackReadinessText("off", unavailable("business_registration_required"))).toBe(READINESS_TEXTS.off);
+  });
+
+  it("shows the switch off and disabled with the reason, and saves the stored choice unchanged", () => {
+    const view = unavailable("no_sender");
+    const form = callSettingsForm(view);
+
+    expect(form.isSmsFallbackEnabled).toBe(true);
+    expect(smsSwitchState(form, view)).toEqual({ isChecked: false, isDisabled: true, hint: "callSettings.textBack.smsNoSender" });
+    expect(isSameCallSettings(form, view)).toBe(true);
+    expect(callSettingsBody({ ...form, isSummaryEnabled: false }).is_sms_fallback_enabled).toBe(true);
+    expect(smsSwitchState(form, unavailable("business_registration_required")).hint).toBe("callSettings.textBack.smsNeedsRegistration");
+  });
+
+  it("asks for text-backs first, and is a choice once both are there", () => {
+    const off = callSettingsForm({ ...VIEW, is_sms_available: false, sms_unavailable_reason: "no_sender" });
+    const on = { ...callSettingsForm(VIEW), isTextBackEnabled: true };
+
+    expect(smsSwitchState(off, unavailable("no_sender"))).toEqual({
+      isChecked: false,
+      isDisabled: true,
+      hint: "callSettings.textBack.smsNeedsTextBack",
+    });
+    expect(smsSwitchState(on, VIEW)).toEqual({ isChecked: true, isDisabled: false, hint: "callSettings.textBack.smsHint" });
+    expect(smsSwitchState({ ...on, isSmsFallbackEnabled: false }, VIEW)).toMatchObject({ isChecked: false, isDisabled: false });
+  });
+});
+
 describe("the labels", () => {
   it("exist in every language", () => {
     const keys = [
       ...Object.values(READINESS_TEXTS),
+      "callSettings.textBack.readiness.noneWithoutSms" as const,
+      ...Object.values(SMS_UNAVAILABLE_TEXTS),
       ...Object.values(TRANSFER_READINESS_TEXTS),
       "callSettings.recording.turnedOff" as const,
       "callSettings.transfers.turnedOff" as const,
